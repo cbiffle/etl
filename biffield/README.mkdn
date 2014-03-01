@@ -1,0 +1,159 @@
+Biffields
+=========
+
+This is a preprocessor stunt that generates fluent, typesafe code for working
+with hardware registers containing bitfields.  While it generates code, it does
+not require any external tools.
+
+Biffields requires C++11 and is tested most thoroughly on GCC 4.6.2.
+
+
+Sales Pitch
+-----------
+
+When writing low level code for drivers and the like, one often needs to deal
+with memory-mapped peripherals.  These have registers that show up like a struct
+in memory, and each register is often split into fields of bits.
+
+C bitfields seem appealing for this, but they're the wrong thing to use: they
+make it difficult to control exactly when memory is read or written.
+
+The "right" way to do this sort of thing has long been the "shift-and-or"
+method, but it's ugly.
+
+Biffields are an attempt at fixing this.  You define the structure of the
+registers in a text file, and Biffields gives you -- for free -- everything you
+see here:
+
+ - A struct layout that can alias the peripheral in memory, under control of a
+   linker script.
+
+ - Accessors for registers that correctly use volatile and make the timing of
+   read/write clear.
+
+ - A type for each register that is as efficient as int, but provides higher
+   level manipulators for the bitfields in the register.  (Yes, it also can
+   act as a compile-time constant.)
+
+ - Static metadata about register structure, so that if you *do* have to resort
+   to bit twiddling, you won't have to hardcode indexes, sizes, and masks
+   separately.
+
+
+The Basic Idea
+--------------
+
+The general pattern for using this library:
+
+ 1. Get a datasheet for your peripheral.  Let's call it `bob`.
+
+ 2. Find a block of related, contiguous (possibly with holes) registers you
+    would like to model.
+
+ 3. Write a `bob.reg` file defining the register layout and their contents.
+
+ 4. Write a `bob.h` file defining a struct that contains the Biffield generated
+    code.
+
+ 5. Place instances of the struct in memory wherever the peripheral appears,
+    using either preprocessor gymnastics or a linker script.
+
+Biffields requires no external tools or build system support -- it's implemented
+purely in the C preprocessor.
+
+
+A Brief Example
+---------------
+
+Assume we have a peripheral containing two 32-bit wide registers, with a 32-bit
+reserved "hole" between.
+
+           31                                                      0
+           +----------------------+---------+-+-+-+-+---------------+
+    CONFIG |    foo (16 bits)     | bar (4) |A|B|C|D|  reserved (8) |
+           +----------------------+---------+-+-+-+-+---------------+
+                                    hole here
+           +-----------------------------------+--------------------+
+    LASERS |   frequency (24 bits)             |   style (8 bits)   |
+           +-----------------------------------+--------------------+
+
+`foo`, `bar`, and `frequency` are simple numerical fields.  `A` through `D` are
+control bits.  `style` is an enumeration where some bit patterns are invalid.
+
+Both registers, for the sake of discussion, are read/write.
+
+We could describe this with the following:
+
+    ETL_BFF_REG_RW(uint32_t, config, 0,
+      ETL_BFF_FIELD(31:16, unsigned, foo)
+      ETL_BFF_FIELD(15:12, unsigned, bar)
+      ETL_BFF_FIELD(11:11, bool, a)
+      ETL_BFF_FIELD(10:10, bool, a)
+      ETL_BFF_FIELD( 9: 9, bool, a)
+      ETL_BFF_FIELD( 8: 8, bool, a)
+    )
+
+    ETL_BFF_REG_RESERVED(uint32_t, hole, 1)
+
+    ETL_BFF_REG_RW(uint32_t, lasers, 0,
+      ETL_BFF_FIELD  (31: 8, unsigned, frequency)
+      ETL_BFF_FIELD_E( 7: 0, unsigned, style,
+        ETL_BFF_ENUM(0b00000000, none)
+        ETL_BFF_ENUM(0b11110000, high)
+        ETL_BFF_ENUM(0b00001111, low)
+        ETL_BFF_ENUM(0b10101010, alternating1)
+        ETL_BFF_ENUM(0b01010101, alternating2)
+      )
+    )
+
+Assuming this is in a file named `death_ray.reg`, we could generate the
+corresponding access code with:
+
+    struct DeathRay {
+      #define ETL_BFF_DEFINITION_FILE death_ray.reg
+      #include <biffield/generate.h>
+      #undef ETL_BFF_DEFINITION_FILE
+    };
+
+    extern DeathRay death_ray;
+
+This will produce:
+
+ 1. Fields in the struct to describe the physical memory layout.  The fields are
+    private, and must be accessed through...
+
+ 2. Accessor member functions.  The implementations are careful to preserve the
+    `volatile` aspect of register access, and will at some point also generate
+    barriers.
+
+ 3. Types for each register, which have their own accessors for getting at the
+    bitfields.
+
+We would use this code as follows:
+
+    // Change bit A and foo value in one write
+    death_ray.write_config(death_ray.read_config()
+                           .with_a(true)
+                           .with_foo(42));
+
+
+Gotchas
+-------
+
+Biffields is designed to be difficult to abuse.  It makes liberal use of
+`static_assert` in the generated code to catch mistakes and report them.
+However, there are some details you should be aware of.
+
+ 1. This library assumes that it can `#define` whatever it wants, as long as it
+    starts with `ETL_BFF_`.  It's careful to `#undef` what it `#define`s.  If
+    there are any collisions with non-Biffield macros, you will get warnings.
+
+ 2. We let you define the containing `struct` yourself so that you can add
+    member functions.  You *must not* add member fields, because they'll be
+    mapped into peripheral space and almost certainly surprise you.  Biffield
+    does not currently have an integrity check for this.
+
+ 3. It is possible, though difficult, to produce a name collision from two
+    similarly named registers.  Exactly how to do this is left as an exercise
+    for the reader; Biffields is designed to avoid it for non-pathological
+    hardware.
