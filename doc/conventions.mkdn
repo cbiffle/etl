@@ -1,0 +1,60 @@
+ETL Conventions
+===============
+
+
+Use of the Preprocessor
+-----------------------
+
+**All macros used in ETL shall be UPPER_CASE_WITH_UNDERSCORES.**  Lower- and
+mixed-case identifiers are reserved for cases where they can be namespaced, and
+macros cannot be namespaced.
+
+To avoid conflicts with application code, preprocessor symbols defined in ETL
+header files should start with one of these two prefixes:
+
+ - `ETL_` for macros intended for use by the application.
+ - `_ETL_` for internal implementation macros.
+
+In certain cases macros are used to provide convenient syntax for the
+application (e.g. `CHECK`).  These macros *may* omit the prefix, but *only* if
+the following rules are followed:
+
+ 1. The macro must be defined in its own header file, so that applications can
+    explicitly opt-in to the namespace pollution.
+
+ 2. The macro must *never* be used in an ETL header file, which would
+    cause it to indirectly appear in the application.
+
+As a compromise, define the actual macro using the `ETL_` prefix, and provide
+an adapter header that re-exports it using the unprefixed name.
+
+
+### Include guards
+
+Include guards follow the same rules as other macros.  They should include the
+full path to the file, starting at the base `etl` directory, and use a trailing
+underscore.  The final `#endif` must carry an explanatory comment repeating
+the include guard name.
+
+For example, a file named `etl/foo/bar/example.h` should be structured as
+follows:
+
+    #ifndef ETL_FOO_BAR_EXAMPLE_H_
+    #define ETL_FOO_BAR_EXAMPLE_H_
+
+    // content goes here
+
+    #endif  // ETL_FOO_BAR_EXAMPLE_H_
+
+
+Namespaces
+----------
+
+Exported symbols should be within the top-level `etl` namespace, except when
+this is not possible (due to e.g. compatibility with external conventions).
+
+Namespace nesting should match directory nesting.  A type `Encoder` defined in
+a file at `etl/util/data/encoder.h` must live in an `etl::util::data` namespace.
+
+Avoid exporting symbols with C linkage.  Where this can't be avoided, name the
+symbols following namespace convention: `etl_armv7m_reset_handler`.
