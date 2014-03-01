@@ -1,0 +1,29 @@
+/* vim:syntax=cpp:
+ * Definitions of ARMv7M architectural exceptions.  This is an X-Macro file.
+ *
+ * This file is order-sensitive!  ARMv7M numbers exceptions starting with 1
+ * in the order given below.
+ *
+ * Note that some vendors (ab)use the RESERVED exception vectors for their
+ * own purposes, so you SHOULD NOT attempt to (ab)use them yourself!
+ *
+ * We omit the reset vector here.
+ */
+ETL_ARMV7M_EXCEPTION(nmi             )
+ETL_ARMV7M_EXCEPTION(hard_fault      )
+ETL_ARMV7M_EXCEPTION(mem_manage_fault)
+ETL_ARMV7M_EXCEPTION(bus_fault       )
+ETL_ARMV7M_EXCEPTION(usage_fault     )
+
+ETL_ARMV7M_EXCEPTION_RESERVED( 7)
+ETL_ARMV7M_EXCEPTION_RESERVED( 8)
+ETL_ARMV7M_EXCEPTION_RESERVED( 9)
+ETL_ARMV7M_EXCEPTION_RESERVED(10)
+
+ETL_ARMV7M_EXCEPTION(sv_call      )
+ETL_ARMV7M_EXCEPTION(debug_monitor)
+
+ETL_ARMV7M_EXCEPTION_RESERVED(13)
+
+ETL_ARMV7M_EXCEPTION(pend_sv )
+ETL_ARMV7M_EXCEPTION(sys_tick)
