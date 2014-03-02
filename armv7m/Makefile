@@ -2,8 +2,12 @@ depth := ../..
 products := armv7m exception_table
 
 armv7m[type] := library
+armv7m[cc_flags] := -std=gnu++0x
+armv7m[cc_files] := \
+  nvic.cc
 armv7m[libs] := \
   etl/common:common
+armv7m[using_l_flags] := $(shell pwd)/peripherals.ld
 
 # This is broken into a separate target so that we can link it with
 # whole-archive.

@@ -1,0 +1,65 @@
+// vim:syntax=cpp:
+// ARMv7-M Nested Vectored Interrupt Controller register definitions
+
+/*
+ * The Interrupt Set Enabled Registers have one bit for each potential
+ * interrupt source.  Writing ones causes the corresponding interrupt(s) to
+ * become enabled; others remain unchanged.
+ */
+ETL_BFF_REG_ARRAY_RW(Word, iser, 16,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+  ETL_BFF_FIELD      (31: 0,    Word, all_bits)
+)
+ETL_BFF_REG_RESERVED(Word, after_iser, 16)
+
+/*
+ * The Interrupt Clear Enabled Registers have one bit for each potential
+ * interrupt source.  Writing ones causes the corresponding interrupt(s) to
+ * become disabled; others remain unchanged.
+ */
+ETL_BFF_REG_ARRAY_RW(Word, icer, 16,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+  ETL_BFF_FIELD      (31: 0,    Word, all_bits)
+)
+ETL_BFF_REG_RESERVED(Word, after_icer, 16)
+
+/*
+ * The Interrupt Set Pending Registers have one bit for each potential
+ * interrupt source.  Writing ones causes the corresponding interrupt(s) to
+ * become pending; others remain unchanged.
+ */
+ETL_BFF_REG_ARRAY_RW(Word, ispr, 16,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+  ETL_BFF_FIELD      (31: 0,    Word, all_bits)
+)
+ETL_BFF_REG_RESERVED(Word, after_ispr, 16)
+
+/*
+ * The Interrupt Clear Pending Registers have one bit for each potential
+ * interrupt source.  Writing ones causes the corresponding interrupt(s) to
+ * become non-pending; others remain unchanged.
+ */
+ETL_BFF_REG_ARRAY_RW(Word, icpr, 16,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+  ETL_BFF_FIELD      (31: 0,    Word, all_bits)
+)
+ETL_BFF_REG_RESERVED(Word, after_icpr, 16)
+
+/*
+ * The Interrupt Active Bit Registers have one bit for each potential
+ * interrupt source.  The bit is 1 if the interrupt is active, 0 otherwise.
+ */
+ETL_BFF_REG_ARRAY_RO(Word, iabr, 16,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+  ETL_BFF_FIELD      (31: 0,    Word, all_bits)
+)
+ETL_BFF_REG_RESERVED(Word, after_iabr, 48)
+
+/*
+ * The Interrupt Priority Registers contain an 8-bit field for each potential
+ * interrupt source.  The field contains the interrupt's priority.  Note that
+ * SoC vendors may leave some LSBs of the field unimplemented.
+ */
+ETL_BFF_REG_ARRAY_RW(Word, ipr, 124,
+  ETL_BFF_FIELD_ARRAY(31: 0, 8, Byte, priority)
+)
