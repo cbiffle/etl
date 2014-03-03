@@ -1,0 +1,20 @@
+ETL_BFF_REG_RW(Word, csr,
+  ETL_BFF_FIELD  (16:16, bool, countflag)
+  ETL_BFF_FIELD_E( 2: 2, bool, clksource,
+    ETL_BFF_ENUM(false, external_reference)
+    ETL_BFF_ENUM(true,  cpu_clock)
+  )
+  ETL_BFF_FIELD  ( 1: 1, bool, tickint)
+  ETL_BFF_FIELD  ( 0: 0, bool, enable)
+)
+ETL_BFF_REG_RW(Word, rvr,
+  ETL_BFF_FIELD(23: 0, unsigned, reload)
+)
+ETL_BFF_REG_RW(Word, cvr,
+  ETL_BFF_FIELD(31: 0, unsigned, current)
+)
+ETL_BFF_REG_RW(Word, calib,
+  ETL_BFF_FIELD(31:31, bool, noref)
+  ETL_BFF_FIELD(30:30, bool, skew)
+  ETL_BFF_FIELD(23: 0, unsigned, tenms)
+)
