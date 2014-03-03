@@ -1,6 +1,7 @@
 #ifndef ETL_ARMV7M_SCB_H_
 #define ETL_ARMV7M_SCB_H_
 
+#include "etl/armv7m/exceptions.h"
 #include "etl/armv7m/types.h"
 
 namespace etl {
@@ -23,6 +24,11 @@ struct Scb {
    * Fault handler, which complicates diagnostics.  This fixes that.
    */
   void enable_faults();
+
+  /*
+   * Sets the priority of a configurable-priority exception.
+   */
+  void set_exception_priority(Exception, Byte);
 };
 
 extern Scb scb;
