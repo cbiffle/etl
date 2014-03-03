@@ -45,5 +45,11 @@
 // Consider object to be 'used' during linker GC.
 #define ETL_USED __attribute__((used))
 
+// Object can be overridden during link time.
+#define ETL_WEAK __attribute__((weak))
+
+// Object is an alias for something else.
+#define ETL_ALIAS(sym) __attribute__((alias(sym)))
+
 
 #endif  // ETL_COMMON_ATTRIBUTE_MACROS_H_
