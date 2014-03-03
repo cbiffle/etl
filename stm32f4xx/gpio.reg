@@ -1,0 +1,35 @@
+ETL_BFF_REG_RW(Word, moder,
+  ETL_BFF_FIELD_ARRAY(31: 0, 2, Mode, mode)
+)
+ETL_BFF_REG_RW(Word, otyper,
+  ETL_BFF_FIELD_ARRAY(15: 0, 1, OutputType, otype)
+)
+ETL_BFF_REG_RW(Word, ospeedr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 2, OutputSpeed, ospeed)
+)
+ETL_BFF_REG_RW(Word, pupdr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 2, Pull, pupd)
+)
+ETL_BFF_REG_RW(Word, idr,
+  ETL_BFF_FIELD_ARRAY(15: 0, 1, bool, id)
+)
+ETL_BFF_REG_RW(Word, odr,
+  ETL_BFF_FIELD_ARRAY(15: 0, 1, bool, od)
+  ETL_BFF_FIELD(15: 0, HalfWord, bits)
+)
+ETL_BFF_REG_RW(Word, bsrr,
+  ETL_BFF_FIELD_ARRAY(31:16, 1, bool, reset)
+  ETL_BFF_FIELD      (31:16, HalfWord, resetbits)
+  ETL_BFF_FIELD_ARRAY(15: 0, 1, bool, set)
+  ETL_BFF_FIELD      (15: 0, HalfWord, setbits)
+)
+ETL_BFF_REG_RW(Word, lckr,
+  ETL_BFF_FIELD(16:16, bool, lckk)
+  ETL_BFF_FIELD_ARRAY(15: 0, 1, bool, lck)
+)
+ETL_BFF_REG_RW(Word, afrl,
+  ETL_BFF_FIELD_ARRAY(31: 0, 4, unsigned, af)
+)
+ETL_BFF_REG_RW(Word, afrh,
+  ETL_BFF_FIELD_ARRAY(31: 0, 4, unsigned, af)
+)

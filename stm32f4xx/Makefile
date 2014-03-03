@@ -5,6 +5,7 @@ products := stm32f4xx interrupt_table
 stm32f4xx[type] := library
 
 stm32f4xx[cc_files] := \
+  gpio.cc \
   interrupts.cc \
   rcc.cc
 
