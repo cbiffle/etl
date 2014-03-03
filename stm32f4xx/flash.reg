@@ -1,0 +1,8 @@
+ETL_BFF_REG_RW(Word, acr,
+  ETL_BFF_FIELD(12:12, bool, dcrst)
+  ETL_BFF_FIELD(11:11, bool, icrst)
+  ETL_BFF_FIELD(10:10, bool, dcen)
+  ETL_BFF_FIELD( 9: 9, bool, icen)
+  ETL_BFF_FIELD( 8: 8, bool, prften)
+  ETL_BFF_FIELD( 2: 0, unsigned, latency)
+)
