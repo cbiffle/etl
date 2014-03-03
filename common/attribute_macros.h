@@ -20,6 +20,9 @@
 // This overrides conservative heuristics at -Os.
 #define ETL_INLINE inline __attribute__((always_inline))
 
+// Function should *never* be inlined.  Really.
+#define ETL_NOINLINE __attribute__((noinline))
+
 
 /*
  * Data attributes.
