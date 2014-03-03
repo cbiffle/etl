@@ -1,3 +1,6 @@
+_ZN3etl9stm32f4xx4tim1E = 0x40010000;
+_ZN3etl9stm32f4xx4tim8E = 0x40010400;
+
 _ZN3etl9stm32f4xx6syscfgE = 0x40013800;
 
 _ZN3etl9stm32f4xx5gpioaE = 0x40020000;
