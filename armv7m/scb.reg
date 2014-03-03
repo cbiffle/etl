@@ -1,0 +1,75 @@
+// vim:syntax=cpp:
+// The ARMv7-M System Control Block (SCB)
+
+ETL_BFF_REG_RO(Word, cpuid,
+  ETL_BFF_FIELD(31:24, Byte, implementer)
+  ETL_BFF_FIELD(23:20, Byte, variant)
+  ETL_BFF_FIELD(19:16, Byte, architecture)
+  ETL_BFF_FIELD(15: 4, Word, partno)
+  ETL_BFF_FIELD( 3: 0, Word, revision)
+)
+
+ETL_BFF_REG_RW(Word, icsr,
+  ETL_BFF_FIELD(31:31, bool, nmipendset)
+  ETL_BFF_FIELD(28:28, bool, pendsvset)
+  ETL_BFF_FIELD(27:27, bool, pendsvclr)
+  ETL_BFF_FIELD(26:26, bool, pendstset)
+  ETL_BFF_FIELD(25:25, bool, pendstclr)
+  ETL_BFF_FIELD(23:23, bool, isrpreempt)
+  ETL_BFF_FIELD(22:22, bool, isrpending)
+  ETL_BFF_FIELD(20:12, unsigned, vectpending)
+  ETL_BFF_FIELD(11:11, bool, rettobase)
+  ETL_BFF_FIELD( 8: 0, unsigned, vectactive)
+)
+
+ETL_BFF_REG_RW(Word, vtor, )
+ETL_BFF_REG_RW(Word, aircr, )
+ETL_BFF_REG_RW(Word, scr, )
+ETL_BFF_REG_RW(Word, ccr,
+  ETL_BFF_FIELD( 9: 9, bool, stkalign)
+  ETL_BFF_FIELD( 8: 8, bool, bfhfnmign)
+  ETL_BFF_FIELD( 4: 4, bool, div_0_trp)
+  ETL_BFF_FIELD( 3: 3, bool, unalign_trp)
+  ETL_BFF_FIELD( 1: 1, bool, usersetmpend)
+  ETL_BFF_FIELD( 0: 0, bool, nonbasethrdena)
+)
+ETL_BFF_REG_RW(Word, shpr1,
+  ETL_BFF_FIELD_ARRAY(31: 0, 8, Byte, pri)
+)
+ETL_BFF_REG_RW(Word, shpr2,
+  ETL_BFF_FIELD_ARRAY(31: 0, 8, Byte, pri)
+)
+ETL_BFF_REG_RW(Word, shpr3,
+  ETL_BFF_FIELD_ARRAY(31: 0, 8, Byte, pri)
+)
+
+ETL_BFF_REG_RW(Word, shcsr,
+  ETL_BFF_FIELD(18:18, bool, usgfaultena)
+  ETL_BFF_FIELD(17:17, bool, busfaultena)
+  ETL_BFF_FIELD(16:16, bool, memfaultena)
+  ETL_BFF_FIELD(15:15, bool, svcallpended)
+  ETL_BFF_FIELD(14:14, bool, busfaultpended)
+  ETL_BFF_FIELD(13:13, bool, memfaultpended)
+  ETL_BFF_FIELD(12:12, bool, usgfaultpended)
+  ETL_BFF_FIELD(11:11, bool, systickact)
+  ETL_BFF_FIELD(10:10, bool, pendsvact)
+  ETL_BFF_FIELD( 8: 8, bool, monitoract)
+  ETL_BFF_FIELD( 7: 7, bool, svcallact)
+  ETL_BFF_FIELD( 3: 3, bool, usgfaultact)
+  ETL_BFF_FIELD( 1: 1, bool, busfaultact)
+  ETL_BFF_FIELD( 0: 0, bool, memfaultact)
+)
+
+ETL_BFF_REG_RW(Word, cfsr, )
+ETL_BFF_REG_RW(Word, hfsr, )
+ETL_BFF_REG_RW(Word, dfsr, )
+ETL_BFF_REG_RW(Word, mmfar, )
+ETL_BFF_REG_RW(Word, bfar, )
+ETL_BFF_REG_RW(Word, afsr, )
+
+ETL_BFF_REG_RESERVED(Word, 40, 18)
+
+ETL_BFF_REG_RW(Word, cpacr,
+  ETL_BFF_FIELD(23:22, CpAccess, cp11)
+  ETL_BFF_FIELD(21:20, CpAccess, cp10)
+)
