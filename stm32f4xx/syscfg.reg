@@ -1,0 +1,20 @@
+ETL_BFF_REG_RW(Word, memrmp,
+  ETL_BFF_FIELD_E( 1: 0, unsigned, mem_mode,
+    ETL_BFF_ENUM(0b00, main_flash)
+    ETL_BFF_ENUM(0b01, system_flash)
+    ETL_BFF_ENUM(0b10, fsmc_bank_1)
+    ETL_BFF_ENUM(0b11, embedded_sram)
+  )
+)
+ETL_BFF_REG_RW(Word, pmc,
+  ETL_BFF_FIELD(23:23, bool, mii_rmii_sel)
+)
+ETL_BFF_REG_RW(Word, exticr1, )
+ETL_BFF_REG_RW(Word, exticr2, )
+ETL_BFF_REG_RW(Word, exticr3, )
+ETL_BFF_REG_RW(Word, exticr4, )
+ETL_BFF_REG_RESERVED(Word, 18, 2)
+ETL_BFF_REG_RW(Word, cmpcr,
+  ETL_BFF_FIELD( 8: 8, bool, ready)
+  ETL_BFF_FIELD( 0: 0, bool, cmp_pd)
+)
