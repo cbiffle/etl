@@ -4,3 +4,4 @@
 
 _ZN3etl6armv7m4nvicE = 0xe000e100;
 _ZN3etl6armv7m3scbE  = 0xe000ed00;
+_ZN3etl6armv7m6scb_fpE = 0xe000ed34;
