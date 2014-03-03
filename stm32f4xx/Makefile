@@ -14,6 +14,8 @@ stm32f4xx[libs] := \
   etl/armv7m:armv7m \
   etl/common:common
 
+stm32f4xx[using_l_flags] := $(shell pwd)/peripherals.ld
+
 
 interrupt_table[type] := library
 
