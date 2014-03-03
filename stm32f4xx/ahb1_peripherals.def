@@ -1,0 +1,33 @@
+// vim:syntax=cpp:
+// This is an x-macro file giving the STM32F4xx AHB peripheral configuration.
+//
+// The columns are, from left to right,
+//  - Peripheral name as given in the memory map table of the reference manual.
+//  - Reset bit assignment in the AHB1RSTR.
+//  - Clock enable bit assignment in the AHB1(LP)ENR.
+//
+// In the latter two cases, the special value NONE means that the peripheral
+// doesn't have a simple enable/reset line.  Some peripherals with NONE lack
+// the functionality entirely, while some are reset/enabled through other
+// means.
+
+ETL_STM32F4XX_AHB_PERIPH(gpioa,           0,        0)
+ETL_STM32F4XX_AHB_PERIPH(gpiob,           1,        1)
+ETL_STM32F4XX_AHB_PERIPH(gpioc,           2,        2)
+ETL_STM32F4XX_AHB_PERIPH(gpiod,           3,        3)
+ETL_STM32F4XX_AHB_PERIPH(gpioe,           4,        4)
+ETL_STM32F4XX_AHB_PERIPH(gpiof,           5,        5)
+ETL_STM32F4XX_AHB_PERIPH(gpiog,           6,        6)
+ETL_STM32F4XX_AHB_PERIPH(gpioh,           7,        7)
+ETL_STM32F4XX_AHB_PERIPH(gpioi,           8,        8)
+ETL_STM32F4XX_AHB_PERIPH(gpioj,           9,        9)
+ETL_STM32F4XX_AHB_PERIPH(gpiok,          10,       10)
+ETL_STM32F4XX_AHB_PERIPH(crc,            12,       12)
+ETL_STM32F4XX_AHB_PERIPH(rcc,      ETL_NONE, ETL_NONE)
+ETL_STM32F4XX_AHB_PERIPH(flash,    ETL_NONE, ETL_NONE)
+ETL_STM32F4XX_AHB_PERIPH(bkpsram,  ETL_NONE,       18)
+ETL_STM32F4XX_AHB_PERIPH(dma1,           21,       21)
+ETL_STM32F4XX_AHB_PERIPH(dma2,           22,       22)
+ETL_STM32F4XX_AHB_PERIPH(ethernet,       25, ETL_NONE)
+ETL_STM32F4XX_AHB_PERIPH(dma2d,          23,       23)
+ETL_STM32F4XX_AHB_PERIPH(usb_otg_hs,     29, ETL_NONE)
