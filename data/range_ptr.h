@@ -1,5 +1,5 @@
-#ifndef ETL_COMMON_RANGE_PTR_H_
-#define ETL_COMMON_RANGE_PTR_H_
+#ifndef ETL_DATA_RANGE_PTR_H_
+#define ETL_DATA_RANGE_PTR_H_
 
 #include "etl/common/algorithm.h"
 #include "etl/common/attribute_macros.h"
@@ -7,7 +7,7 @@
 #define ETL_IMPLICIT /* TODO */
 
 namespace etl {
-namespace common {
+namespace data {
 
 template <typename E>
 class RangePtr {
@@ -95,7 +95,7 @@ public:
 
   inline RangePtr slice(unsigned start, unsigned length) {
     if (start > _count) return RangePtr();
-    return RangePtr(&_base[start], min(_count - start, length));
+    return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
   }
 
   bool contents_equal(RangePtr other) {
@@ -113,7 +113,7 @@ private:
   unsigned _count;
 };
 
-}  // namespace common
+}  // namespace data
 }  // namespace etl
 
-#endif  // ETL_COMMON_RANGE_PTR_H_
+#endif  // ETL_DATA_RANGE_PTR_H_
