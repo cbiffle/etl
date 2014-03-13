@@ -12,10 +12,16 @@ class Maybe {
  public:
   constexpr ETL_INLINE Maybe() : _full(false) {}
 
+  /*
+   * Creates a full Maybe from any value that can be used to construct a T.
+   */
   template <typename S>
   ETL_INLINE Maybe(S && value) : _value(etl::common::forward<S>(value)),
                              _full(true) {}
 
+  /*
+   * Copies a Maybe<S>, where T is constructible from S.
+   */
   template <typename S>
   ETL_INLINE Maybe(Maybe<S> const & other) : _full(false) {
     if (other) {
@@ -24,6 +30,9 @@ class Maybe {
     }
   }
 
+  /*
+   * Moves a Maybe<S>, where T is constructible from S.
+   */
   template <typename S>
   ETL_INLINE Maybe(Maybe<S> && other) : _full(false) {
     if (other) {
@@ -39,8 +48,16 @@ class Maybe {
     }
   }
  
+  // Haven't needed this yet....
   Maybe &operator=(Maybe<T> const &other) = delete;
 
+  /*
+   * Copy an S into the Maybe, causing it to become full.  T must be
+   * constructible from S.  This implementation forwards to T's
+   * copy assignment operator, unless this Maybe is empty, in which
+   * case there is no T on which to call the operator.  In that case
+   * we defer to the constructor.
+   */
   template <typename S>
   ETL_INLINE Maybe const & operator=(S const & other) {
     if (_full) {
@@ -51,6 +68,13 @@ class Maybe {
     }
   }
 
+  /*
+   * Move an S into the Maybe, causing it to become full.  T must be
+   * constructible from S.  This implementation forwards to T's
+   * move assignment operator, unless this Maybe is empty, in which
+   * case there is no T on which to call the operator.  In that case
+   * we defer to the constructor.
+   */
   template <typename S>
   ETL_INLINE Maybe const & operator=(S && other) {
     if (_full) {
