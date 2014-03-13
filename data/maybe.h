@@ -7,10 +7,18 @@
 namespace etl {
 namespace data {
 
+struct Nothing {};
+static Nothing constexpr nothing = {};
+
 template <typename T>
 class Maybe {
  public:
-  constexpr ETL_INLINE Maybe() : _full(false) {}
+  static_assert(!etl::common::IsSame<Nothing, T>::value,
+                "Maybe<Nothing> is an illegal type.");
+  /*
+   * Creates an empty Maybe using the Nothing sentinel value.
+   */
+  constexpr ETL_INLINE Maybe(Nothing) : _full(false) {}
 
   /*
    * Creates a full Maybe from any value that can be used to construct a T.

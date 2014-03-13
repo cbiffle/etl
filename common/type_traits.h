@@ -41,6 +41,16 @@ struct IntegralConstant {
 typedef IntegralConstant<bool, true>  TrueType;
 typedef IntegralConstant<bool, false> FalseType;
 
+/*
+ * Reasoning about type relationships.
+ */
+
+template <typename T, typename S>
+struct IsSame : public FalseType {};
+
+template <typename T>
+struct IsSame<T, T> : public TrueType {};
+
 }  // namespace common
 }  // namespace etl
 
