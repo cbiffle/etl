@@ -3,8 +3,7 @@
 
 #include "etl/common/algorithm.h"
 #include "etl/common/attribute_macros.h"
-
-#define ETL_IMPLICIT /* TODO */
+#include "etl/common/implicit.h"
 
 namespace etl {
 namespace data {
