@@ -91,7 +91,12 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  ETL_INLINE constexpr unsigned length() { return _count; }
+  ETL_INLINE constexpr unsigned count() { return _count; }
+
+  /*
+   * Returns the number of bytes in the range.
+   */
+  ETL_INLINE constexpr unsigned byte_length() { return count() * sizeof(E); }
 
   /*
    * Checks whether this RangePtr describes no elements.
@@ -111,18 +116,19 @@ public:
     return _base[index];
   }
 
+  ETL_INLINE RangePtr slice(unsigned start, unsigned length) {
+    // TODO(cbiffle): handling policy
+    // TODO(cbiffle): this seems like it ought to take start/end indices.
+    if (start > _count) return RangePtr();
+    return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
+  }
+
   ETL_INLINE RangePtr tail_from(unsigned start) {
-    //panic_if(_count < start, "tail index out of range");
-    return RangePtr(_base + start, _count - start);
+    return slice(start, _count - start);
   }
 
   ETL_INLINE RangePtr tail() {
     return tail_from(1);
-  }
-
-  ETL_INLINE RangePtr slice(unsigned start, unsigned length) {
-    if (start > _count) return RangePtr();
-    return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
   }
 
   bool contents_equal(RangePtr other) {
@@ -133,6 +139,17 @@ public:
     }
 
     return true;
+  }
+
+  template <typename X>
+  ETL_INLINE constexpr bool operator==(RangePtr<X> other) {
+    return _base == other.base()
+        && byte_length() == other.byte_length();
+  }
+
+  template <typename X>
+  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) {
+    return !(*this == other);
   }
 
 private:
