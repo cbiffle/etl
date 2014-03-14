@@ -8,45 +8,72 @@
 namespace etl {
 namespace data {
 
+/*
+ * A pointer to a bounded, contiguous range of values.
+ *
+ * RangePtr is intended to replace the C pattern of passing an (address, size)
+ * pair to describe a section of memory.  The old pattern is both awkward and
+ * dangerous.  Awkward, because it increases parameter counts.  Dangerous,
+ * because nothing enforces that the parameters "go together," so nothing
+ * prevents code from walking off the end of the region, or misinterpreting a
+ * byte count as an element count or vice versa.
+ *
+ * RangePtr provides a syntactically convenient way to pass pointers to regions
+ * of memory, and (optionally bounds-checked) ways of accessing the region.
+ *
+ * RangePtr defines an implicit conversion from statically sized arrays:
+ *
+ *   void process(RangePtr<uint8_t> data);
+ *
+ *   uint8_t my_data[42];
+ *   process(my_data);  // works
+ *
+ * This makes it difficult to pass the wrong size, and eliminates the need
+ * for clever array-length-finding macros.
+ *
+ * Like pointers, RangePtrs are intended to be passed around by value.  The
+ * range can be *shrunk* using pop_front or slice, but never *grown* (except by
+ * assignment from a larger RangePtr).
+ */
 template <typename E>
 class RangePtr {
 public:
-
-//  static_assert(!is_void<E>::value, "RangePtr cannot currently be used with "
-//                                    "void.");
-
-  /*
-   * Creates a RangePtr from explicit base and extent.
-   */
-  constexpr inline RangePtr(E *base, unsigned count)
-      : _base(base), _count(count) {}
-
-  /*
-   * Creates a RangePtr by capturing the bounds of a static array.
-   */
-  template <unsigned N, typename T>
-  constexpr inline ETL_IMPLICIT
-  RangePtr(T (&array)[N])
-      : _base(&array[0]), _count(N) {}
-
-  /*
-   * Overload for zero-length static arrays.  This one won't happen
-   * naturally.
-   */
-  template <typename T>
-  constexpr inline ETL_IMPLICIT
-  RangePtr(T (&array)[0])
-      : _base(&array[0]), _count(0) {}
+  // TODO(cbiffle): this really wants size_t, but currently ETL doesn't
+  // define an equivalent type.  This begins to matter on LP64 systems,
+  // which I'm not currently targeting...
 
   /*
    * Creates an empty RangePtr.
    */
-  constexpr inline RangePtr() : _base(0), _count(0) {}
+  ETL_INLINE constexpr RangePtr() : _base(nullptr), _count(0) {}
+
+  /*
+   * Creates a RangePtr from explicit base and extent.
+   *
+   * Note that you should rarely need to do this.
+   */
+  ETL_INLINE constexpr RangePtr(E *base, unsigned count)
+      : _base(base), _count(count) {}
+
+  /*
+   * Creates a RangePtr by capturing the bounds of a static array.  Note that
+   * this only matches for arrays of 1+ elements.
+   */
+  template <unsigned N>
+  ETL_INLINE ETL_IMPLICIT constexpr RangePtr(E (&array)[N])
+      : _base(&array[0]), _count(N) {}
+
+  /*
+   * Overload for zero-length static arrays.  Interestingly, such arrays don't
+   * match the template above.
+   */
+  ETL_INLINE ETL_IMPLICIT constexpr RangePtr(E (&array)[0])
+      : _base(&array[0]), _count(0) {}
 
   /*
    * Implicit conversion from a RangePtr<T> to a RangePtr<T const>.
    */
-  constexpr inline ETL_IMPLICIT operator RangePtr<E const>() const {
+  ETL_INLINE ETL_IMPLICIT constexpr operator RangePtr<E const>() {
     return RangePtr<E const>(_base, _count);
   }
 
@@ -55,8 +82,8 @@ public:
    * length.
    */
   template <typename T>
-  constexpr inline explicit
-  operator RangePtr<T>() const {
+  ETL_INLINE explicit constexpr operator RangePtr<T>() const {
+    // TODO(cbiffle): potential for overflow in length calculation.
     return RangePtr<T>(reinterpret_cast<T *>(_base),
                        _count * sizeof(E) / sizeof(T));
   }
@@ -64,35 +91,36 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  constexpr inline unsigned length() { return _count; }
+  ETL_INLINE constexpr unsigned length() { return _count; }
 
   /*
    * Checks whether this RangePtr describes no elements.
    */
-  constexpr inline bool is_empty() const { return _count == 0; }
+  ETL_INLINE constexpr bool is_empty() { return _count == 0; }
 
   /*
-   * Gets a raw pointer to the first element.
+   * Gets a raw pointer to the first element.  From this point on, all
+   * safety guarantees are void.
    */
-  constexpr inline E *base() { return _base; }
+  ETL_INLINE constexpr E *base() { return _base; }
 
   /*
    * UNSAFE array accessor.
    */
-  inline E &operator[](unsigned index) const {
+  ETL_INLINE E &operator[](unsigned index) const {
     return _base[index];
   }
 
-  inline RangePtr tail_from(unsigned start) {
+  ETL_INLINE RangePtr tail_from(unsigned start) {
     //panic_if(_count < start, "tail index out of range");
     return RangePtr(_base + start, _count - start);
   }
 
-  inline RangePtr tail() {
+  ETL_INLINE RangePtr tail() {
     return tail_from(1);
   }
 
-  inline RangePtr slice(unsigned start, unsigned length) {
+  ETL_INLINE RangePtr slice(unsigned start, unsigned length) {
     if (start > _count) return RangePtr();
     return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
   }
