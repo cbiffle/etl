@@ -75,6 +75,12 @@ struct BoolConstant : public IntegralConstant<bool, V> {};
 typedef BoolConstant<true>  TrueType;
 typedef BoolConstant<false> FalseType;
 
+
+template <typename T>
+struct TypeConstant {
+  typedef T type;
+};
+
 /*
  * Fundamental types.
  */
@@ -136,6 +142,19 @@ struct IsSame : public FalseType {};
 
 template <typename T>
 struct IsSame<T, T> : public TrueType {};
+
+
+template <bool Selector, typename A, typename B> struct Select;
+
+template <typename A, typename B>
+struct Select<true, A, B> {
+  typedef A type;
+};
+
+template <typename A, typename B>
+struct Select<false, A, B> {
+  typedef B type;
+};
 
 }  // namespace common
 }  // namespace etl
