@@ -4,7 +4,7 @@
 #include "etl/common/algorithm.h"
 #include "etl/common/attribute_macros.h"
 #include "etl/common/implicit.h"
-#include "etl/common/types.h"
+#include "etl/common/size.h"
 
 namespace etl {
 namespace data {

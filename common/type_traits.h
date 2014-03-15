@@ -6,6 +6,7 @@
  */
 
 #include "etl/common/attribute_macros.h"
+#include "etl/common/size.h"
 
 namespace etl {
 namespace common {
@@ -70,6 +71,19 @@ struct Conditional<false, A, B> {
 };
 
 /*
+ * SelectBySize searches a list of types for one with the specified size,
+ * as measured by sizeof.
+ */
+template <Size N, typename... Types> struct SelectBySize;
+
+template <Size N, typename Head, typename... Rest>
+struct SelectBySize<N, Head, Rest...>
+  : public Conditional<sizeof(Head) == N,
+                       TypeConstant<Head>,
+                       SelectBySize<N, Rest...>>::type {};
+
+
+/*
  * The IsSame predicate tests if two types are exactly identical.
  */
 template <typename T, typename S>
@@ -99,8 +113,8 @@ struct RemoveReference<T &&> {
 };
 
 /*
- * RemoveVolatile and RemoveConst strip qualifiers from a type.
- * RemoveConstVolatile does both.
+ * RemoveVolatile and RemoveConst strip individual qualifiers from a type.
+ * RemoveQualifiers does both.
  */
 template <typename T>
 struct RemoveVolatile {
@@ -123,12 +137,31 @@ struct RemoveConst<T const> {
 };
 
 template <typename T>
-struct RemoveConstVolatile {
- private:
-  typedef typename RemoveConst<T>::type no_const;
- public:
-  typedef typename RemoveVolatile<no_const>::type type;
-};
+struct RemoveQualifiers
+  : public RemoveVolatile<typename RemoveConst<T>::type> {};
+
+/*
+ * MatchConst and MatchVolatile copy the const/volatile qualifiers from one
+ * type onto another.  MatchQualifiers does both.
+ */
+template <typename Source, typename Dest>
+struct MatchConst : public TypeConstant<Dest> {};
+
+template <typename Source, typename Dest>
+struct MatchConst<Source const, Dest> : public TypeConstant<Dest const> {};
+
+
+template <typename Source, typename Dest>
+struct MatchVolatile : public TypeConstant<Dest> {};
+
+template <typename Source, typename Dest>
+struct MatchVolatile<Source volatile, Dest>
+  : public TypeConstant<Dest volatile> {};
+
+
+template <typename Source, typename Dest>
+struct MatchQualifiers
+  : public MatchConst<Source, typename MatchVolatile<Source, Dest>::type> {};
 
 
 /*******************************************************************************
@@ -166,7 +199,7 @@ ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned long long, true);
  */
 template <typename T>
 struct IsIntegral
-  : public IsUnqualifiedIntegral<typename RemoveConstVolatile<T>::type> {};
+  : public IsUnqualifiedIntegral<typename RemoveQualifiers<T>::type> {};
 
 /*
  * The IsUnqualifiedFloatingPoint matches fundamental floating point types
@@ -186,7 +219,7 @@ ETL_COMMON_SPECIALIZE(IsUnqualifiedFloatingPoint, long double, true);
  */
 template <typename T>
 struct IsFloatingPoint
-  : public IsUnqualifiedFloatingPoint<typename RemoveConstVolatile<T>::type> {};
+  : public IsUnqualifiedFloatingPoint<typename RemoveQualifiers<T>::type> {};
 
 /*
  * The IsArithmetic predicate matches fundamental arithmetic types, meaning
@@ -212,6 +245,69 @@ struct IsSigned
 template <typename T>
 struct IsUnsigned
   : public BoolConstant<IsArithmetic<T>::value && !IsSigned<T>::value> {};
+
+/*
+ * The IsEnum predicate matches enumerations.  Note that this uses a compiler
+ * intrinsic; it's difficult to recognize enumerations reliably without this.
+ */
+template <typename T>
+struct IsEnum : public BoolConstant<__is_enum(T)> {};
+
+
+/*******************************************************************************
+ * Deriving types from others or parameters
+ */
+
+template <Size N>
+struct SignedIntOfSize
+  : SelectBySize<N, signed char, short, int, long, long long> {};
+
+template <typename T> struct MakeArithmeticUnsigned;
+
+#define ETL_COMMON_TYPEMAP(tmpl, source, dest) \
+  template <> \
+  struct tmpl<source> { \
+    typedef dest type; \
+  }
+
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, char,        unsigned char);
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, signed char, unsigned char);
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, short,       unsigned short);
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, int,         unsigned int);
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, long,        unsigned long);
+ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
+
+template <Size N>
+struct UnsignedIntOfSize
+  : MakeArithmeticUnsigned<typename SignedIntOfSize<N>::type> {};
+
+template <typename T>
+struct MakeUnsigned {
+ private:
+  template <typename S,
+            bool Integral = IsIntegral<S>::value,
+            bool Enum = IsEnum<S>::value>
+  struct Helper;
+
+  template <typename S>
+  struct Helper<S, true, false> {
+   private:
+    typedef MakeArithmeticUnsigned<typename RemoveQualifiers<S>::type> step1;
+
+   public:
+    typedef typename MatchQualifiers<S, typename step1::type>::type type;
+  };
+
+  template <typename S>
+  struct Helper<S, false, true> {
+   private:
+    typedef UnsignedIntOfSize<sizeof(S)> step1;
+   public:
+    typedef typename MatchQualifiers<S, typename step1::type>::type type;
+  };
+
+  typedef typename Helper<T>::type type;
+};
 
 }  // namespace common
 }  // namespace etl
