@@ -20,9 +20,9 @@ template <Size N, typename... Types> struct SelectSize;
 
 template <Size N, typename Head, typename... Rest>
 struct SelectSize<N, Head, Rest...>
-  : public Select<sizeof(Head) == N,
-                  TypeConstant<Head>,
-                  SelectSize<N, Rest...>>::type {};
+  : public Conditional<sizeof(Head) == N,
+                       TypeConstant<Head>,
+                       SelectSize<N, Rest...>>::type {};
 
 #define ETL_COMMON_SIZED_INT(n, name) \
   typedef typename SelectSize<n, char, short, int, long, long long>::type name
