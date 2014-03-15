@@ -4,6 +4,7 @@
 #include "etl/common/algorithm.h"
 #include "etl/common/attribute_macros.h"
 #include "etl/common/implicit.h"
+#include "etl/common/types.h"
 
 namespace etl {
 namespace data {
@@ -38,10 +39,6 @@ namespace data {
 template <typename E>
 class RangePtr {
 public:
-  // TODO(cbiffle): this really wants size_t, but currently ETL doesn't
-  // define an equivalent type.  This begins to matter on LP64 systems,
-  // which I'm not currently targeting...
-
   /*
    * Creates an empty RangePtr.
    */
@@ -52,14 +49,14 @@ public:
    *
    * Note that you should rarely need to do this.
    */
-  ETL_INLINE constexpr RangePtr(E *base, unsigned count)
+  ETL_INLINE constexpr RangePtr(E *base, etl::common::Size count)
       : _base(base), _count(count) {}
 
   /*
    * Creates a RangePtr by capturing the bounds of a static array.  Note that
    * this only matches for arrays of 1+ elements.
    */
-  template <unsigned N>
+  template <etl::common::Size N>
   ETL_INLINE ETL_IMPLICIT constexpr RangePtr(E (&array)[N])
       : _base(&array[0]), _count(N) {}
 
@@ -91,12 +88,14 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  ETL_INLINE constexpr unsigned count() { return _count; }
+  ETL_INLINE constexpr etl::common::Size count() { return _count; }
 
   /*
    * Returns the number of bytes in the range.
    */
-  ETL_INLINE constexpr unsigned byte_length() { return count() * sizeof(E); }
+  ETL_INLINE constexpr etl::common::Size byte_length() {
+    return count() * sizeof(E);
+  }
 
   /*
    * Checks whether this RangePtr describes no elements.
@@ -112,18 +111,18 @@ public:
   /*
    * UNSAFE array accessor.
    */
-  ETL_INLINE E &operator[](unsigned index) const {
+  ETL_INLINE E &operator[](etl::common::Size index) const {
     return _base[index];
   }
 
-  ETL_INLINE RangePtr slice(unsigned start, unsigned length) {
+  ETL_INLINE RangePtr slice(etl::common::Size start, etl::common::Size length) {
     // TODO(cbiffle): handling policy
     // TODO(cbiffle): this seems like it ought to take start/end indices.
     if (start > _count) return RangePtr();
     return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
   }
 
-  ETL_INLINE RangePtr tail_from(unsigned start) {
+  ETL_INLINE RangePtr tail_from(etl::common::Size start) {
     return slice(start, _count - start);
   }
 
@@ -134,7 +133,7 @@ public:
   bool contents_equal(RangePtr other) {
     if (_count != other._count) return false;
 
-    for (unsigned i = 0; i < _count; ++i) {
+    for (etl::common::Size i = 0; i < _count; ++i) {
       if (_base[i] != other[i]) return false;
     }
 
@@ -154,7 +153,7 @@ public:
 
 private:
   E *_base;
-  unsigned _count;
+  etl::common::Size _count;
 };
 
 }  // namespace data
