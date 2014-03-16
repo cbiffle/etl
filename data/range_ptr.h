@@ -9,6 +9,9 @@
 namespace etl {
 namespace data {
 
+struct LaxRangeCheckPolicy;
+
+
 /*
  * A pointer to a bounded, contiguous range of values.
  *
@@ -36,7 +39,7 @@ namespace data {
  * range can be *shrunk* using pop_front or slice, but never *grown* (except by
  * assignment from a larger RangePtr).
  */
-template <typename E>
+template <typename E, typename Policy = LaxRangeCheckPolicy>
 class RangePtr {
 public:
   /*
@@ -109,24 +112,28 @@ public:
   ETL_INLINE constexpr E *base() { return _base; }
 
   /*
-   * UNSAFE array accessor.
+   * Array accessor.
    */
   ETL_INLINE constexpr E &operator[](etl::common::Size index) const {
-    return _base[index];
+    return _base[Policy::check_index(index, _count)];
   }
 
-  ETL_INLINE RangePtr slice(etl::common::Size start, etl::common::Size end) {
-    // TODO(cbiffle): handling policy
-    if (start > _count) return RangePtr();
-    return RangePtr(&_base[start], ::etl::common::min(_count, end)  - start);
+  ETL_INLINE constexpr RangePtr slice(etl::common::Size start,
+                                      etl::common::Size end) {
+    return RangePtr(&_base[Policy::check_slice_start(start, end, _count)],
+                    Policy::check_slice_end(start, end, _count));
   }
 
-  ETL_INLINE RangePtr tail_from(etl::common::Size start) {
+  ETL_INLINE constexpr RangePtr tail_from(etl::common::Size start) {
     return slice(start, _count - start);
   }
 
-  ETL_INLINE RangePtr tail() {
+  ETL_INLINE constexpr RangePtr tail() {
     return tail_from(1);
+  }
+
+  ETL_INLINE constexpr RangePtr first(etl::common::Size count) {
+    return slice(0, count);
   }
 
   bool contents_equal(RangePtr other) {
@@ -153,6 +160,29 @@ public:
 private:
   E *_base;
   etl::common::Size _count;
+};
+
+/*
+ * This RangePtr checking policy will tolerate *anything.*  It is dangerous,
+ * but efficient.
+ */
+struct LaxRangeCheckPolicy {
+  static constexpr etl::common::Size check_index(etl::common::Size index,
+                                                 etl::common::Size) {
+    return index;
+  }
+
+  static constexpr etl::common::Size check_slice_start(etl::common::Size start,
+                                                       etl::common::Size,
+                                                       etl::common::Size) {
+    return start;
+  }
+
+  static constexpr etl::common::Size check_slice_end(etl::common::Size start,
+                                                     etl::common::Size end,
+                                                     etl::common::Size) {
+    return end - start;
+  }
 };
 
 }  // namespace data
