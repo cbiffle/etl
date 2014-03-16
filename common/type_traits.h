@@ -21,8 +21,8 @@ namespace common {
 template <typename T, T V>
 struct IntegralConstant {
   static constexpr T value = V;
-  typedef T value_type;
-  typedef IntegralConstant<T, V> type;
+  typedef T ValueType;
+  typedef IntegralConstant<T, V> Type;
   constexpr operator T() { return V; }
 };
 
@@ -47,7 +47,7 @@ typedef BoolConstant<false> FalseType;
  */
 template <typename T>
 struct TypeConstant {
-  typedef T type;
+  typedef T Type;
 };
 
 
@@ -57,17 +57,17 @@ struct TypeConstant {
 
 /*
  * Equivalent of the C ternary operator, but over types.  The expression
- * Conditional<x, A, B>::type evaluates to A if x is true, B if x is false.
+ * Conditional<x, A, B>::Type evaluates to A if x is true, B if x is false.
  */
 template <bool, typename A, typename B>
 struct Conditional {
-  typedef A type;
+  typedef A Type;
 };
 
 // Partial specialization for false.
 template <typename A, typename B>
 struct Conditional<false, A, B> {
-  typedef B type;
+  typedef B Type;
 };
 
 /*
@@ -80,7 +80,7 @@ template <Size N, typename Head, typename... Rest>
 struct SelectBySize<N, Head, Rest...>
   : public Conditional<sizeof(Head) == N,
                        TypeConstant<Head>,
-                       SelectBySize<N, Rest...>>::type {};
+                       SelectBySize<N, Rest...>>::Type {};
 
 
 /*
@@ -94,22 +94,22 @@ struct IsSame<T, T> : public TrueType {};
 
 
 /*
- * RemoveReference<T>::type strips any reference type from T.
+ * RemoveReference<T>::Type strips any reference type from T.
  */
 
 template <typename T>
 struct RemoveReference {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveReference<T &> {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveReference<T &&> {
-  typedef T type;
+  typedef T Type;
 };
 
 /*
@@ -118,27 +118,27 @@ struct RemoveReference<T &&> {
  */
 template <typename T>
 struct RemoveVolatile {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveVolatile<T volatile> {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveConst {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveConst<T const> {
-  typedef T type;
+  typedef T Type;
 };
 
 template <typename T>
 struct RemoveQualifiers
-  : public RemoveVolatile<typename RemoveConst<T>::type> {};
+  : public RemoveVolatile<typename RemoveConst<T>::Type> {};
 
 /*
  * MatchConst and MatchVolatile copy the const/volatile qualifiers from one
@@ -161,7 +161,7 @@ struct MatchVolatile<Source volatile, Dest>
 
 template <typename Source, typename Dest>
 struct MatchQualifiers
-  : public MatchConst<Source, typename MatchVolatile<Source, Dest>::type> {};
+  : public MatchConst<Source, typename MatchVolatile<Source, Dest>::Type> {};
 
 
 /*******************************************************************************
@@ -199,7 +199,7 @@ ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned long long, true);
  */
 template <typename T>
 struct IsIntegral
-  : public IsUnqualifiedIntegral<typename RemoveQualifiers<T>::type> {};
+  : public IsUnqualifiedIntegral<typename RemoveQualifiers<T>::Type> {};
 
 /*
  * The IsUnqualifiedFloatingPoint matches fundamental floating point types
@@ -219,7 +219,7 @@ ETL_COMMON_SPECIALIZE(IsUnqualifiedFloatingPoint, long double, true);
  */
 template <typename T>
 struct IsFloatingPoint
-  : public IsUnqualifiedFloatingPoint<typename RemoveQualifiers<T>::type> {};
+  : public IsUnqualifiedFloatingPoint<typename RemoveQualifiers<T>::Type> {};
 
 /*
  * The IsArithmetic predicate matches fundamental arithmetic types, meaning
@@ -267,7 +267,7 @@ template <typename T> struct MakeArithmeticUnsigned;
 #define ETL_COMMON_TYPEMAP(tmpl, source, dest) \
   template <> \
   struct tmpl<source> { \
-    typedef dest type; \
+    typedef dest Type; \
   }
 
 ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, char,        unsigned char);
@@ -279,7 +279,7 @@ ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
 
 template <Size N>
 struct UnsignedIntOfSize
-  : MakeArithmeticUnsigned<typename SignedIntOfSize<N>::type> {};
+  : MakeArithmeticUnsigned<typename SignedIntOfSize<N>::Type> {};
 
 template <typename T>
 struct MakeUnsigned {
@@ -292,10 +292,10 @@ struct MakeUnsigned {
   template <typename S>
   struct Helper<S, true, false> {
    private:
-    typedef MakeArithmeticUnsigned<typename RemoveQualifiers<S>::type> step1;
+    typedef MakeArithmeticUnsigned<typename RemoveQualifiers<S>::Type> step1;
 
    public:
-    typedef typename MatchQualifiers<S, typename step1::type>::type type;
+    typedef typename MatchQualifiers<S, typename step1::Type>::Type Type;
   };
 
   template <typename S>
@@ -303,10 +303,10 @@ struct MakeUnsigned {
    private:
     typedef UnsignedIntOfSize<sizeof(S)> step1;
    public:
-    typedef typename MatchQualifiers<S, typename step1::type>::type type;
+    typedef typename MatchQualifiers<S, typename step1::Type>::Type Type;
   };
 
-  typedef typename Helper<T>::type type;
+  typedef typename Helper<T>::Type Type;
 };
 
 }  // namespace common

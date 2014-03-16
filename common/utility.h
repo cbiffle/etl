@@ -8,18 +8,18 @@ namespace etl {
 namespace common {
 
 template <typename T>
-ETL_INLINE T && forward(typename RemoveReference<T>::type & value) {
+ETL_INLINE T && forward(typename RemoveReference<T>::Type & value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE T && forward(typename RemoveReference<T>::type && value) {
+ETL_INLINE T && forward(typename RemoveReference<T>::Type && value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE typename RemoveReference<T>::type && move(T && value) {
-  return static_cast<typename RemoveReference<T>::type &&>(value);
+ETL_INLINE typename RemoveReference<T>::Type && move(T && value) {
+  return static_cast<typename RemoveReference<T>::Type &&>(value);
 }
 
 }  // namespace common

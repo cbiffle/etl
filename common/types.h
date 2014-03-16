@@ -7,7 +7,7 @@ namespace etl {
 namespace common {
 
 #define ETL_COMMON_SIZED_INT(n, name) \
-  typedef typename SelectBySize<n, char, short, int, long, long long>::type name
+  typedef typename SelectBySize<n, char, short, int, long, long long>::Type name
 
 ETL_COMMON_SIZED_INT(1, Int8);
 ETL_COMMON_SIZED_INT(2, Int16);
@@ -17,7 +17,7 @@ ETL_COMMON_SIZED_INT(8, Int64);
 #undef ETL_COMMON_SIZED_INT
 
 #define ETL_COMMON_UNSIGNED_INT(n) \
-  typedef typename MakeUnsigned<Int ## n>::type UInt ## n
+  typedef typename MakeUnsigned<Int ## n>::Type UInt ## n
 
 ETL_COMMON_UNSIGNED_INT(8);
 ETL_COMMON_UNSIGNED_INT(16);
