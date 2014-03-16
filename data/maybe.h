@@ -65,7 +65,7 @@ class Maybe {
    * Creates an empty Maybe using the Nothing sentinel value.  Note that
    * this conversion is implicit.
    */
-  ETL_INLINE constexpr Maybe(Nothing) : _full(false) {}
+  ETL_INLINE Maybe(Nothing) : _full(false) {}
 
   /*
    * Creates a full Maybe from any value that can be used to construct a T.
@@ -190,14 +190,14 @@ class Maybe {
   /*
    * Checks to see if this Maybe is something, rather than nothing.
    */
-  ETL_INLINE constexpr bool is_something() const {
+  ETL_INLINE bool is_something() const {
     return _full;
   }
 
   /*
    * Inverse of is_something
    */
-  ETL_INLINE constexpr bool is_nothing() const {
+  ETL_INLINE bool is_nothing() const {
     return !is_something();
   }
 
@@ -206,7 +206,7 @@ class Maybe {
    *
    * Precondition: is_something()
    */
-  ETL_INLINE constexpr T const & const_ref() const {
+  ETL_INLINE T const & const_ref() const {
     // TODO(cbiffle): assert
     return _value;
   }
@@ -236,7 +236,7 @@ class Maybe {
    *     // => foo.is_nothing();
    *   }
    */
-  ETL_INLINE explicit constexpr operator bool() const { return is_something(); }
+  ETL_INLINE explicit operator bool() const { return is_something(); }
 
   /*
    * Convenience syntax for clearing a Maybe by assignment from nothing.
