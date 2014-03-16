@@ -136,6 +136,12 @@ public:
     return slice(0, count);
   }
 
+  ETL_INLINE E & pop_front() {
+    E &result = (*this)[0];
+    *this = slice(1, _count);
+    return result;
+  }
+
   bool contents_equal(RangePtr other) {
     if (_count != other._count) return false;
 
