@@ -111,15 +111,14 @@ public:
   /*
    * UNSAFE array accessor.
    */
-  ETL_INLINE E &operator[](etl::common::Size index) const {
+  ETL_INLINE constexpr E &operator[](etl::common::Size index) const {
     return _base[index];
   }
 
-  ETL_INLINE RangePtr slice(etl::common::Size start, etl::common::Size length) {
+  ETL_INLINE RangePtr slice(etl::common::Size start, etl::common::Size end) {
     // TODO(cbiffle): handling policy
-    // TODO(cbiffle): this seems like it ought to take start/end indices.
     if (start > _count) return RangePtr();
-    return RangePtr(&_base[start], ::etl::common::min(_count - start, length));
+    return RangePtr(&_base[start], ::etl::common::min(_count, end)  - start);
   }
 
   ETL_INLINE RangePtr tail_from(etl::common::Size start) {
