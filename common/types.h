@@ -26,6 +26,12 @@ ETL_COMMON_UNSIGNED_INT(64);
 
 #undef ETL_COMMON_UNSIGNED_INT
 
+typedef typename SelectBySize<sizeof(void *),
+                              char, short, int, long, long long>::Type
+        IntPtr;
+
+typedef typename MakeUnsigned<IntPtr>::Type UIntPtr;
+
 }  // namespace common
 }  // namespace etl
 
