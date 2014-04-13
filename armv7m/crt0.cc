@@ -12,10 +12,12 @@ extern "C" {
   /*
    * These symbols are created by the linker script.
    */
-  extern Word _etext;
-  extern Word _data;
-  extern Word _edata;
-  extern Word _ebss;
+  extern Word const _data_init_image_start;
+  extern Word _data_start;
+  extern Word _data_end;
+
+  extern Word _bss_start;
+  extern Word _bss_end;
 
   extern InitFnPtr _preinit_array_start, _preinit_array_end;
   extern InitFnPtr _init_array_start, _init_array_end;
@@ -27,13 +29,16 @@ extern "C" {
 
 void crt0_init() {
   // Initialize data.
-  for (Word *src = &_etext, *dest = &_data;
-       dest < &_edata; ) {
-    *dest++ = *src++;
+  {
+    Word const *src = &_data_init_image_start;
+    Word *dest = &_data_start;
+    while (dest < &_data_end) {
+      *dest++ = *src++;
+    }
   }
 
   // Zero-fill BSS.
-  for (Word *dest = &_edata; dest < &_ebss; ) {
+  for (Word *dest = &_bss_start; dest < &_bss_end; ) {
     *dest++ = 0;
   }
 
