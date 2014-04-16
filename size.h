@@ -1,8 +1,7 @@
-#ifndef ETL_COMMON_SIZE_H_
-#define ETL_COMMON_SIZE_H_
+#ifndef ETL_SIZE_H_
+#define ETL_SIZE_H_
 
 namespace etl {
-namespace common {
 
 /*
  * A type large enough to hold the maximum size of an object in memory.
@@ -10,7 +9,6 @@ namespace common {
  */
 typedef decltype(sizeof(char(0))) Size;
 
-}  // namespace common
 }  // namespace etl
 
-#endif  // ETL_COMMON_SIZE_H_
+#endif  // ETL_SIZE_H_

@@ -5,7 +5,7 @@
  * C++ function wrappers for GCC ARM intrinsics and inline assembly.
  */
 
-#include "etl/common/attribute_macros.h"
+#include "etl/attribute_macros.h"
 
 namespace etl {
 namespace armv7m {

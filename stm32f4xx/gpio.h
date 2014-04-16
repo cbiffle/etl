@@ -1,7 +1,7 @@
 #ifndef ETL_STM32F4XX_GPIO_H_
 #define ETL_STM32F4XX_GPIO_H_
 
-#include "etl/common/attribute_macros.h"
+#include "etl/attribute_macros.h"
 #include "etl/stm32f4xx/types.h"
 
 namespace etl {

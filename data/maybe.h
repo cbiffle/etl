@@ -1,8 +1,8 @@
 #ifndef ETL_DATA_MAYBE_H_
 #define ETL_DATA_MAYBE_H_
 
-#include "etl/common/attribute_macros.h"
-#include "etl/common/utility.h"
+#include "etl/attribute_macros.h"
+#include "etl/utility.h"
 
 namespace etl {
 namespace data {
@@ -53,7 +53,7 @@ class Maybe {
    * Attempting to use Maybe<Nothing> causes all sorts of problems.
    * This static_assert mostly serves to improve the error clarity.
    */
-  static_assert(!etl::common::IsSame<Nothing, T>::value,
+  static_assert(!etl::IsSame<Nothing, T>::value,
                 "Maybe<Nothing> is an illegal type.");
 
 
@@ -72,7 +72,7 @@ class Maybe {
    */
   template <typename S>
   explicit ETL_INLINE Maybe(S && value)
-    : _value(etl::common::forward<S>(value)),
+    : _value(etl::forward<S>(value)),
       _full(true) {}
 
   /*
@@ -92,7 +92,7 @@ class Maybe {
   template <typename S>
   explicit ETL_INLINE Maybe(Maybe<S> && other) : _full(false) {
     if (other) {
-      new(&_value) T(etl::common::move(other._value));
+      new(&_value) T(etl::move(other._value));
       _full = true;
     }
   }
@@ -124,9 +124,9 @@ class Maybe {
   Maybe &operator=(Maybe<S> && other) {
     if (other) {
       if (_full) {
-        _value = etl::common::move(other._value);
+        _value = etl::move(other._value);
       } else {
-        new(&_value) T(etl::common::move(other._value));
+        new(&_value) T(etl::move(other._value));
         _full = true;
       }
     } else {
@@ -163,9 +163,9 @@ class Maybe {
   template <typename S>
   ETL_INLINE Maybe const & operator=(S && other) {
     if (_full) {
-      _value = etl::common::forward<S>(other);
+      _value = etl::forward<S>(other);
     } else {
-      new(&_value) T(etl::common::forward<S>(other));
+      new(&_value) T(etl::forward<S>(other));
       _full = true;
     }
 

@@ -1,8 +1,7 @@
-#ifndef ETL_COMMON_ALGORITHM_H_
-#define ETL_COMMON_ALGORITHM_H_
+#ifndef ETL_ALGORITHM_H_
+#define ETL_ALGORITHM_H_
 
 namespace etl {
-namespace common {
 
 template <typename T>
 T const min(T const &a, T const &b) {
@@ -14,7 +13,6 @@ T const max(T const &a, T const &b) {
   return a > b ? a : b;
 }
 
-}  // namespace common
 }  // namespace etl
 
-#endif  // ETL_COMMON_ALGORITHM_H_
+#endif  // ETL_ALGORITHM_H_

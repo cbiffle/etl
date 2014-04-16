@@ -1,7 +1,7 @@
 #ifndef ETL_ARMV7M_TYPES_H_
 #define ETL_ARMV7M_TYPES_H_
 
-#include "etl/common/types.h"
+#include "etl/types.h"
 
 namespace etl {
 namespace armv7m {
@@ -15,10 +15,10 @@ namespace armv7m {
  * when shifting.
  */
 
-typedef etl::common::UInt64 DoubleWord;
-typedef etl::common::UInt32 Word;
-typedef etl::common::UInt16 HalfWord;
-typedef etl::common::UInt8  Byte;
+typedef etl::UInt64 DoubleWord;
+typedef etl::UInt32 Word;
+typedef etl::UInt16 HalfWord;
+typedef etl::UInt8  Byte;
 
 }  // namespace armv7m
 }  // namespace etl

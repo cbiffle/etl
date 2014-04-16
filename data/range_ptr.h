@@ -1,10 +1,10 @@
 #ifndef ETL_DATA_RANGE_PTR_H_
 #define ETL_DATA_RANGE_PTR_H_
 
-#include "etl/common/algorithm.h"
-#include "etl/common/attribute_macros.h"
-#include "etl/common/implicit.h"
-#include "etl/common/size.h"
+#include "etl/algorithm.h"
+#include "etl/attribute_macros.h"
+#include "etl/implicit.h"
+#include "etl/size.h"
 
 namespace etl {
 namespace data {
@@ -52,14 +52,14 @@ public:
    *
    * Note that you should rarely need to do this.
    */
-  ETL_INLINE constexpr RangePtr(E *base, etl::common::Size count)
+  ETL_INLINE constexpr RangePtr(E *base, etl::Size count)
       : _base(base), _count(count) {}
 
   /*
    * Creates a RangePtr by capturing the bounds of a static array.  Note that
    * this only matches for arrays of 1+ elements.
    */
-  template <etl::common::Size N>
+  template <etl::Size N>
   ETL_INLINE ETL_IMPLICIT constexpr RangePtr(E (&array)[N])
       : _base(&array[0]), _count(N) {}
 
@@ -91,12 +91,12 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  ETL_INLINE constexpr etl::common::Size count() { return _count; }
+  ETL_INLINE constexpr etl::Size count() { return _count; }
 
   /*
    * Returns the number of bytes in the range.
    */
-  ETL_INLINE constexpr etl::common::Size byte_length() {
+  ETL_INLINE constexpr etl::Size byte_length() {
     return count() * sizeof(E);
   }
 
@@ -114,17 +114,17 @@ public:
   /*
    * Array accessor.
    */
-  ETL_INLINE constexpr E &operator[](etl::common::Size index) const {
+  ETL_INLINE constexpr E &operator[](etl::Size index) const {
     return _base[Policy::check_index(index, _count)];
   }
 
-  ETL_INLINE constexpr RangePtr slice(etl::common::Size start,
-                                      etl::common::Size end) {
+  ETL_INLINE constexpr RangePtr slice(etl::Size start,
+                                      etl::Size end) {
     return RangePtr(&_base[Policy::check_slice_start(start, end, _count)],
                     Policy::check_slice_end(start, end, _count));
   }
 
-  ETL_INLINE constexpr RangePtr tail_from(etl::common::Size start) {
+  ETL_INLINE constexpr RangePtr tail_from(etl::Size start) {
     return slice(start, _count - start);
   }
 
@@ -132,7 +132,7 @@ public:
     return tail_from(1);
   }
 
-  ETL_INLINE constexpr RangePtr first(etl::common::Size count) {
+  ETL_INLINE constexpr RangePtr first(etl::Size count) {
     return slice(0, count);
   }
 
@@ -145,7 +145,7 @@ public:
   bool contents_equal(RangePtr other) {
     if (_count != other._count) return false;
 
-    for (etl::common::Size i = 0; i < _count; ++i) {
+    for (etl::Size i = 0; i < _count; ++i) {
       if (_base[i] != other[i]) return false;
     }
 
@@ -165,7 +165,7 @@ public:
 
 private:
   E *_base;
-  etl::common::Size _count;
+  etl::Size _count;
 };
 
 /*
@@ -173,20 +173,20 @@ private:
  * but efficient.
  */
 struct LaxRangeCheckPolicy {
-  static constexpr etl::common::Size check_index(etl::common::Size index,
-                                                 etl::common::Size) {
+  static constexpr etl::Size check_index(etl::Size index,
+                                         etl::Size) {
     return index;
   }
 
-  static constexpr etl::common::Size check_slice_start(etl::common::Size start,
-                                                       etl::common::Size,
-                                                       etl::common::Size) {
+  static constexpr etl::Size check_slice_start(etl::Size start,
+                                               etl::Size,
+                                               etl::Size) {
     return start;
   }
 
-  static constexpr etl::common::Size check_slice_end(etl::common::Size start,
-                                                     etl::common::Size end,
-                                                     etl::common::Size) {
+  static constexpr etl::Size check_slice_end(etl::Size start,
+                                             etl::Size end,
+                                             etl::Size) {
     return end - start;
   }
 };

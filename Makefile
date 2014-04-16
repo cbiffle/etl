@@ -1,5 +1,7 @@
 depth := ..
-products := subdirs
+products := etl subdirs
+
+etl[type] := library
 
 subdirs[type] := subdirectories
 

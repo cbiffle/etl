@@ -1,15 +1,14 @@
-#ifndef ETL_COMMON_TYPE_TRAITS_H_
-#define ETL_COMMON_TYPE_TRAITS_H_
+#ifndef ETL_TYPE_TRAITS_H_
+#define ETL_TYPE_TRAITS_H_
 
 /*
  * Analog of the C++11 type_traits header.
  */
 
-#include "etl/common/attribute_macros.h"
-#include "etl/common/size.h"
+#include "etl/attribute_macros.h"
+#include "etl/size.h"
 
 namespace etl {
-namespace common {
 
 /*******************************************************************************
  * Promoting values to types
@@ -168,7 +167,7 @@ struct MatchQualifiers
  * Operations on C++ fundamental types.
  */
 
-#define ETL_COMMON_SPECIALIZE(tmpl, type, value) \
+#define ETL_SPECIALIZE(tmpl, type, value) \
   template <> \
   struct tmpl<type> : public BoolConstant<value> {}
 
@@ -180,18 +179,18 @@ template <typename T>
 struct IsUnqualifiedIntegral : public FalseType {};
 
 // Specializations for every built-in integral type.
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, bool, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, char, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, signed char, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned char, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, short, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned short, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, int, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned int, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, long, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned long, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, long long, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedIntegral, unsigned long long, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, bool, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, char, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, signed char, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned char, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, short, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned short, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, int, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned int, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, long, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned long, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, long long, true);
+ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned long long, true);
 
 /*
  * The IsIntegral predicate matches fundamental integral types, even when
@@ -209,9 +208,9 @@ template <typename T>
 struct IsUnqualifiedFloatingPoint : public FalseType {};
 
 // Specializations for built-in floating point types.
-ETL_COMMON_SPECIALIZE(IsUnqualifiedFloatingPoint, float, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedFloatingPoint, double, true);
-ETL_COMMON_SPECIALIZE(IsUnqualifiedFloatingPoint, long double, true);
+ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, float, true);
+ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, double, true);
+ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, long double, true);
 
 /*
  * The IsFloatingPoint predicate matches fundamental floating point types,
@@ -264,18 +263,18 @@ struct SignedIntOfSize
 
 template <typename T> struct MakeArithmeticUnsigned;
 
-#define ETL_COMMON_TYPEMAP(tmpl, source, dest) \
+#define ETL_TYPEMAP(tmpl, source, dest) \
   template <> \
   struct tmpl<source> { \
     typedef dest Type; \
   }
 
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, char,        unsigned char);
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, signed char, unsigned char);
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, short,       unsigned short);
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, int,         unsigned int);
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, long,        unsigned long);
-ETL_COMMON_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
+ETL_TYPEMAP(MakeArithmeticUnsigned, char,        unsigned char);
+ETL_TYPEMAP(MakeArithmeticUnsigned, signed char, unsigned char);
+ETL_TYPEMAP(MakeArithmeticUnsigned, short,       unsigned short);
+ETL_TYPEMAP(MakeArithmeticUnsigned, int,         unsigned int);
+ETL_TYPEMAP(MakeArithmeticUnsigned, long,        unsigned long);
+ETL_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
 
 template <Size N>
 struct UnsignedIntOfSize
@@ -309,7 +308,6 @@ struct MakeUnsigned {
   typedef typename Helper<T>::Type Type;
 };
 
-}  // namespace common
 }  // namespace etl
 
-#endif  // ETL_COMMON_TYPE_TRAITS_H_
+#endif  // ETL_TYPE_TRAITS_H_

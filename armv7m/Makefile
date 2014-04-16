@@ -7,7 +7,7 @@ armv7m[cc_files] := \
   nvic.cc \
   scb.cc
 armv7m[libs] := \
-  etl/common:common
+  etl:etl
 armv7m[using_l_flags] := $(shell pwd)/peripherals.ld
 
 # This is broken into a separate target so that we can link it with
@@ -18,7 +18,7 @@ exception_table[cc_files] := exception_table.cc
 exception_table[cc_flags] := -std=gnu++0x
 exception_table[libs] := \
   etl/armv7m:armv7m \
-  etl/common:common
+  etl:etl
 
 
 manual_crt0[type] := library
@@ -27,6 +27,6 @@ manual_crt0[cc_files] := \
   crt0.cc
 manual_crt0[libs] := \
   etl/armv7m:armv7m \
-  etl/common:common
+  etl:etl
 
 include $(depth)/build/Makefile.rules

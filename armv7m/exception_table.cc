@@ -1,6 +1,6 @@
 #include "etl/armv7m/exception_table.h"
 
-#include "etl/common/attribute_macros.h"
+#include "etl/attribute_macros.h"
 
 namespace etl {
 namespace armv7m {

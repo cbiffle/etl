@@ -1,5 +1,5 @@
-#ifndef ETL_COMMON_ATTRIBUTE_MACROS_H_
-#define ETL_COMMON_ATTRIBUTE_MACROS_H_
+#ifndef ETL_ATTRIBUTE_MACROS_H_
+#define ETL_ATTRIBUTE_MACROS_H_
 
 /*
  * These are shorthand for GCC's attribute syntax.  (The ETL_INLINE macro
@@ -52,4 +52,4 @@
 #define ETL_ALIAS(sym) __attribute__((alias(sym)))
 
 
-#endif  // ETL_COMMON_ATTRIBUTE_MACROS_H_
+#endif  // ETL_ATTRIBUTE_MACROS_H_

@@ -4,7 +4,7 @@
  */
 #define _ETL_BFF_INCLUDED_THROUGH_GENERATE
 
-#include "etl/common/quote.h"
+#include "etl/quote.h"
 
 /*
  * The order of these steps is significant.  See the individual files for

@@ -1,5 +1,5 @@
 #include "etl/stm32f4xx/interrupt_table.h"
-#include "etl/common/attribute_macros.h"
+#include "etl/attribute_macros.h"
 #include "etl/stm32f4xx/interrupts.h"
 
 namespace etl {
