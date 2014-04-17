@@ -20,6 +20,30 @@ struct Strategy {
   static constexpr bool is_error_type = false;
 };
 
+/*
+ * Convenience implementation for the common case where an error is an
+ * enumeration type with a "success value".
+ */
+template <typename E, E success>
+struct TraditionalEnumStrategy {
+  static constexpr bool is_error_type = true;
+  static constexpr bool has_success_value = true;
+  static constexpr E success_value = success;
+
+  static constexpr bool is_bad(E error) {
+    return error != success_value;
+  }
+
+  static constexpr E move_error(E error) { return error; }
+
+  /*
+   * This indicates that this type has no "success" component, causing
+   * CHECK and friends to become void and preventing their use in expression
+   * contexts.
+   */
+  static void move_success(E) {}
+};
+
 }  // namespace error
 }  // namespace etl
 
