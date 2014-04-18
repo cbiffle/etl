@@ -2,6 +2,7 @@
 #define ETL_DATA_MAYBE_H_
 
 #include "etl/attribute_macros.h"
+#include "etl/type_traits.h"
 #include "etl/utility.h"
 
 namespace etl {
@@ -41,13 +42,21 @@ namespace data {
  * Maybe<T> has a special relationship with its sister type, Nothing.  Nothing
  * essentially acts like an empty Maybe<T> for any T, just as nullptr acts as
  * a null of any type.
+ *
+ * This is a crapload of code for such a simple concept.  Perhaps it can be
+ * simplified; I don't see an obvious way.  I've already used universal
+ * references where possible to reduce duplication.  C++ sure loves boilerplate
+ * and corner cases!
  */
 
 struct Nothing {};
 static Nothing constexpr nothing = {};
 
+template <typename T> struct IsMaybe;
+
 template <typename T>
 class Maybe {
+  template <typename S> friend class Maybe;
  public:
   /*
    * Attempting to use Maybe<Nothing> causes all sorts of problems.
@@ -56,6 +65,10 @@ class Maybe {
   static_assert(!etl::IsSame<Nothing, T>::value,
                 "Maybe<Nothing> is an illegal type.");
 
+  /*
+   * Maybe<Maybe<...>> causes weird template match errors.
+   */
+  static_assert(!IsMaybe<T>::value, "Maybe cannot be nested.");
 
   /*****************************************************************
    * Construction, Destruction
@@ -68,10 +81,29 @@ class Maybe {
   ETL_INLINE Maybe(Nothing) : _full(false) {}
 
   /*
-   * Creates a full Maybe from any value that can be used to construct a T.
+   * Copies a Maybe<T> when the types match exactly.
+   */
+  explicit ETL_INLINE Maybe(Maybe<T> const & other)
+    : _full(other._full) {
+    if (_full) new(&_value) T(other._value);
+  }
+
+  /*
+   * Moves a Maybe<T> when the types match exactly.
+   */
+  explicit ETL_INLINE Maybe(Maybe<T> && other) : _full(other._full) {
+    if (_full) {
+      new(&_value) T(::etl::move(other._value));
+      other._full = false;
+    }
+  }
+
+  /*
+   * Creates a full Maybe by universal reference to any type S assignable to T.
    */
   template <typename S>
-  explicit ETL_INLINE Maybe(S && value)
+  explicit ETL_INLINE Maybe(S && value,
+      typename ::etl::EnableIf<!IsMaybe<S>::value, void *>::Type = 0)
     : _value(etl::forward<S>(value)),
       _full(true) {}
 
@@ -79,21 +111,20 @@ class Maybe {
    * Copies a Maybe<S>, where T is constructible from S.
    */
   template <typename S>
-  explicit ETL_INLINE Maybe(Maybe<S> const & other) : _full(false) {
-    if (other) {
-      new(&_value) T(other._value);
-      _full = true;
-    }
+  explicit ETL_INLINE Maybe(Maybe<S> const & other,
+      typename ::etl::EnableIf<!::etl::IsSame<T, S>::value, void *>::Type = 0)
+    : _full(other._full) {
+    if (_full) new(&_value) T(other._value);
   }
 
   /*
    * Moves a Maybe<S>, where T is constructible from S.
    */
   template <typename S>
-  explicit ETL_INLINE Maybe(Maybe<S> && other) : _full(false) {
-    if (other) {
+  explicit ETL_INLINE Maybe(Maybe<S> && other) : _full(other._full) {
+    if (_full) {
       new(&_value) T(etl::move(other._value));
-      _full = true;
+      other._full = false;
     }
   }
 
@@ -105,6 +136,9 @@ class Maybe {
    * Assignment
    */
 
+  /*
+   * Copy assignment.
+   */
   template <typename S>
   Maybe &operator=(Maybe<S> const & other) {
     if (other) {
@@ -136,25 +170,7 @@ class Maybe {
   }
 
   /*
-   * Copy an S into the Maybe, causing it to become full.  T must be
-   * constructible from S.  This implementation forwards to T's
-   * copy assignment operator, unless this Maybe is empty, in which
-   * case there is no T on which to call the operator.  In that case
-   * we defer to the constructor.
-   */
-  template <typename S>
-  ETL_INLINE Maybe const & operator=(S const & other) {
-    if (_full) {
-      _value = other;
-    } else {
-      new(&_value) T(other);
-      _full = true;
-    }
-    return *this;
-  }
-
-  /*
-   * Move an S into the Maybe, causing it to become full.  T must be
+   * Move/copy an S into the Maybe, causing it to become full.  T must be
    * constructible from S.  This implementation forwards to T's
    * move assignment operator, unless this Maybe is empty, in which
    * case there is no T on which to call the operator.  In that case
@@ -257,22 +273,38 @@ class Maybe {
 
 /*
  * Comparisons between Maybes.  These kick in for any pair of types that have
- * defined comparison operators.
+ * defined comparison operators.  Note that we don't provide orderings, because
+ * it's not obvious what the ordering between a user-defined type and nothing
+ * would be.  Users can of course provide these if an ordering makes sense.
  */
-#define ETL_DATA_MAYBE_COMPARISON(op) \
-  template <typename T, typename S> \
-  bool operator op(Maybe<T> const &t, Maybe<S> const &s) { \
-    return (t && s) && t.Get() op s.Get(); \
-  }
+template <typename T, typename S>
+bool operator==(Maybe<T> const &t, Maybe<S> const &s) {
+  bool t_ = t, s_ = s;
+  return (!t_ && !s_) || ((t_ && s_) && t.const_ref() == s.const_ref());
+}
 
-ETL_DATA_MAYBE_COMPARISON(==)
-ETL_DATA_MAYBE_COMPARISON(!=)
-ETL_DATA_MAYBE_COMPARISON(<)
-ETL_DATA_MAYBE_COMPARISON(>)
-ETL_DATA_MAYBE_COMPARISON(<=)
-ETL_DATA_MAYBE_COMPARISON(>=)
+template <typename T, typename S>
+bool operator!=(Maybe<T> const &t, Maybe<S> const &s) {
+  bool t_ = t, s_ = s;
+  return (t_ != s_) || ((t_ && s_) && t.const_ref() != s.const_ref());
+}
 
-#undef ETL_DATA_MAYBE_COMPARISON
+
+template <typename T>
+struct IsRawMaybe : public ::etl::BoolConstant<false> {};
+
+template <typename T>
+struct IsRawMaybe<Maybe<T>> : public ::etl::BoolConstant<true> {};
+
+template <typename T>
+struct IsMaybe {
+private:
+  typedef typename ::etl::RemoveReference<T>::Type Tnoref;
+  typedef typename ::etl::RemoveQualifiers<Tnoref>::Type Traw;
+
+public:
+  static constexpr bool value = IsRawMaybe<Traw>::value;
+};
 
 }  // namespace data
 }  // namespace etl

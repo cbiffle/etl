@@ -308,6 +308,17 @@ struct MakeUnsigned {
   typedef typename Helper<T>::Type Type;
 };
 
+
+/*******************************************************************************
+ * Conditionally enabling features
+ */
+
+template <bool, typename T = void>
+struct EnableIf {};
+
+template <typename T>
+struct EnableIf<true, T> : public TypeConstant<T> {};
+
 }  // namespace etl
 
 #endif  // ETL_TYPE_TRAITS_H_
