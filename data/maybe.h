@@ -2,6 +2,7 @@
 #define ETL_DATA_MAYBE_H_
 
 #include "etl/attribute_macros.h"
+#include "etl/implicit.h"
 #include "etl/type_traits.h"
 #include "etl/utility.h"
 
@@ -78,7 +79,7 @@ class Maybe {
    * Creates an empty Maybe using the Nothing sentinel value.  Note that
    * this conversion is implicit.
    */
-  ETL_INLINE Maybe(Nothing) : _full(false) {}
+  ETL_INLINE ETL_IMPLICIT Maybe(Nothing) : _full(false) {}
 
   /*
    * Copies a Maybe<T> when the types match exactly.
