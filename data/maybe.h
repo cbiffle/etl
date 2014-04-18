@@ -290,6 +290,31 @@ bool operator!=(Maybe<T> const &t, Maybe<S> const &s) {
   return (t_ != s_) || ((t_ && s_) && t.const_ref() != s.const_ref());
 }
 
+/*
+ * Comparisons with Nothing.  We need this despite the implicit conversion
+ * from Nothing -> Maybe<T> forall T, because implicit conversions don't kick
+ * in during template argument matching for the templated operators above.
+ */
+template <typename T>
+bool operator==(Maybe<T> const &m, Nothing) {
+  return m.is_nothing();
+}
+
+template <typename T>
+bool operator==(Nothing, Maybe<T> const &m) {
+  return m.is_nothing();
+}
+
+template <typename T>
+bool operator!=(Maybe<T> const &m, Nothing) {
+  return m.is_something();
+}
+
+template <typename T>
+bool operator!=(Nothing, Maybe<T> const &m) {
+  return m.is_something();
+}
+
 
 template <typename T>
 struct IsRawMaybe : public ::etl::BoolConstant<false> {};
