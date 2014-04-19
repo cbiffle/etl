@@ -305,6 +305,7 @@ struct MakeUnsigned {
     typedef typename MatchQualifiers<S, typename step1::Type>::Type Type;
   };
 
+ public:
   typedef typename Helper<T>::Type Type;
 };
 
