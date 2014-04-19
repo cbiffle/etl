@@ -84,7 +84,7 @@ class Maybe {
   /*
    * Copies a Maybe<T> when the types match exactly.
    */
-  explicit ETL_INLINE Maybe(Maybe<T> const & other)
+  ETL_INLINE Maybe(Maybe<T> const & other)
     : _full(other._full) {
     if (_full) new(&_value) T(other._value);
   }
@@ -92,7 +92,7 @@ class Maybe {
   /*
    * Moves a Maybe<T> when the types match exactly.
    */
-  explicit ETL_INLINE Maybe(Maybe<T> && other) : _full(other._full) {
+  ETL_INLINE Maybe(Maybe<T> && other) : _full(other._full) {
     if (_full) {
       new(&_value) T(::etl::move(other._value));
       other._full = false;
