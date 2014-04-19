@@ -332,6 +332,11 @@ public:
   static constexpr bool value = IsRawMaybe<Traw>::value;
 };
 
+template <typename T>
+Maybe<T> just(T && value) {
+  return Maybe<T>(etl::forward<T>(value));
+}
+
 }  // namespace data
 }  // namespace etl
 
