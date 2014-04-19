@@ -3,6 +3,7 @@
 
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
+#include "etl/placement_new.h"
 #include "etl/type_traits.h"
 #include "etl/utility.h"
 
