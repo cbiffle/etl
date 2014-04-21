@@ -1,0 +1,72 @@
+ETL_BFF_REG_RW(Word, cr,
+  ETL_BFF_FIELD  (29:29, bool, dmaudrie2)
+  ETL_BFF_FIELD  (28:28, bool, dmaen2)
+
+  ETL_BFF_FIELD  (27:24, LfsrMask, mamp2_lfsr)
+  ETL_BFF_FIELD  (27:24, TriangleAmplitude, mamp2_tri)
+  ETL_BFF_FIELD  (23:22, Waveform, wave2)
+  ETL_BFF_FIELD  (21:19, Trigger, tsel2)
+  ETL_BFF_FIELD  (18:18, bool, ten2)
+  ETL_BFF_FIELD  (17:17, bool, boff2)
+  ETL_BFF_FIELD  (16:16, bool, en2)
+
+  ETL_BFF_FIELD  (13:13, bool, dmaudrie1)
+  ETL_BFF_FIELD  (12:12, bool, dmaen1)
+  ETL_BFF_FIELD  (11: 8, LfsrMask, mamp1_lfsr)
+  ETL_BFF_FIELD  (11: 8, TriangleAmplitude, mamp1_tri)
+  ETL_BFF_FIELD  ( 7: 6, Waveform, wave1)
+  ETL_BFF_FIELD  ( 5: 3, Trigger, tsel1)
+  ETL_BFF_FIELD  ( 2: 2, bool, ten1)
+  ETL_BFF_FIELD  ( 1: 1, bool, boff1)
+  ETL_BFF_FIELD  ( 0: 0, bool, en1)
+)
+
+ETL_BFF_REG_RW(Word, swtrigr,
+  ETL_BFF_FIELD  ( 1: 1, bool, swtrig2)
+  ETL_BFF_FIELD  ( 0: 0, bool, swtrig1)
+)
+
+ETL_BFF_REG_RW(Word, dhr12r1,
+  ETL_BFF_FIELD  (11: 0, unsigned, dacc1dhr)
+)
+ETL_BFF_REG_RW(Word, dhr12l1,
+  ETL_BFF_FIELD  (15: 4, unsigned, dacc1dhr)
+)
+ETL_BFF_REG_RW(Word, dhr8r1,
+  ETL_BFF_FIELD  ( 7: 0, unsigned, dacc1dhr)
+)
+
+ETL_BFF_REG_RW(Word, dhr12r2,
+  ETL_BFF_FIELD  (11: 0, unsigned, dacc2dhr)
+)
+ETL_BFF_REG_RW(Word, dhr12l2,
+  ETL_BFF_FIELD  (15: 4, unsigned, dacc2dhr)
+)
+ETL_BFF_REG_RW(Word, dhr8r2,
+  ETL_BFF_FIELD  ( 7: 0, unsigned, dacc2dhr)
+)
+
+ETL_BFF_REG_RW(Word, dhr12rd,
+  ETL_BFF_FIELD  (27:16, unsigned, dacc2dhr)
+  ETL_BFF_FIELD  (11: 0, unsigned, dacc1dhr)
+)
+ETL_BFF_REG_RW(Word, dhr12ld,
+  ETL_BFF_FIELD  (31:20, unsigned, dacc2dhr)
+  ETL_BFF_FIELD  (15: 4, unsigned, dacc1dhr)
+)
+ETL_BFF_REG_RW(Word, dhr8rd,
+  ETL_BFF_FIELD  (15: 8, unsigned, dacc2dhr)
+  ETL_BFF_FIELD  ( 7: 0, unsigned, dacc1dhr)
+)
+
+ETL_BFF_REG_RO(Word, dor1,
+  ETL_BFF_FIELD  (11: 0, unsigned, dacc1dor)
+)
+ETL_BFF_REG_RO(Word, dor2,
+  ETL_BFF_FIELD  (11: 0, unsigned, dacc2dor)
+)
+
+ETL_BFF_REG_RW(Word, sr,
+  ETL_BFF_FIELD  (29:29, unsigned, dmaudr2)
+  ETL_BFF_FIELD  (13:13, unsigned, dmaudr1)
+)
