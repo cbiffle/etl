@@ -1,4 +1,15 @@
 Embedded Template Library
 =========================
 
-This is my collection of reusable embedded code.
+This is my collection of reusable embedded code.  I found myself either
+rewriting or copying and pasting code like this into each project, so I
+centralized it here.
+
+This is intended to be used as a submodule.  It's designed to be used in
+projects that do not rely on toolchain facilities like libc, libstdc++,
+or startup code, because I'm weird like that.
+
+The tests are in a separate repo for now.
+
+**Caveat hax0r:** this code is currently subject to change at my whims.  I am
+not currently supporting a 'released' version.
