@@ -28,4 +28,9 @@ c_library('manual_crt0',
     '//etl/armv7m',
     '//etl',
   ],
+  using = {
+    # This library provides the equivalent of GCC's startfiles.  Attempting to
+    # link in *both* will result in a symbol conflict.
+    'link_flags': [ '-nostartfiles' ],
+  },
 )
