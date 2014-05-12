@@ -2,10 +2,10 @@ Biffields
 =========
 
 This is a preprocessor stunt that generates fluent, typesafe code for working
-with hardware registers containing bitfields.  While it generates code, it does
-not require any external tools.
+with blocks of hardware registers containing bitfields.  While it generates
+code, it does not require any external tools or build system support.
 
-Biffields requires C++11 and is tested most thoroughly on GCC 4.6.2.
+Biffields requires C++11 and is tested most thoroughly on GCC 4.6.2 and 4.8.3.
 
 
 Sales Pitch
@@ -16,17 +16,20 @@ with memory-mapped peripherals.  These have registers that show up like a struct
 in memory, and each register is often split into fields of bits.
 
 C bitfields seem appealing for this, but they're the wrong thing to use: they
-make it difficult to control exactly when memory is read or written.
+make it difficult to control exactly when memory is read or written, and they're
+non-portable (though this is less of a concern for peripheral drivers).
 
 The "right" way to do this sort of thing has long been the "shift-and-or"
-method, but it's ugly.
+method, but it's ugly:
+
+    foo1.cr2 = (foo1.cr2 & ~ctl_mask) | (value << ctl_offset);
 
 Biffields are an attempt at fixing this.  You define the structure of the
 registers in a text file, and Biffields gives you -- for free -- everything you
 see here:
 
  - A struct layout that can alias the peripheral in memory, under control of a
-   linker script.
+   linker script or (if you must) `#define`s.
 
  - Accessors for registers that correctly use volatile and make the timing of
    read/write clear.
@@ -38,6 +41,9 @@ see here:
  - Static metadata about register structure, so that if you *do* have to resort
    to bit twiddling, you won't have to hardcode indexes, sizes, and masks
    separately.
+
+Biffields has been carefully designed and implemented to have little to no
+runtime overhead in terms of either execution speed or code space.
 
 
 The Basic Idea
@@ -150,10 +156,120 @@ However, there are some details you should be aware of.
 
  2. We let you define the containing `struct` yourself so that you can add
     member functions.  You *must not* add member fields, because they'll be
-    mapped into peripheral space and almost certainly surprise you.  Biffield
-    does not currently have an integrity check for this.
+    mapped into peripheral space and almost certainly surprise you.  Similarly,
+    you *must not* have the struct inherit from a non-empty base class, or
+    add virtual methods.  Biffield does not currently have an integrity check
+    for any of this.
 
  3. It is possible, though difficult, to produce a name collision from two
     similarly named registers.  Exactly how to do this is left as an exercise
     for the reader; Biffields is designed to avoid it for non-pathological
     hardware.
+
+
+API Overview
+============
+
+This section describes patterns in the generated API.  All API is generated
+inside the scope of the container struct, to avoid name collisions.
+
+
+Structural Metadata
+-------------------
+
+See: `generated_constants.h`
+
+For a register named `foo`, the container struct type will have a nested type
+`foo_meta`.  This is a namespace-like struct containing the following static
+members:
+
+ - `access_type` (typedef): the type used to read/write the `foo` register.
+
+For each field `bar` inside `foo`, the `foo_meta` struct will further contain a
+namespace-like struct named `bar`, with the following static members:
+
+ - `low_bit`, `high_bit` (unsigned): low and high inclusive bit indices.
+ - `bit_count` (unsigned): number of bits in field.
+ - `low_mask` (`access_type`): a value with `bit_count` LSBs set.
+ - `in_place_mask` (`access_type`): a value with bits `high_bit:low_bit` set.
+
+For array fields, the `bar` struct additionally contains:
+
+ - `bits_per_element` (unsigned): number of bits in each array element.
+ - `element_count` (unsigned): total number of elements.
+ - `low_element_mask` (`access_type`) a value with `bits_per_element` LSBs set.
+ - `low_bit_of(unsigned)`: convenience constexpr function for computing the low
+   bit of an element by index.
+ - `in_place_mask_of(unsigned)`: convenience constexpr function for computing
+   the equivalent of `in_place_mask` (above) for a single element by index.
+
+
+Value Types
+-----------
+
+See: `generate_value_types.h`
+
+Reading a register in Biffields returns, not a primitive integer, but a *value
+type*.  These are integer-sized objects that sport member functions for
+splitting out field values and deriving new values.
+
+For a register named `foo` in a container struct `Unit`, the value type is named
+`Unit::foo_value_t`.  This name is a little ugly -- it's chosen to avoid name
+conflicts.  Feel free to typedef it.
+
+`foo_value_t` contains the following members:
+
+ - `meta_type` (typedef): shorthand reference to `foo_meta` (see Structural
+   Metadata, above).
+ - `this_type` (typedef): an alias for `foo_value_t`, useful during macro
+   expansion.
+ - `access_type` (typedef): shorthand reference to `foo_meta::access_type`.
+ - `foo_value_t(access_type)`: constructs a `foo_value_t` from a native
+   integer.
+ - `foo_value_t()`: constructs a `foo_value_t` with all bits set to zero.
+ - `explicit operator access_type()`: extracts the bitwise representation.
+
+For a non-array field `bar` of type `ft` in register `foo`, `foo_value_t`
+provides:
+
+ - `ft get_bar()`: constexpr accessor for field value.
+ - `foo_value_t with_bar(ft)`: constexpr derivation function.  Returns a
+   copy of a `foo_value_t` with one field changed.
+
+For an array field `bar` of element type `et` in register `foo`, `foo_value_t`
+provides;
+
+ - `et get_bar(unsigned)`: constexpr accessor for array element.
+ - `foo_value_t with_bar(unsigned, et)`: constexpr derivation function.  Returns
+   a copy of a `foo_value_t` with one array element changed.
+
+The `with_bar` operations are intended to be used like this:
+
+    uart.write_cr(uart.read_cr().with_ie(false).with_data(c));
+
+For each enumerated field `quux` defined using `ETL_BFF_FIELD_E`, `foo_value_t`
+contains an `enum class` called `quux_t` that is used as the return type for
+`get_quux` and as the argument type for `with_quux`.
+
+
+Register Accessors
+------------------
+
+See: `generate_accessors.h`
+
+Registers can be read-only, read-write, or write-only.
+
+For each non-array register `foo`, the container struct has:
+
+ - A member function `foo_value_t read_foo()` if `foo` is readable.
+ - A member function `void write_foo(foo_value_t)` if `foo` is writable.
+ - A member function `bool swap_foo(foo_value_t old, foo_value_t new)` if `foo`
+   can be read and written.  It returns `true` if the swap occurred atomically.
+
+For each array register `foo`, the container struct has:
+
+ - A member function `foo_value_t read_foo(unsigned)` if `foo` is readable.
+ - A member function `void write_foo(unsigned, foo_value_t)` if `foo` is
+   writable.
+
+Array registers don't currently have `swap` operations.
