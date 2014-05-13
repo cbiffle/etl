@@ -48,7 +48,7 @@ ExceptionTable const exception_table = {
   etl_armv7m_reset_handler,
 
   #define ETL_ARMV7M_EXCEPTION(name) etl_armv7m_##name##_handler,
-  #define ETL_ARMV7M_EXCEPTION_RESERVED(n) (ExceptionHandler) 0,
+  #define ETL_ARMV7M_EXCEPTION_RESERVED(n) nullptr,
   #include "etl/armv7m/exceptions.def"
   #undef ETL_ARMV7M_EXCEPTION
   #undef ETL_ARMV7M_EXCEPTION_RESERVED
