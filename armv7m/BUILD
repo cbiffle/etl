@@ -34,3 +34,12 @@ c_library('manual_crt0',
     'link_flags': [ '-nostartfiles' ],
   },
 )
+
+c_library('implicit_crt0',
+  sources = [ 'implicit_crt0.cc' ],
+  deps = [
+    '//etl/armv7m:manual_crt0',
+    '//etl/armv7m',
+    '//etl',
+  ],
+)
