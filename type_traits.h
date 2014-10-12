@@ -78,12 +78,20 @@ struct Conditional<false, A, B> {
  */
 template <Size N, typename... Types> struct SelectBySize;
 
+// Common case: linear recursion.
 template <Size N, typename Head, typename... Rest>
 struct SelectBySize<N, Head, Rest...>
   : public Conditional<sizeof(Head) == N,
                        TypeConstant<Head>,
                        SelectBySize<N, Rest...>>::Type {};
 
+// Termination case for single type, to improve error reporting.
+template <Size N, typename OnlyCandidate>
+struct SelectBySize<N, OnlyCandidate> {
+  static_assert(sizeof(OnlyCandidate) == N,
+                "No type in SelectBySize list had the required size!");
+  typedef OnlyCandidate Type;
+};
 
 /*
  * The IsSame predicate tests if two types are exactly identical.
