@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_SCB_FP_H_
-#define ETL_ARMV7M_SCB_FP_H_
+#ifndef _ETL_ARMV7M_SCB_FP_H_INCLUDED
+#define _ETL_ARMV7M_SCB_FP_H_INCLUDED
 
 #include "etl/armv7m/types.h"
 
@@ -17,4 +17,4 @@ extern ScbFp scb_fp;
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_SCB_FP_H_
+#endif  // _ETL_ARMV7M_SCB_FP_H_INCLUDED

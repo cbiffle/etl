@@ -1,5 +1,5 @@
-#ifndef ETL_IMPLICIT_H_
-#define ETL_IMPLICIT_H_
+#ifndef _ETL_IMPLICIT_H_INCLUDED
+#define _ETL_IMPLICIT_H_INCLUDED
 
 /*
  * This do-nothing macro serves as a reminder that an operation is *not*
@@ -8,4 +8,4 @@
  */
 #define ETL_IMPLICIT /* empty */
 
-#endif  // ETL_IMPLICIT_H_
+#endif  // _ETL_IMPLICIT_H_INCLUDED

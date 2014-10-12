@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_TYPES_H_
-#define ETL_ARMV7M_TYPES_H_
+#ifndef _ETL_ARMV7M_TYPES_H_INCLUDED
+#define _ETL_ARMV7M_TYPES_H_INCLUDED
 
 #include "etl/types.h"
 
@@ -23,4 +23,4 @@ typedef etl::UInt8  Byte;
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_TYPES_H_
+#endif  // _ETL_ARMV7M_TYPES_H_INCLUDED

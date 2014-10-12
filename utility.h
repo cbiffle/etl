@@ -1,5 +1,5 @@
-#ifndef ETL_UTILITY_H_
-#define ETL_UTILITY_H_
+#ifndef _ETL_UTILITY_H_INCLUDED
+#define _ETL_UTILITY_H_INCLUDED
 
 /*
  * Type and scope manipulation operators that weren't interesting enough
@@ -30,4 +30,4 @@ ETL_INLINE typename RemoveReference<T>::Type && move(T && value) {
 
 }  // namespace etl
 
-#endif  // ETL_UTILITY_H_
+#endif  // _ETL_UTILITY_H_INCLUDED

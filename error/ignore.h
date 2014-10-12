@@ -1,8 +1,8 @@
-#ifndef ETL_ERROR_IGNORE_H_
-#define ETL_ERROR_IGNORE_H_
+#ifndef _ETL_ERROR_IGNORE_H_INCLUDED
+#define _ETL_ERROR_IGNORE_H_INCLUDED
 
 #include "etl/error/flow.h"
 
 #define IGNORE(expr) ETL_IGNORE(expr)
 
-#endif  // ETL_ERROR_IGNORE_H_
+#endif  // _ETL_ERROR_IGNORE_H_INCLUDED

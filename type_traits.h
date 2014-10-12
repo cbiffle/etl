@@ -1,5 +1,5 @@
-#ifndef ETL_TYPE_TRAITS_H_
-#define ETL_TYPE_TRAITS_H_
+#ifndef _ETL_TYPE_TRAITS_H_INCLUDED
+#define _ETL_TYPE_TRAITS_H_INCLUDED
 
 /*
  * Trait templates describing properties of types and providing basic
@@ -373,4 +373,4 @@ struct MakeUnsigned {
 
 }  // namespace etl
 
-#endif  // ETL_TYPE_TRAITS_H_
+#endif  // _ETL_TYPE_TRAITS_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_EXCEPTION_TABLE_H_
-#define ETL_ARMV7M_EXCEPTION_TABLE_H_
+#ifndef _ETL_ARMV7M_EXCEPTION_TABLE_H_INCLUDED
+#define _ETL_ARMV7M_EXCEPTION_TABLE_H_INCLUDED
 
 #include "etl/armv7m/types.h"
 
@@ -50,4 +50,4 @@ extern "C" {
   extern etl::armv7m::Word const etl_armv7m_initial_stack_top;
 }
 
-#endif  // ETL_ARMV7M_EXCEPTION_TABLE_H_
+#endif  // _ETL_ARMV7M_EXCEPTION_TABLE_H_INCLUDED

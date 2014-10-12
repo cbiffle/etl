@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_GPIO_H_
-#define ETL_STM32F4XX_GPIO_H_
+#ifndef _ETL_STM32F4XX_GPIO_H_INCLUDED
+#define _ETL_STM32F4XX_GPIO_H_INCLUDED
 
 #include "etl/attribute_macros.h"
 #include "etl/stm32f4xx/types.h"
@@ -127,4 +127,4 @@ extern Gpio gpioe;
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_GPIO_H_
+#endif  // _ETL_STM32F4XX_GPIO_H_INCLUDED

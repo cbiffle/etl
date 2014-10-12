@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_INSTRUCTIONS_H_
-#define ETL_ARMV7M_INSTRUCTIONS_H_
+#ifndef _ETL_ARMV7M_INSTRUCTIONS_H_INCLUDED
+#define _ETL_ARMV7M_INSTRUCTIONS_H_INCLUDED
 
 /*
  * C++ function wrappers for GCC ARM intrinsics and inline assembly.
@@ -85,4 +85,4 @@ ETL_INLINE unsigned usat(unsigned v) {
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_INSTRUCTIONS_H_
+#endif  // _ETL_ARMV7M_INSTRUCTIONS_H_INCLUDED

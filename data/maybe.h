@@ -1,5 +1,5 @@
-#ifndef ETL_DATA_MAYBE_H_
-#define ETL_DATA_MAYBE_H_
+#ifndef _ETL_DATA_MAYBE_H_INCLUDED
+#define _ETL_DATA_MAYBE_H_INCLUDED
 
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
@@ -341,4 +341,4 @@ Maybe<T> just(T && value) {
 }  // namespace data
 }  // namespace etl
 
-#endif  // ETL_DATA_MAYBE_H_
+#endif  // _ETL_DATA_MAYBE_H_INCLUDED

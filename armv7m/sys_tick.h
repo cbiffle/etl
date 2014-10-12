@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_SYS_TICK_H_
-#define ETL_ARMV7M_SYS_TICK_H_
+#ifndef _ETL_ARMV7M_SYS_TICK_H_INCLUDED
+#define _ETL_ARMV7M_SYS_TICK_H_INCLUDED
 
 #include "etl/armv7m/types.h"
 
@@ -17,4 +17,4 @@ extern SysTick sys_tick;
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_SYS_TICK_H_
+#endif  // _ETL_ARMV7M_SYS_TICK_H_INCLUDED

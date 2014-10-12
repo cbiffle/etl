@@ -1,5 +1,5 @@
-#ifndef ETL_PLACEMENT_NEW_H_
-#define ETL_PLACEMENT_NEW_H_
+#ifndef _ETL_PLACEMENT_NEW_H_INCLUDED
+#define _ETL_PLACEMENT_NEW_H_INCLUDED
 
 #include "etl/size.h"
 
@@ -13,4 +13,4 @@ inline void * operator new(etl::Size, void *p) noexcept { return p; }
 
 #endif  // _NEW
 
-#endif  // ETL_PLACEMENT_NEW_H_
+#endif  // _ETL_PLACEMENT_NEW_H_INCLUDED

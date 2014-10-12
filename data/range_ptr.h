@@ -1,5 +1,5 @@
-#ifndef ETL_DATA_RANGE_PTR_H_
-#define ETL_DATA_RANGE_PTR_H_
+#ifndef _ETL_DATA_RANGE_PTR_H_INCLUDED
+#define _ETL_DATA_RANGE_PTR_H_INCLUDED
 
 #include "etl/algorithm.h"
 #include "etl/attribute_macros.h"
@@ -195,4 +195,4 @@ struct LaxRangeCheckPolicy {
 }  // namespace data
 }  // namespace etl
 
-#endif  // ETL_DATA_RANGE_PTR_H_
+#endif  // _ETL_DATA_RANGE_PTR_H_INCLUDED

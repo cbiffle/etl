@@ -1,5 +1,5 @@
-#ifndef ETL_ERROR_FLOW_H_
-#define ETL_ERROR_FLOW_H_
+#ifndef _ETL_ERROR_FLOW_H_INCLUDED
+#define _ETL_ERROR_FLOW_H_INCLUDED
 
 /*
  * These macros provide an alternative to exceptions for non-local flow
@@ -79,4 +79,4 @@
     static_cast<void>(etl_flow_value); \
   })
 
-#endif  // ETL_ERROR_FLOW_H_
+#endif  // _ETL_ERROR_FLOW_H_INCLUDED

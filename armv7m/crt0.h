@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_CRT0_H_
-#define ETL_ARMV7M_CRT0_H_
+#ifndef _ETL_ARMV7M_CRT0_H_INCLUDED
+#define _ETL_ARMV7M_CRT0_H_INCLUDED
 
 namespace etl {
 namespace armv7m {
@@ -13,4 +13,4 @@ void crt0_init();
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_CRT0_H_
+#endif  // _ETL_ARMV7M_CRT0_H_INCLUDED

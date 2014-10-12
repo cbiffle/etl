@@ -31,20 +31,20 @@ an adapter header that re-exports it using the unprefixed name.
 
 ### Include guards
 
-Include guards follow the same rules as other macros.  They should include the
-full path to the file, starting at the base `etl` directory, and use a trailing
-underscore.  The final `#endif` must carry an explanatory comment repeating
-the include guard name.
+Include guards follow the same rules as other internal-use macros.  They should
+include the full path to the file, starting at the base `etl` directory, and use
+a leading underscore and a trailing `_INCLUDED` marker.  The final `#endif` must
+carry an explanatory comment repeating the include guard name.
 
 For example, a file named `etl/foo/bar/example.h` should be structured as
 follows:
 
-    #ifndef ETL_FOO_BAR_EXAMPLE_H_
-    #define ETL_FOO_BAR_EXAMPLE_H_
+    #ifndef _ETL_FOO_BAR_EXAMPLE_H_INCLUDED
+    #define _ETL_FOO_BAR_EXAMPLE_H_INCLUDED
 
     // content goes here
 
-    #endif  // ETL_FOO_BAR_EXAMPLE_H_
+    #endif  // _ETL_FOO_BAR_EXAMPLE_H_INCLUDED
 
 
 Namespaces

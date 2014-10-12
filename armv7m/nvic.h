@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_NVIC_H_
-#define ETL_ARMV7M_NVIC_H_
+#ifndef _ETL_ARMV7M_NVIC_H_INCLUDED
+#define _ETL_ARMV7M_NVIC_H_INCLUDED
 
 #include "etl/armv7m/types.h"
 
@@ -111,4 +111,4 @@ extern Nvic nvic;
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_NVIC_H_
+#endif  // _ETL_ARMV7M_NVIC_H_INCLUDED

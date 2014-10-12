@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_FLASH_H_
-#define ETL_STM32F4XX_FLASH_H_
+#ifndef _ETL_STM32F4XX_FLASH_H_INCLUDED
+#define _ETL_STM32F4XX_FLASH_H_INCLUDED
 
 namespace etl {
 namespace stm32f4xx {
@@ -15,4 +15,4 @@ extern Flash flash;
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_FLASH_H_
+#endif  // _ETL_STM32F4XX_FLASH_H_INCLUDED

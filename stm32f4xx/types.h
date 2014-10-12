@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_TYPES_H_
-#define ETL_STM32F4XX_TYPES_H_
+#ifndef _ETL_STM32F4XX_TYPES_H_INCLUDED
+#define _ETL_STM32F4XX_TYPES_H_INCLUDED
 
 #include "etl/armv7m/types.h"
 
@@ -18,4 +18,4 @@ using etl::armv7m::Byte;
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_TYPES_H_
+#endif  // _ETL_STM32F4XX_TYPES_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_EXCEPTIONS_H_
-#define ETL_ARMV7M_EXCEPTIONS_H_
+#ifndef _ETL_ARMV7M_EXCEPTIONS_H_INCLUDED
+#define _ETL_ARMV7M_EXCEPTIONS_H_INCLUDED
 
 namespace etl {
 namespace armv7m {
@@ -21,4 +21,4 @@ enum class Exception {
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_EXCEPTIONS_H_
+#endif  // _ETL_ARMV7M_EXCEPTIONS_H_INCLUDED

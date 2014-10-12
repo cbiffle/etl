@@ -1,5 +1,5 @@
-#ifndef ETL_ERROR_STRATEGY_H_
-#define ETL_ERROR_STRATEGY_H_
+#ifndef _ETL_ERROR_STRATEGY_H_INCLUDED
+#define _ETL_ERROR_STRATEGY_H_INCLUDED
 
 namespace etl {
 namespace error {
@@ -47,4 +47,4 @@ struct TraditionalEnumStrategy {
 }  // namespace error
 }  // namespace etl
 
-#endif  // ETL_ERROR_STRATEGY_H_
+#endif  // _ETL_ERROR_STRATEGY_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef ETL_QUOTE_H_
-#define ETL_QUOTE_H_
+#ifndef _ETL_QUOTE_H_INCLUDED
+#define _ETL_QUOTE_H_INCLUDED
 
 /*
  * The C preprocessor won't rewrite macros inside string literals.  This is
@@ -9,4 +9,4 @@
 #define _ETL_QUOTE(x) #x
 #define ETL_QUOTE(x) _ETL_QUOTE(x)
 
-#endif  // ETL_QUOTE_H_
+#endif  // _ETL_QUOTE_H_INCLUDED

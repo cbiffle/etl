@@ -1,5 +1,5 @@
-#ifndef ETL_ALGORITHM_H_
-#define ETL_ALGORITHM_H_
+#ifndef _ETL_ALGORITHM_H_INCLUDED
+#define _ETL_ALGORITHM_H_INCLUDED
 
 /*
  * Provides algorithmic utility functions that weren't interesting enough
@@ -22,4 +22,4 @@ T const max(T const &a, T const &b) {
 
 }  // namespace etl
 
-#endif  // ETL_ALGORITHM_H_
+#endif  // _ETL_ALGORITHM_H_INCLUDED

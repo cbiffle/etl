@@ -1,5 +1,5 @@
-#ifndef ETL_TYPES_H_
-#define ETL_TYPES_H_
+#ifndef _ETL_TYPES_H_INCLUDED
+#define _ETL_TYPES_H_INCLUDED
 
 /*
  * Provides integer types with predictable sizes, independent of your choice
@@ -46,4 +46,4 @@ typedef typename UnsignedIntOfSize<sizeof(void *)>::Type UIntPtr;
 
 }  // namespace etl
 
-#endif  // ETL_TYPES_H_
+#endif  // _ETL_TYPES_H_INCLUDED

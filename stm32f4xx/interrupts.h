@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_INTERRUPTS_H_
-#define ETL_STM32F4XX_INTERRUPTS_H_
+#ifndef _ETL_STM32F4XX_INTERRUPTS_H_INCLUDED
+#define _ETL_STM32F4XX_INTERRUPTS_H_INCLUDED
 
 namespace etl {
 namespace stm32f4xx {
@@ -42,4 +42,4 @@ void set_irq_priority(Interrupt, unsigned priority);
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_INTERRUPTS_H_
+#endif  // _ETL_STM32F4XX_INTERRUPTS_H_INCLUDED

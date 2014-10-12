@@ -1,8 +1,8 @@
-#ifndef ETL_ERROR_CATCH_H_
-#define ETL_ERROR_CATCH_H_
+#ifndef _ETL_ERROR_CATCH_H_INCLUDED
+#define _ETL_ERROR_CATCH_H_INCLUDED
 
 #include "etl/error/flow.h"
 
 #define CATCH(expr) ETL_CATCH(expr)
 
-#endif  // ETL_ERROR_CATCH_H_
+#endif  // _ETL_ERROR_CATCH_H_INCLUDED

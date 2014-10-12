@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_IIC_H_
-#define ETL_STM32F4XX_IIC_H_
+#ifndef _ETL_STM32F4XX_IIC_H_INCLUDED
+#define _ETL_STM32F4XX_IIC_H_INCLUDED
 
 #include "etl/stm32f4xx/types.h"
 
@@ -17,4 +17,4 @@ extern Iic iic1;
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_IIC_H_
+#endif  // _ETL_STM32F4XX_IIC_H_INCLUDED

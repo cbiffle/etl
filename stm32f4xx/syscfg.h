@@ -1,5 +1,5 @@
-#ifndef ETL_STM32F4XX_SYSCFG_H_
-#define ETL_STM32F4XX_SYSCFG_H_
+#ifndef _ETL_STM32F4XX_SYSCFG_H_INCLUDED
+#define _ETL_STM32F4XX_SYSCFG_H_INCLUDED
 
 #include "etl/stm32f4xx/types.h"
 
@@ -17,4 +17,4 @@ extern SysCfg syscfg;
 }  // namespace stm32f4xx
 }  // namespace etl
 
-#endif  // ETL_STM32F4XX_SYSCFG_H
+#endif  // _ETL_STM32F4XX_SYSCFG_H_INCLUDED

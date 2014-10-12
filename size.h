@@ -1,5 +1,5 @@
-#ifndef ETL_SIZE_H_
-#define ETL_SIZE_H_
+#ifndef _ETL_SIZE_H_INCLUDED
+#define _ETL_SIZE_H_INCLUDED
 
 namespace etl {
 
@@ -11,4 +11,4 @@ typedef decltype(sizeof(char(0))) Size;
 
 }  // namespace etl
 
-#endif  // ETL_SIZE_H_
+#endif  // _ETL_SIZE_H_INCLUDED

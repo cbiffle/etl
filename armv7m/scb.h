@@ -1,5 +1,5 @@
-#ifndef ETL_ARMV7M_SCB_H_
-#define ETL_ARMV7M_SCB_H_
+#ifndef _ETL_ARMV7M_SCB_H_INCLUDED
+#define _ETL_ARMV7M_SCB_H_INCLUDED
 
 #include "etl/armv7m/exceptions.h"
 #include "etl/armv7m/types.h"
@@ -36,4 +36,4 @@ extern Scb scb;
 }  // namespace armv7m
 }  // namespace etl
 
-#endif  // ETL_ARMV7M_SCB_H_
+#endif  // _ETL_ARMV7M_SCB_H_INCLUDED
