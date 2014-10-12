@@ -94,6 +94,33 @@ struct SelectBySize<N, OnlyCandidate> {
 };
 
 /*
+ * BitWidth determines the width, in bits, of an integral type.  This
+ * allows access to the value known as CHAR_BIT in C.
+ */
+template <typename T>
+struct BitWidth {
+private:
+  /*
+   * Determine the width of T by shifting until overflow occurs.  This is
+   * recursive in the width of the type.
+   */
+  template <T test_value, Size bits>
+  struct Helper {
+    static constexpr Size value = Helper<T(test_value << 1), bits + 1>::value;
+  };
+
+  template <Size bits>
+  struct Helper<T(0), bits> {
+    static constexpr Size value = bits;
+  };
+
+public:
+  static constexpr Size value = Helper<1, 0>::value;
+};
+
+static constexpr Size char_bits = BitWidth<unsigned char>::value;
+
+/*
  * The IsSame predicate tests if two types are exactly identical.
  */
 template <typename T, typename S>

@@ -25,6 +25,11 @@
 
 namespace etl {
 
+static_assert(etl::char_bits == 8,
+              "ETL's explicitly-sized integer types can only be used on "
+              "systems with 8-bit address units, because of a shortcut "
+              "taken in the type selection algorithm.");
+
 #define ETL_SIZED_INT(n, name) \
   typedef typename SelectBySize<n, signed char, short, int, long, long long>\
                        ::Type name
