@@ -2,6 +2,7 @@
 #define _ETL_DATA_RANGE_PTR_H_INCLUDED
 
 #include "etl/algorithm.h"
+#include "etl/assert.h"
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
 #include "etl/size.h"
@@ -189,6 +190,28 @@ struct LaxRangeCheckPolicy {
                                              etl::Size end,
                                              etl::Size) {
     return end - start;
+  }
+};
+
+/*
+ * This RangePtr checking policy wil assert on any out-of-range access.
+ */
+struct AssertRangeCheckPolicy {
+  static constexpr etl::Size check_index(etl::Size index,
+                                         etl::Size count) {
+    return ETL_ASSERT_CE(index < count), index;
+  }
+
+  static constexpr etl::Size check_slice_start(etl::Size start,
+                                               etl::Size end,
+                                               etl::Size count) {
+    return ETL_ASSERT_CE(start < count), start;
+  }
+
+  static constexpr etl::Size check_slice_end(etl::Size start,
+                                             etl::Size end,
+                                             etl::Size count) {
+    return ETL_ASSERT_CE(start <= end && end <= count), end;
   }
 };
 
