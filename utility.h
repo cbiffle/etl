@@ -1,6 +1,13 @@
 #ifndef ETL_UTILITY_H_
 #define ETL_UTILITY_H_
 
+/*
+ * Type and scope manipulation operators that weren't interesting enough
+ * to merit their own headers.
+ *
+ * Analog of C++ <utility>.
+ */
+
 #include "etl/attribute_macros.h"
 #include "etl/type_traits.h"
 

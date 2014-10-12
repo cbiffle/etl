@@ -1,6 +1,13 @@
 #ifndef ETL_ALGORITHM_H_
 #define ETL_ALGORITHM_H_
 
+/*
+ * Provides algorithmic utility functions that weren't interesting enough
+ * to merit their own header.
+ *
+ * Analog of C++ <algorithm>.
+ */
+
 namespace etl {
 
 template <typename T>

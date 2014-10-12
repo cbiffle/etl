@@ -23,7 +23,8 @@ struct LaxRangeCheckPolicy;
  * byte count as an element count or vice versa.
  *
  * RangePtr provides a syntactically convenient way to pass pointers to regions
- * of memory, and (optionally bounds-checked) ways of accessing the region.
+ * of memory and access the contents of those regions.  Optionally, the accesses
+ * can be bounds-checked at runtime by adjusting the policy choices.
  *
  * RangePtr defines an implicit conversion from statically sized arrays:
  *

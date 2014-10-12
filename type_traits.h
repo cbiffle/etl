@@ -2,7 +2,10 @@
 #define ETL_TYPE_TRAITS_H_
 
 /*
- * Analog of the C++11 type_traits header.
+ * Trait templates describing properties of types and providing basic
+ * operations over types.
+ *
+ * Analog of C++ <type_traits>.
  */
 
 #include "etl/attribute_macros.h"
