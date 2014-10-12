@@ -1,6 +1,7 @@
 #ifndef _ETL_DATA_MAYBE_H_INCLUDED
 #define _ETL_DATA_MAYBE_H_INCLUDED
 
+#include "etl/assert.h"
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
 #include "etl/placement_new.h"
@@ -56,9 +57,11 @@ static Nothing constexpr nothing = {};
 
 template <typename T> struct IsMaybe;
 
-template <typename T>
+struct LaxMaybeCheckPolicy;
+
+template <typename T, typename Policy = LaxMaybeCheckPolicy>
 class Maybe {
-  template <typename S> friend class Maybe;
+  template <typename S, typename P> friend class Maybe;
  public:
   /*
    * Attempting to use Maybe<Nothing> causes all sorts of problems.
@@ -226,7 +229,7 @@ class Maybe {
    * Precondition: is_something()
    */
   ETL_INLINE T const & const_ref() const {
-    // TODO(cbiffle): assert
+    Policy::check_access(_full);
     return _value;
   }
 
@@ -236,7 +239,7 @@ class Maybe {
    * Precondition: is_something()
    */
   ETL_INLINE T & ref() {
-    // TODO(cbiffle): assert
+    Policy::check_access(_full);
     return _value;
   }
 
@@ -321,8 +324,8 @@ bool operator!=(Nothing, Maybe<T> const &m) {
 template <typename T>
 struct IsRawMaybe : public ::etl::BoolConstant<false> {};
 
-template <typename T>
-struct IsRawMaybe<Maybe<T>> : public ::etl::BoolConstant<true> {};
+template <typename T, typename P>
+struct IsRawMaybe<Maybe<T, P>> : public ::etl::BoolConstant<true> {};
 
 template <typename T>
 struct IsMaybe {
@@ -338,6 +341,21 @@ template <typename T>
 Maybe<T> just(T && value) {
   return Maybe<T>(etl::forward<T>(value));
 }
+
+
+/*******************************************************************************
+ * Maybe Check Policies
+ */
+
+struct LaxMaybeCheckPolicy {
+  static constexpr bool check_access(bool) { return true; }
+};
+
+struct AssertMaybeCheckPolicy {
+  static constexpr bool check_access(bool condition) {
+    return ETL_ASSERT_CE(condition), true;
+  }
+};
 
 }  // namespace data
 }  // namespace etl
