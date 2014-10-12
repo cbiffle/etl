@@ -54,7 +54,7 @@ struct TypeConstant {
 
 
 /*******************************************************************************
- * Basic operations on types
+ * Conditional operations.
  */
 
 /*
@@ -73,52 +73,19 @@ struct Conditional<false, A, B> {
 };
 
 /*
- * SelectBySize searches a list of types for one with the specified size,
- * as measured by sizeof.
+ * Idiomatic method for making the presence or absence of a feature explicitly
+ * depend on a predicate.
  */
-template <Size N, typename... Types> struct SelectBySize;
+template <bool, typename T = void>
+struct EnableIf {};
 
-// Common case: linear recursion.
-template <Size N, typename Head, typename... Rest>
-struct SelectBySize<N, Head, Rest...>
-  : public Conditional<sizeof(Head) == N,
-                       TypeConstant<Head>,
-                       SelectBySize<N, Rest...>>::Type {};
-
-// Termination case for single type, to improve error reporting.
-template <Size N, typename OnlyCandidate>
-struct SelectBySize<N, OnlyCandidate> {
-  static_assert(sizeof(OnlyCandidate) == N,
-                "No type in SelectBySize list had the required size!");
-  typedef OnlyCandidate Type;
-};
-
-/*
- * BitWidth determines the width, in bits, of an integral type.  This
- * allows access to the value known as CHAR_BIT in C.
- */
 template <typename T>
-struct BitWidth {
-private:
-  /*
-   * Determine the width of T by shifting until overflow occurs.  This is
-   * recursive in the width of the type.
-   */
-  template <T test_value, Size bits>
-  struct Helper {
-    static constexpr Size value = Helper<T(test_value << 1), bits + 1>::value;
-  };
+struct EnableIf<true, T> : public TypeConstant<T> {};
 
-  template <Size bits>
-  struct Helper<T(0), bits> {
-    static constexpr Size value = bits;
-  };
 
-public:
-  static constexpr Size value = Helper<1, 0>::value;
-};
-
-static constexpr Size char_bits = BitWidth<unsigned char>::value;
+/*******************************************************************************
+ * General predicates.
+ */
 
 /*
  * The IsSame predicate tests if two types are exactly identical.
@@ -129,6 +96,10 @@ struct IsSame : public FalseType {};
 template <typename T>
 struct IsSame<T, T> : public TrueType {};
 
+
+/*******************************************************************************
+ * Operations on qualifiers.
+ */
 
 /*
  * RemoveReference<T>::Type strips any reference type from T.
@@ -202,7 +173,7 @@ struct MatchQualifiers
 
 
 /*******************************************************************************
- * Operations on C++ fundamental types.
+ * Predicates on integral, floating-point, and arithmetic types.
  */
 
 #define ETL_SPECIALIZE(tmpl, type, value) \
@@ -292,12 +263,61 @@ struct IsEnum : public BoolConstant<__is_enum(T)> {};
 
 
 /*******************************************************************************
- * Deriving types from others or parameters
+ * Reasoning about type sizes.
  */
 
-template <Size N>
-struct SignedIntOfSize
-  : SelectBySize<N, signed char, short, int, long, long long> {};
+/*
+ * SelectBySize searches a list of types for one with the specified size,
+ * as measured by sizeof.
+ */
+template <Size N, typename... Types> struct SelectBySize;
+
+// Common case: linear recursion.
+template <Size N, typename Head, typename... Rest>
+struct SelectBySize<N, Head, Rest...>
+  : public Conditional<sizeof(Head) == N,
+                       TypeConstant<Head>,
+                       SelectBySize<N, Rest...>>::Type {};
+
+// Termination case for single type, to improve error reporting.
+template <Size N, typename OnlyCandidate>
+struct SelectBySize<N, OnlyCandidate> {
+  static_assert(sizeof(OnlyCandidate) == N,
+                "No type in SelectBySize list had the required size!");
+  typedef OnlyCandidate Type;
+};
+
+/*
+ * BitWidth determines the width, in bits, of an integral type.  This
+ * allows access to the value known as CHAR_BIT in C.
+ */
+template <typename T>
+struct BitWidth {
+private:
+  /*
+   * Determine the width of T by shifting until overflow occurs.  This is
+   * recursive in the width of the type.
+   */
+  template <T test_value, Size bits>
+  struct Helper {
+    static constexpr Size value = Helper<T(test_value << 1), bits + 1>::value;
+  };
+
+  template <Size bits>
+  struct Helper<T(0), bits> {
+    static constexpr Size value = bits;
+  };
+
+public:
+  static constexpr Size value = Helper<1, 0>::value;
+};
+
+static constexpr Size char_bits = BitWidth<unsigned char>::value;
+
+
+/*******************************************************************************
+ * Altering signedness.
+ */
 
 template <typename T> struct MakeArithmeticUnsigned;
 
@@ -313,6 +333,10 @@ ETL_TYPEMAP(MakeArithmeticUnsigned, short,       unsigned short);
 ETL_TYPEMAP(MakeArithmeticUnsigned, int,         unsigned int);
 ETL_TYPEMAP(MakeArithmeticUnsigned, long,        unsigned long);
 ETL_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
+
+template <Size N>
+struct SignedIntOfSize
+  : SelectBySize<N, signed char, short, int, long, long long> {};
 
 template <Size N>
 struct UnsignedIntOfSize
@@ -346,17 +370,6 @@ struct MakeUnsigned {
  public:
   typedef typename Helper<T>::Type Type;
 };
-
-
-/*******************************************************************************
- * Conditionally enabling features
- */
-
-template <bool, typename T = void>
-struct EnableIf {};
-
-template <typename T>
-struct EnableIf<true, T> : public TypeConstant<T> {};
 
 }  // namespace etl
 
