@@ -30,30 +30,19 @@ static_assert(etl::char_bits == 8,
               "systems with 8-bit address units, because of a shortcut "
               "taken in the type selection algorithm.");
 
-#define ETL_SIZED_INT(n, name) \
-  typedef typename SelectBySize<n, signed char, short, int, long, long long>\
-                       ::Type name
+typedef typename SignedIntOfSize<1>::Type Int8;
+typedef typename SignedIntOfSize<2>::Type Int16;
+typedef typename SignedIntOfSize<4>::Type Int32;
+typedef typename SignedIntOfSize<8>::Type Int64;
 
-ETL_SIZED_INT(1, Int8);
-ETL_SIZED_INT(2, Int16);
-ETL_SIZED_INT(4, Int32);
-ETL_SIZED_INT(8, Int64);
+typedef typename SignedIntOfSize<sizeof(void *)>::Type IntPtr;
 
-ETL_SIZED_INT(sizeof(void *), IntPtr);
+typedef typename UnsignedIntOfSize<1>::Type UInt8;
+typedef typename UnsignedIntOfSize<2>::Type UInt16;
+typedef typename UnsignedIntOfSize<4>::Type UInt32;
+typedef typename UnsignedIntOfSize<8>::Type UInt64;
 
-#undef ETL_SIZED_INT
-
-#define ETL_UNSIGNED_INT(n) \
-  typedef typename MakeUnsigned<Int ## n>::Type UInt ## n
-
-ETL_UNSIGNED_INT(8);
-ETL_UNSIGNED_INT(16);
-ETL_UNSIGNED_INT(32);
-ETL_UNSIGNED_INT(64);
-
-#undef ETL_UNSIGNED_INT
-
-typedef typename MakeUnsigned<IntPtr>::Type UIntPtr;
+typedef typename UnsignedIntOfSize<sizeof(void *)>::Type UIntPtr;
 
 }  // namespace etl
 
