@@ -105,7 +105,7 @@ class Maybe {
    */
   template <typename S>
   explicit ETL_INLINE Maybe(S && value,
-      typename ::etl::EnableIf<!IsMaybe<S>::value, void *>::Type = 0)
+      typename ::etl::EnableIf<!IsMaybe<S>::value, void *>::Type = nullptr)
     : _value(etl::forward<S>(value)),
       _full(true) {}
 
@@ -114,7 +114,8 @@ class Maybe {
    */
   template <typename S>
   explicit ETL_INLINE Maybe(Maybe<S> const & other,
-      typename ::etl::EnableIf<!::etl::IsSame<T, S>::value, void *>::Type = 0)
+      typename ::etl::EnableIf<!::etl::IsSame<T, S>::value,
+                               void *>::Type = nullptr)
     : _full(other._full) {
     if (_full) new(&_value) T(other._value);
   }
