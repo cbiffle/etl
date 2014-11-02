@@ -90,8 +90,8 @@ struct Gpio {
   ETL_INLINE void toggle(HalfWord mask) {
     auto bits = read_odr().get_bits();
     write_bsrr(bsrr_value_t()
-               .with_setbits(~bits & mask)
-               .with_resetbits(bits & mask));
+               .with_setbits(HalfWord(~bits & mask))
+               .with_resetbits(HalfWord(bits & mask)));
   }
 
 
