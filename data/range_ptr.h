@@ -1,11 +1,11 @@
 #ifndef _ETL_DATA_RANGE_PTR_H_INCLUDED
 #define _ETL_DATA_RANGE_PTR_H_INCLUDED
 
-#include "etl/algorithm.h"
+#include <cstddef>
+
 #include "etl/assert.h"
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
-#include "etl/size.h"
 
 namespace etl {
 namespace data {
@@ -54,14 +54,14 @@ public:
    *
    * Note that you should rarely need to do this.
    */
-  ETL_INLINE constexpr RangePtr(E *base, etl::Size count)
+  ETL_INLINE constexpr RangePtr(E *base, std::size_t count)
       : _base(base), _count(count) {}
 
   /*
    * Creates a RangePtr by capturing the bounds of a static array.  Note that
    * this only matches for arrays of 1+ elements.
    */
-  template <etl::Size N>
+  template <std::size_t N>
   ETL_INLINE ETL_IMPLICIT constexpr RangePtr(E (&array)[N])
       : _base(&array[0]), _count(N) {}
 
@@ -93,12 +93,12 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  ETL_INLINE constexpr etl::Size count() { return _count; }
+  ETL_INLINE constexpr std::size_t count() { return _count; }
 
   /*
    * Returns the number of bytes in the range.
    */
-  ETL_INLINE constexpr etl::Size byte_length() {
+  ETL_INLINE constexpr std::size_t byte_length() {
     return count() * sizeof(E);
   }
 
@@ -116,17 +116,17 @@ public:
   /*
    * Array accessor.
    */
-  ETL_INLINE constexpr E &operator[](etl::Size index) const {
+  ETL_INLINE constexpr E &operator[](std::size_t index) const {
     return _base[Policy::check_index(index, _count)];
   }
 
-  ETL_INLINE constexpr RangePtr slice(etl::Size start,
-                                      etl::Size end) {
+  ETL_INLINE constexpr RangePtr slice(std::size_t start,
+                                      std::size_t end) {
     return RangePtr(&_base[Policy::check_slice_start(start, end, _count)],
                     Policy::check_slice_end(start, end, _count));
   }
 
-  ETL_INLINE constexpr RangePtr tail_from(etl::Size start) {
+  ETL_INLINE constexpr RangePtr tail_from(std::size_t start) {
     return slice(start, _count - start);
   }
 
@@ -134,7 +134,7 @@ public:
     return tail_from(1);
   }
 
-  ETL_INLINE constexpr RangePtr first(etl::Size count) {
+  ETL_INLINE constexpr RangePtr first(std::size_t count) {
     return slice(0, count);
   }
 
@@ -147,7 +147,7 @@ public:
   bool contents_equal(RangePtr other) {
     if (_count != other._count) return false;
 
-    for (etl::Size i = 0; i < _count; ++i) {
+    for (std::size_t i = 0; i < _count; ++i) {
       if (_base[i] != other[i]) return false;
     }
 
@@ -167,7 +167,7 @@ public:
 
 private:
   E *_base;
-  etl::Size _count;
+  std::size_t _count;
 };
 
 /*
@@ -175,20 +175,20 @@ private:
  * but efficient.
  */
 struct LaxRangeCheckPolicy {
-  static constexpr etl::Size check_index(etl::Size index,
-                                         etl::Size) {
+  static constexpr std::size_t check_index(std::size_t index,
+                                           std::size_t) {
     return index;
   }
 
-  static constexpr etl::Size check_slice_start(etl::Size start,
-                                               etl::Size,
-                                               etl::Size) {
+  static constexpr std::size_t check_slice_start(std::size_t start,
+                                                 std::size_t,
+                                                 std::size_t) {
     return start;
   }
 
-  static constexpr etl::Size check_slice_end(etl::Size start,
-                                             etl::Size end,
-                                             etl::Size) {
+  static constexpr std::size_t check_slice_end(std::size_t start,
+                                               std::size_t end,
+                                               std::size_t) {
     return end - start;
   }
 };
@@ -197,20 +197,20 @@ struct LaxRangeCheckPolicy {
  * This RangePtr checking policy wil assert on any out-of-range access.
  */
 struct AssertRangeCheckPolicy {
-  static constexpr etl::Size check_index(etl::Size index,
-                                         etl::Size count) {
+  static constexpr std::size_t check_index(std::size_t index,
+                                           std::size_t count) {
     return ETL_ASSERT_CE(index < count), index;
   }
 
-  static constexpr etl::Size check_slice_start(etl::Size start,
-                                               etl::Size end,
-                                               etl::Size count) {
+  static constexpr std::size_t check_slice_start(std::size_t start,
+                                                 std::size_t end,
+                                                 std::size_t count) {
     return ETL_ASSERT_CE(start < count), start;
   }
 
-  static constexpr etl::Size check_slice_end(etl::Size start,
-                                             etl::Size end,
-                                             etl::Size count) {
+  static constexpr std::size_t check_slice_end(std::size_t start,
+                                               std::size_t end,
+                                               std::size_t count) {
     return ETL_ASSERT_CE(start <= end && end <= count), end;
   }
 };

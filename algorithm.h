@@ -5,7 +5,8 @@
  * Provides algorithmic utility functions that weren't interesting enough
  * to merit their own header.
  *
- * Analog of C++ <algorithm>.
+ * Analog of C++ <algorithm>, which is not available in freestanding
+ * implementations.
  */
 
 namespace etl {

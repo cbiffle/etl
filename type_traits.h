@@ -5,11 +5,14 @@
  * Trait templates describing properties of types and providing basic
  * operations over types.
  *
- * Analog of C++ <type_traits>.
+ * Provides extensions to C++ <type_traits>.
  */
 
+#include <cstddef>
+#include <climits>
+#include <type_traits>
+
 #include "etl/attribute_macros.h"
-#include "etl/size.h"
 
 namespace etl {
 
@@ -17,24 +20,9 @@ namespace etl {
  * Promoting values to types
  */
 
-/*
- * IntegralConstant creates types holding a constant value.
- */
-template <typename T, T V>
-struct IntegralConstant {
-  static constexpr T value = V;
-  typedef T ValueType;
-  typedef IntegralConstant<T, V> Type;
-  constexpr operator T() { return V; }
-};
-
-// Shorthand for the common case of IntegralConstant<bool, x>
+// Shorthand for the common case of std::integral_constant<bool, x>
 template <bool V>
-struct BoolConstant : public IntegralConstant<bool, V> {};
-
-// Further shorthand for the two famous bool values.
-typedef BoolConstant<true>  TrueType;
-typedef BoolConstant<false> FalseType;
+using BoolConstant = std::integral_constant<bool, V>;
 
 
 /*******************************************************************************
@@ -54,99 +42,8 @@ struct TypeConstant {
 
 
 /*******************************************************************************
- * Conditional operations.
- */
-
-/*
- * Equivalent of the C ternary operator, but over types.  The expression
- * Conditional<x, A, B>::Type evaluates to A if x is true, B if x is false.
- */
-template <bool, typename A, typename B>
-struct Conditional {
-  typedef A Type;
-};
-
-// Partial specialization for false.
-template <typename A, typename B>
-struct Conditional<false, A, B> {
-  typedef B Type;
-};
-
-/*
- * Idiomatic method for making the presence or absence of a feature explicitly
- * depend on a predicate.
- */
-template <bool, typename T = void>
-struct EnableIf {};
-
-template <typename T>
-struct EnableIf<true, T> : public TypeConstant<T> {};
-
-
-/*******************************************************************************
- * General predicates.
- */
-
-/*
- * The IsSame predicate tests if two types are exactly identical.
- */
-template <typename T, typename S>
-struct IsSame : public FalseType {};
-
-template <typename T>
-struct IsSame<T, T> : public TrueType {};
-
-
-/*******************************************************************************
  * Operations on qualifiers.
  */
-
-/*
- * RemoveReference<T>::Type strips any reference type from T.
- */
-
-template <typename T>
-struct RemoveReference {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveReference<T &> {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveReference<T &&> {
-  typedef T Type;
-};
-
-/*
- * RemoveVolatile and RemoveConst strip individual qualifiers from a type.
- * RemoveQualifiers does both.
- */
-template <typename T>
-struct RemoveVolatile {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveVolatile<T volatile> {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveConst {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveConst<T const> {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveQualifiers
-  : public RemoveVolatile<typename RemoveConst<T>::Type> {};
 
 /*
  * MatchConst and MatchVolatile copy the const/volatile qualifiers from one
@@ -168,98 +65,8 @@ struct MatchVolatile<Source volatile, Dest>
 
 
 template <typename Source, typename Dest>
-struct MatchQualifiers
-  : public MatchConst<Source, typename MatchVolatile<Source, Dest>::Type> {};
-
-
-/*******************************************************************************
- * Predicates on integral, floating-point, and arithmetic types.
- */
-
-#define ETL_SPECIALIZE(tmpl, type, value) \
-  template <> \
-  struct tmpl<type> : public BoolConstant<value> {}
-
-/*
- * The IsUnqualifiedIntegral predicate matches fundamental integral types
- * without const/volatile qualifiers.  To match qualified types, see IsIntegral.
- */
-template <typename T>
-struct IsUnqualifiedIntegral : public FalseType {};
-
-// Specializations for every built-in integral type.
-ETL_SPECIALIZE(IsUnqualifiedIntegral, bool, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, char, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, signed char, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned char, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, short, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned short, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, int, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned int, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, long, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned long, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, long long, true);
-ETL_SPECIALIZE(IsUnqualifiedIntegral, unsigned long long, true);
-
-/*
- * The IsIntegral predicate matches fundamental integral types, even when
- * qualified with const/volatile.
- */
-template <typename T>
-struct IsIntegral
-  : public IsUnqualifiedIntegral<typename RemoveQualifiers<T>::Type> {};
-
-/*
- * The IsUnqualifiedFloatingPoint matches fundamental floating point types
- * without const/volatile qualifiers.
- */
-template <typename T>
-struct IsUnqualifiedFloatingPoint : public FalseType {};
-
-// Specializations for built-in floating point types.
-ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, float, true);
-ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, double, true);
-ETL_SPECIALIZE(IsUnqualifiedFloatingPoint, long double, true);
-
-/*
- * The IsFloatingPoint predicate matches fundamental floating point types,
- * even when qualified with const/volatile.
- */
-template <typename T>
-struct IsFloatingPoint
-  : public IsUnqualifiedFloatingPoint<typename RemoveQualifiers<T>::Type> {};
-
-/*
- * The IsArithmetic predicate matches fundamental arithmetic types, meaning
- * integral or floating point types.
- */
-template <typename T>
-struct IsArithmetic
-  : public BoolConstant<IsIntegral<T>::value || IsFloatingPoint<T>::value> {};
-
-/*
- * The IsSigned predicate matches arithmetic types that can represent negative
- * numbers.
- */
-template <typename T>
-struct IsSigned
-  : public BoolConstant<IsFloatingPoint<T>::value
-                        || (IsIntegral<T>::value && (T(-1) < T(0)))> {};
-
-/*
- * The IsUnsigned predicate matches arithmetic types that cannot represent
- * negative numbers.
- */
-template <typename T>
-struct IsUnsigned
-  : public BoolConstant<IsArithmetic<T>::value && !IsSigned<T>::value> {};
-
-/*
- * The IsEnum predicate matches enumerations.  Note that this uses a compiler
- * intrinsic; it's difficult to recognize enumerations reliably without this.
- */
-template <typename T>
-struct IsEnum : public BoolConstant<__is_enum(T)> {};
+using MatchQualifiers =
+    MatchConst<Source, typename MatchVolatile<Source, Dest>::Type>;
 
 
 /*******************************************************************************
@@ -270,105 +77,38 @@ struct IsEnum : public BoolConstant<__is_enum(T)> {};
  * SelectBySize searches a list of types for one with the specified size,
  * as measured by sizeof.
  */
-template <Size N, typename... Types> struct SelectBySize;
+template <std::size_t N, typename... Types> struct SelectBySize;
 
 // Common case: linear recursion.
-template <Size N, typename Head, typename... Rest>
+template <std::size_t N, typename Head, typename... Rest>
 struct SelectBySize<N, Head, Rest...>
-  : public Conditional<sizeof(Head) == N,
-                       TypeConstant<Head>,
-                       SelectBySize<N, Rest...>>::Type {};
+  : public std::conditional<sizeof(Head) == N,
+                            TypeConstant<Head>,
+                            SelectBySize<N, Rest...>>::Type {};
 
 // Termination case for single type, to improve error reporting.
-template <Size N, typename OnlyCandidate>
+template <std::size_t N, typename OnlyCandidate>
 struct SelectBySize<N, OnlyCandidate> {
   static_assert(sizeof(OnlyCandidate) == N,
                 "No type in SelectBySize list had the required size!");
   typedef OnlyCandidate Type;
 };
 
-/*
- * BitWidth determines the width, in bits, of an integral type.  This
- * allows access to the value known as CHAR_BIT in C.
- */
-template <typename T>
-struct BitWidth {
-private:
-  /*
-   * Determine the width of T by shifting until overflow occurs.  This is
-   * recursive in the width of the type.
-   */
-  template <T test_value, Size bits>
-  struct Helper {
-    static constexpr Size value = Helper<T(test_value << 1), bits + 1>::value;
-  };
-
-  template <Size bits>
-  struct Helper<T(0), bits> {
-    static constexpr Size value = bits;
-  };
-
-public:
-  static constexpr Size value = Helper<1, 0>::value;
-};
-
-static constexpr Size char_bits = BitWidth<unsigned char>::value;
+static constexpr std::size_t char_bits = CHAR_BIT;
 
 
 /*******************************************************************************
- * Altering signedness.
+ * Selecting integer types by size (as measured by sizeof).
  */
 
-template <typename T> struct MakeArithmeticUnsigned;
+template <std::size_t N>
+using SignedIntOfSize =
+    SelectBySize<N, signed char, short, int, long, long long>;
 
-#define ETL_TYPEMAP(tmpl, source, dest) \
-  template <> \
-  struct tmpl<source> { \
-    typedef dest Type; \
-  }
-
-ETL_TYPEMAP(MakeArithmeticUnsigned, char,        unsigned char);
-ETL_TYPEMAP(MakeArithmeticUnsigned, signed char, unsigned char);
-ETL_TYPEMAP(MakeArithmeticUnsigned, short,       unsigned short);
-ETL_TYPEMAP(MakeArithmeticUnsigned, int,         unsigned int);
-ETL_TYPEMAP(MakeArithmeticUnsigned, long,        unsigned long);
-ETL_TYPEMAP(MakeArithmeticUnsigned, long long,   unsigned long long);
-
-template <Size N>
-struct SignedIntOfSize
-  : SelectBySize<N, signed char, short, int, long, long long> {};
-
-template <Size N>
-struct UnsignedIntOfSize
-  : MakeArithmeticUnsigned<typename SignedIntOfSize<N>::Type> {};
-
-template <typename T>
-struct MakeUnsigned {
- private:
-  template <typename S,
-            bool Integral = IsIntegral<S>::value,
-            bool Enum = IsEnum<S>::value>
-  struct Helper;
-
-  template <typename S>
-  struct Helper<S, true, false> {
-   private:
-    typedef MakeArithmeticUnsigned<typename RemoveQualifiers<S>::Type> step1;
-
-   public:
-    typedef typename MatchQualifiers<S, typename step1::Type>::Type Type;
-  };
-
-  template <typename S>
-  struct Helper<S, false, true> {
-   private:
-    typedef UnsignedIntOfSize<sizeof(S)> step1;
-   public:
-    typedef typename MatchQualifiers<S, typename step1::Type>::Type Type;
-  };
-
- public:
-  typedef typename Helper<T>::Type Type;
+template <std::size_t N>
+struct UnsignedIntOfSize {
+  typedef typename std::make_unsigned<typename SignedIntOfSize<N>::Type>::type
+          Type;
 };
 
 }  // namespace etl

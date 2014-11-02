@@ -1,10 +1,12 @@
 #ifndef _ETL_DATA_MAYBE_H_INCLUDED
 #define _ETL_DATA_MAYBE_H_INCLUDED
 
+#include <new>
+#include <type_traits>
+
 #include "etl/assert.h"
 #include "etl/attribute_macros.h"
 #include "etl/implicit.h"
-#include "etl/placement_new.h"
 #include "etl/type_traits.h"
 #include "etl/utility.h"
 
@@ -67,7 +69,7 @@ class Maybe {
    * Attempting to use Maybe<Nothing> causes all sorts of problems.
    * This static_assert mostly serves to improve the error clarity.
    */
-  static_assert(!etl::IsSame<Nothing, T>::value,
+  static_assert(!std::is_same<Nothing, T>::value,
                 "Maybe<Nothing> is an illegal type.");
 
   /*
@@ -108,7 +110,7 @@ class Maybe {
    */
   template <typename S>
   explicit ETL_INLINE Maybe(S && value,
-      typename ::etl::EnableIf<!IsMaybe<S>::value, void *>::Type = nullptr)
+      typename std::enable_if<!IsMaybe<S>::value, void *>::type = nullptr)
     : _value(etl::forward<S>(value)),
       _full(true) {}
 
@@ -117,8 +119,8 @@ class Maybe {
    */
   template <typename S>
   explicit ETL_INLINE Maybe(Maybe<S> const & other,
-      typename ::etl::EnableIf<!::etl::IsSame<T, S>::value,
-                               void *>::Type = nullptr)
+      typename std::enable_if<!std::is_same<T, S>::value,
+                              void *>::type = nullptr)
     : _full(other._full) {
     if (_full) new(&_value) T(other._value);
   }
@@ -330,8 +332,8 @@ struct IsRawMaybe<Maybe<T, P>> : public ::etl::BoolConstant<true> {};
 template <typename T>
 struct IsMaybe {
 private:
-  typedef typename ::etl::RemoveReference<T>::Type Tnoref;
-  typedef typename ::etl::RemoveQualifiers<Tnoref>::Type Traw;
+  typedef typename std::remove_reference<T>::type Tnoref;
+  typedef typename std::remove_cv<Tnoref>::type Traw;
 
 public:
   static constexpr bool value = IsRawMaybe<Traw>::value;

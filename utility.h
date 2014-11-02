@@ -5,27 +5,29 @@
  * Type and scope manipulation operators that weren't interesting enough
  * to merit their own headers.
  *
- * Analog of C++ <utility>.
+ * Analog of C++ <utility>, which is not available in a freestanding
+ * implementation (see discussion in n3256).
  */
 
+#include <type_traits>
+
 #include "etl/attribute_macros.h"
-#include "etl/type_traits.h"
 
 namespace etl {
 
 template <typename T>
-ETL_INLINE T && forward(typename RemoveReference<T>::Type & value) {
+ETL_INLINE T && forward(typename std::remove_reference<T>::type & value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE T && forward(typename RemoveReference<T>::Type && value) {
+ETL_INLINE T && forward(typename std::remove_reference<T>::type && value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE typename RemoveReference<T>::Type && move(T && value) {
-  return static_cast<typename RemoveReference<T>::Type &&>(value);
+ETL_INLINE typename std::remove_reference<T>::type && move(T && value) {
+  return static_cast<typename std::remove_reference<T>::type &&>(value);
 }
 
 }  // namespace etl
