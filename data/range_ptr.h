@@ -93,25 +93,25 @@ public:
   /*
    * Returns the number of elements in the range.
    */
-  ETL_INLINE constexpr std::size_t count() { return _count; }
+  ETL_INLINE constexpr std::size_t count() const { return _count; }
 
   /*
    * Returns the number of bytes in the range.
    */
-  ETL_INLINE constexpr std::size_t byte_length() {
+  ETL_INLINE constexpr std::size_t byte_length() const {
     return count() * sizeof(E);
   }
 
   /*
    * Checks whether this RangePtr describes no elements.
    */
-  ETL_INLINE constexpr bool is_empty() { return _count == 0; }
+  ETL_INLINE constexpr bool is_empty() const { return _count == 0; }
 
   /*
    * Gets a raw pointer to the first element.  From this point on, all
    * safety guarantees are void.
    */
-  ETL_INLINE constexpr E *base() { return _base; }
+  ETL_INLINE constexpr E *base() const { return _base; }
 
   /*
    * Array accessor.
@@ -121,30 +121,30 @@ public:
   }
 
   ETL_INLINE constexpr RangePtr slice(std::size_t start,
-                                      std::size_t end) {
+                                      std::size_t end) const {
     return RangePtr(&_base[Policy::check_slice_start(start, end, _count)],
                     Policy::check_slice_end(start, end, _count));
   }
 
-  ETL_INLINE constexpr RangePtr tail_from(std::size_t start) {
+  ETL_INLINE constexpr RangePtr tail_from(std::size_t start) const {
     return slice(start, _count - start);
   }
 
-  ETL_INLINE constexpr RangePtr tail() {
+  ETL_INLINE constexpr RangePtr tail() const {
     return tail_from(1);
   }
 
-  ETL_INLINE constexpr RangePtr first(std::size_t count) {
+  ETL_INLINE constexpr RangePtr first(std::size_t count) const {
     return slice(0, count);
   }
 
-  ETL_INLINE E & pop_front() {
+  ETL_INLINE E & pop_front() const {
     E &result = (*this)[0];
     *this = slice(1, _count);
     return result;
   }
 
-  bool contents_equal(RangePtr other) {
+  bool contents_equal(RangePtr other) const {
     if (_count != other._count) return false;
 
     for (std::size_t i = 0; i < _count; ++i) {
@@ -155,13 +155,13 @@ public:
   }
 
   template <typename X>
-  ETL_INLINE constexpr bool operator==(RangePtr<X> other) {
+  ETL_INLINE constexpr bool operator==(RangePtr<X> other) const {
     return _base == other.base()
         && byte_length() == other.byte_length();
   }
 
   template <typename X>
-  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) {
+  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) const {
     return !(*this == other);
   }
 
