@@ -182,7 +182,7 @@ public:
    * -- but the length of the ranges must also match.
    */
   template <typename X>
-  ETL_INLINE constexpr bool operator==(RangePtr<X> other) const {
+  ETL_INLINE constexpr bool operator==(RangePtr<X, Policy> other) const {
     return _base == other.base()
         && byte_length() == other.byte_length();
   }
@@ -193,7 +193,7 @@ public:
    * -- but the length of the ranges must also match.
    */
   template <typename X>
-  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) const {
+  ETL_INLINE constexpr bool operator!=(RangePtr<X, Policy> other) const {
     return !(*this == other);
   }
 
@@ -276,13 +276,13 @@ struct AssertRangeCheckPolicy {
   static constexpr std::size_t check_slice_start(std::size_t start,
                                                  std::size_t end,
                                                  std::size_t count) {
-    return ETL_ASSERT_CE(start < count), start;
+    return ETL_ASSERT_CE(start <= count), start;
   }
 
   static constexpr std::size_t check_slice_end(std::size_t start,
                                                std::size_t end,
                                                std::size_t count) {
-    return ETL_ASSERT_CE(start <= end && end <= count), end;
+    return ETL_ASSERT_CE(start <= end && end <= count), end - start;
   }
 };
 
