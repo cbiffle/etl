@@ -236,6 +236,40 @@ public:
    */
   ETL_INLINE constexpr E *base() const { return _base; }
 
+  /*****************************************************************
+   * "Range-based for" and standard algorithm support
+   *
+   * These operations provide an adapter that allows a RangePtr to
+   * be used as a traditional C++ iterator.  If the RangePtr is
+   * checked, iteration over it will also be checked.
+   */
+
+  class Iterator {
+  public:
+    constexpr Iterator(RangePtr const & r) : _r(r) {}
+    constexpr E & operator*() const { return _r[0]; }
+
+    Iterator & operator++() {
+      _r.pop_front();
+      return *this;
+    }
+
+    constexpr bool operator!=(Iterator const & other) {
+      return _r != other._r;
+    }
+
+  private:
+    RangePtr _r;
+  };
+
+  constexpr Iterator begin() const {
+    return Iterator(*this);
+  }
+
+  constexpr Iterator end() const {
+    return Iterator(slice(_count, _count));
+  }
+
 private:
   E *_base;
   std::size_t _count;
