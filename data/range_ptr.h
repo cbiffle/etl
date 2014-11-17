@@ -44,18 +44,14 @@ struct LaxRangeCheckPolicy;
 template <typename E, typename Policy = LaxRangeCheckPolicy>
 class RangePtr {
 public:
+  /*****************************************************************
+   * Making RangePtrs
+   */
+
   /*
    * Creates an empty RangePtr.
    */
   ETL_INLINE constexpr RangePtr() : _base(nullptr), _count(0) {}
-
-  /*
-   * Creates a RangePtr from explicit base and extent.
-   *
-   * Note that you should rarely need to do this.
-   */
-  ETL_INLINE constexpr RangePtr(E *base, std::size_t count)
-      : _base(base), _count(count) {}
 
   /*
    * Creates a RangePtr by capturing the bounds of a static array.  Note that
@@ -73,22 +69,24 @@ public:
       : _base(&array[0]), _count(0) {}
 
   /*
+   * Creates a RangePtr from explicit base and extent.
+   *
+   * Note that you should rarely need to do this.  The array overloads above
+   * provide a safer and more convenient alternative.
+   */
+  ETL_INLINE constexpr RangePtr(E *base, std::size_t count)
+      : _base(base), _count(count) {}
+
+  /*
    * Implicit conversion from a RangePtr<T> to a RangePtr<T const>.
    */
   ETL_INLINE ETL_IMPLICIT constexpr operator RangePtr<E const>() {
     return RangePtr<E const>(_base, _count);
   }
 
-  /*
-   * Explicit conversion to a different type, with a possible reduction in
-   * length.
+  /*****************************************************************
+   * Basic access
    */
-  template <typename T>
-  ETL_INLINE explicit constexpr operator RangePtr<T>() const {
-    // TODO(cbiffle): potential for overflow in length calculation.
-    return RangePtr<T>(reinterpret_cast<T *>(_base),
-                       _count * sizeof(E) / sizeof(T));
-  }
 
   /*
    * Returns the number of elements in the range.
@@ -108,42 +106,103 @@ public:
   ETL_INLINE constexpr bool is_empty() const { return _count == 0; }
 
   /*
-   * Gets a raw pointer to the first element.  From this point on, all
-   * safety guarantees are void.
-   */
-  ETL_INLINE constexpr E *base() const { return _base; }
-
-  /*
-   * Array accessor.
+   * Element accessor.  Note that while this supports an array-like syntax, it
+   * may imply bounds-checked access, depending on the Policy.
    */
   ETL_INLINE constexpr E &operator[](std::size_t index) const {
     return _base[Policy::check_index(index, _count)];
   }
 
+  /*
+   * Shortens this range in-place by removing the first element.  Returns a
+   * reference to the removed element.
+   *
+   * This function is useful when processing the range left-to-right, either in
+   * a loop or in other code.
+   *
+   * This may be bounds-checked, depending on the Policy.
+   */
+  ETL_INLINE E & pop_front() {
+    E &result = (*this)[0];
+    *this = slice(1, _count);
+    return result;
+  }
+
+  /*****************************************************************
+   * Deriving new RangePtrs
+   */
+
+  /*
+   * Returns a sub-range between start (inclusive) and end (exclusive).  This is
+   * the most general derivation operation, but sometimes not the most clear;
+   * see the operations below.
+   *
+   * This may be bounds-checked, depending on the Policy.
+   */
   ETL_INLINE constexpr RangePtr slice(std::size_t start,
                                       std::size_t end) const {
     return RangePtr(&_base[Policy::check_slice_start(start, end, _count)],
                     Policy::check_slice_end(start, end, _count));
   }
 
+  /*
+   * Returns a "tail" of this range -- all elements starting at a certain index.
+   *
+   * This may be bounds-checked, depending on the Policy.
+   */
   ETL_INLINE constexpr RangePtr tail_from(std::size_t start) const {
     return slice(start, _count - start);
   }
 
+  /*
+   * Returns all elements of this range after the first.
+   *
+   * This may be bounds-checked, depending on the Policy.
+   */
   ETL_INLINE constexpr RangePtr tail() const {
     return tail_from(1);
   }
 
+  /*
+   * Returns the first N elements of this range.
+   *
+   * This may be bounds-checked, depending on the Policy.
+   */
   ETL_INLINE constexpr RangePtr first(std::size_t count) const {
     return slice(0, count);
   }
 
-  ETL_INLINE E & pop_front() const {
-    E &result = (*this)[0];
-    *this = slice(1, _count);
-    return result;
+  /*****************************************************************
+   * Comparison
+   */
+
+  /*
+   * Compares two RangePtrs for equality.  RangePtr equality is like pointer
+   * equality -- in that both ranges must start at the same address to be equal
+   * -- but the length of the ranges must also match.
+   */
+  template <typename X>
+  ETL_INLINE constexpr bool operator==(RangePtr<X> other) const {
+    return _base == other.base()
+        && byte_length() == other.byte_length();
   }
 
+  /*
+   * Compares two RangePtrs for inequality.  RangePtr equality is like pointer
+   * equality -- in that both ranges must start at the same address to be equal
+   * -- but the length of the ranges must also match.
+   */
+  template <typename X>
+  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) const {
+    return !(*this == other);
+  }
+
+  /*
+   * Checks for "deep equality" of two RangePtrs -- that is, whether the ranges
+   * they reference contain equivalent data.
+   *
+   * The two ranges must be equal length for the comparison to succeed.
+   */
   bool contents_equal(RangePtr other) const {
     if (_count != other._count) return false;
 
@@ -154,16 +213,28 @@ public:
     return true;
   }
 
-  template <typename X>
-  ETL_INLINE constexpr bool operator==(RangePtr<X> other) const {
-    return _base == other.base()
-        && byte_length() == other.byte_length();
+  /*****************************************************************
+   * Conversions
+   */
+
+  /*
+   * Explicit conversion to a different type, with a possible reduction in
+   * element count.
+   *
+   * TODO(cbiffle): provide a version of this that uses static_cast for safety.
+   */
+  template <typename T>
+  ETL_INLINE explicit constexpr operator RangePtr<T>() const {
+    // TODO(cbiffle): potential for overflow in length calculation.
+    return RangePtr<T>(reinterpret_cast<T *>(_base),
+                       _count * sizeof(E) / sizeof(T));
   }
 
-  template <typename X>
-  ETL_INLINE constexpr bool operator!=(RangePtr<X> other) const {
-    return !(*this == other);
-  }
+  /*
+   * Gets a raw pointer to the first element.  Note that this allows arbitrary
+   * unsafe pointer arithmetic  and should be used sparingly.
+   */
+  ETL_INLINE constexpr E *base() const { return _base; }
 
 private:
   E *_base;
