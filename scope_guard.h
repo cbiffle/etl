@@ -3,6 +3,7 @@
 
 #include <type_traits>
 
+#include "etl/concatenate.h"
 #include "etl/implicit.h"
 #include "etl/utility.h"
 
@@ -211,7 +212,7 @@ ScopeGuard<typename std::decay<F>::type> operator<<(GuardTag const &,
 }
 
 #define ETL_ON_SCOPE_EXIT \
-  auto on_scope_exit_ ## __COUNTER__ = ::etl::GuardTag() << [&]()
+  auto ETL_CONCATENATE(on_scope_exit, __COUNTER__) = ::etl::GuardTag() << [&]()
 
 }  // namespace etl
 
