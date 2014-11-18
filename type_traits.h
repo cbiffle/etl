@@ -154,22 +154,26 @@ using MatchQualifiers =
  * SelectBySize searches a list of types for one with the specified size,
  * as measured by sizeof.
  */
-template <std::size_t N, typename... Types> struct SelectBySize;
+
+template <std::size_t N, typename... Types> struct SelectBySizeHelper;
 
 // Common case: linear recursion.
 template <std::size_t N, typename Head, typename... Rest>
-struct SelectBySize<N, Head, Rest...>
-  : public std::conditional<sizeof(Head) == N,
-                            TypeConstant<Head>,
-                            SelectBySize<N, Rest...>>::Type {};
+struct SelectBySizeHelper<N, Head, Rest...>
+  : std::conditional<sizeof(Head) == N,
+                     TypeConstant<Head>,
+                     SelectBySizeHelper<N, Rest...>>::type {};
 
 // Termination case for single type, to improve error reporting.
 template <std::size_t N, typename OnlyCandidate>
-struct SelectBySize<N, OnlyCandidate> {
+struct SelectBySizeHelper<N, OnlyCandidate> {
   static_assert(sizeof(OnlyCandidate) == N,
                 "No type in SelectBySize list had the required size!");
   typedef OnlyCandidate Type;
 };
+
+template <std::size_t N, typename... Types>
+using SelectBySize = Invoke<SelectBySizeHelper<N, Types...>>;
 
 static constexpr std::size_t char_bits = CHAR_BIT;
 
@@ -183,10 +187,7 @@ using SignedIntOfSize =
     SelectBySize<N, signed char, short, int, long, long long>;
 
 template <std::size_t N>
-struct UnsignedIntOfSize {
-  typedef typename std::make_unsigned<typename SignedIntOfSize<N>::Type>::type
-          Type;
-};
+using UnsignedIntOfSize = Invoke<std::make_unsigned<SignedIntOfSize<N>>>;
 
 }  // namespace etl
 
