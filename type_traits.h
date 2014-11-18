@@ -152,7 +152,8 @@ using MatchQualifiers =
 
 /*
  * SelectBySize searches a list of types for one with the specified size,
- * as measured by sizeof.
+ * as measured by sizeof.  If given two types with equal size, the first is
+ * preferred.
  */
 
 template <std::size_t N, typename... Types> struct SelectBySizeHelper;
@@ -174,6 +175,31 @@ struct SelectBySizeHelper<N, OnlyCandidate> {
 
 template <std::size_t N, typename... Types>
 using SelectBySize = Invoke<SelectBySizeHelper<N, Types...>>;
+
+/*
+ * SelectByMinSize searches a list of types for the first one with at least the
+ * specified size, as measured by sizeof.
+ */
+
+template <std::size_t N, typename... Types> struct SelectByMinSizeHelper;
+
+// Common case: linear recursion.
+template <std::size_t N, typename Head, typename... Rest>
+struct SelectByMinSizeHelper<N, Head, Rest...>
+  : std::conditional<sizeof(Head) >= N,
+                     TypeConstant<Head>,
+                     SelectByMinSizeHelper<N, Rest...>>::type {};
+
+// Termination case for single type, to improve error reporting.
+template <std::size_t N, typename OnlyCandidate>
+struct SelectByMinSizeHelper<N, OnlyCandidate> {
+  static_assert(sizeof(OnlyCandidate) >= N,
+                "No type in SelectByMinSize list had the required size!");
+  typedef OnlyCandidate Type;
+};
+
+template <std::size_t N, typename... Types>
+using SelectByMinSize = Invoke<SelectByMinSizeHelper<N, Types...>>;
 
 static constexpr std::size_t char_bits = CHAR_BIT;
 
