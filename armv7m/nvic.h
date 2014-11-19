@@ -26,7 +26,7 @@ namespace armv7m {
  * end of this file.  They will help you avoid interesting race conditions.
  */
 struct Nvic {
-  #define ETL_BFF_DEFINITION_FILE etl/armv7m/nvic.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/armv7m/nvic.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 

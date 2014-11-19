@@ -7,7 +7,7 @@ namespace etl {
 namespace stm32f4xx {
 
 struct Usart {
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/usart.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/usart.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 };

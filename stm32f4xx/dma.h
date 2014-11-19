@@ -21,12 +21,12 @@ struct Dma {
       word = 0b10,
     };
 
-    #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/dma_stream.reg
+    #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/dma_stream.reg"
     #include "etl/biffield/generate.h"
     #undef ETL_BFF_DEFINITION_FILE
   };
 
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/dma.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/dma.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 

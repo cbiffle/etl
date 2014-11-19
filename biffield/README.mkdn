@@ -116,8 +116,8 @@ Assuming this is in a file named `death_ray.reg`, we could generate the
 corresponding access code with:
 
     struct DeathRay {
-      #define ETL_BFF_DEFINITION_FILE death_ray.reg
-      #include <biffield/generate.h>
+      #define ETL_BFF_DEFINITION_FILE "death_ray.reg"
+      #include <etl/biffield/generate.h>
       #undef ETL_BFF_DEFINITION_FILE
     };
 

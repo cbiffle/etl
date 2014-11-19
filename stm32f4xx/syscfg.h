@@ -7,7 +7,7 @@ namespace etl {
 namespace stm32f4xx {
 
 struct SysCfg {
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/syscfg.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/syscfg.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 };

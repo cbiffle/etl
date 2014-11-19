@@ -5,7 +5,7 @@ namespace etl {
 namespace stm32f4xx {
 
 struct Flash {
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/flash.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/flash.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 };

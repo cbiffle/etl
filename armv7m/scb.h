@@ -14,7 +14,7 @@ struct Scb {
     full = 0b11,
   };
 
-  #define ETL_BFF_DEFINITION_FILE etl/armv7m/scb.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/armv7m/scb.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 

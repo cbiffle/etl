@@ -7,7 +7,7 @@ namespace etl {
 namespace armv7m {
 
 struct ScbFp {
-  #define ETL_BFF_DEFINITION_FILE etl/armv7m/scb_fp.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/armv7m/scb_fp.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 };

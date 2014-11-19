@@ -28,7 +28,7 @@
 #define ETL_BFF_REG_WO(__at, __n, __fs) \
   __at volatile _##__n;
 
-#include ETL_QUOTE(ETL_BFF_DEFINITION_FILE)
+#include ETL_BFF_DEFINITION_FILE
 
 #undef ETL_BFF_REG_RW
 #undef ETL_BFF_REG_RO

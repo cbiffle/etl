@@ -34,7 +34,7 @@ struct Gpio {
     // 0b11 is reserved
   };
 
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/gpio.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/gpio.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 

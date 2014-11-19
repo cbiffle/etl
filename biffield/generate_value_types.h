@@ -124,7 +124,7 @@
  * Include the file and clean up.
  */
 
-#include ETL_QUOTE(ETL_BFF_DEFINITION_FILE)
+#include ETL_BFF_DEFINITION_FILE
 
 #undef ETL_BFF_ENUM
 

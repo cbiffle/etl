@@ -19,7 +19,7 @@ struct Rcc {
     div16 = 0b111,
   };
 
-  #define ETL_BFF_DEFINITION_FILE etl/stm32f4xx/rcc.reg
+  #define ETL_BFF_DEFINITION_FILE "etl/stm32f4xx/rcc.reg"
   #include "etl/biffield/generate.h"
   #undef ETL_BFF_DEFINITION_FILE
 

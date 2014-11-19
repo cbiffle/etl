@@ -123,7 +123,7 @@
  * Include the file and clean up.
  */
 
-#include ETL_QUOTE(ETL_BFF_DEFINITION_FILE)
+#include ETL_BFF_DEFINITION_FILE
 
 #undef _ETL_BFF_FIELD_COMMON
 #undef ETL_BFF_FIELD
