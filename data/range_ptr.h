@@ -80,7 +80,7 @@ public:
   /*
    * Implicit conversion from a RangePtr<T> to a RangePtr<T const>.
    */
-  ETL_INLINE ETL_IMPLICIT constexpr operator RangePtr<E const>() {
+  ETL_INLINE ETL_IMPLICIT constexpr operator RangePtr<E const>() const {
     return RangePtr<E const>(_base, _count);
   }
 
@@ -254,7 +254,7 @@ public:
       return *this;
     }
 
-    constexpr bool operator!=(Iterator const & other) {
+    constexpr bool operator!=(Iterator const & other) const {
       return _r != other._r;
     }
 

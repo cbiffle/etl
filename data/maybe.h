@@ -287,13 +287,13 @@ class Maybe {
  */
 template <typename T, typename S>
 bool operator==(Maybe<T> const &t, Maybe<S> const &s) {
-  bool t_ = t, s_ = s;
+  bool t_ = bool(t), s_ = bool(s);
   return (!t_ && !s_) || ((t_ && s_) && t.const_ref() == s.const_ref());
 }
 
 template <typename T, typename S>
 bool operator!=(Maybe<T> const &t, Maybe<S> const &s) {
-  bool t_ = t, s_ = s;
+  bool t_ = bool(t), s_ = bool(s);
   return (t_ != s_) || ((t_ && s_) && t.const_ref() != s.const_ref());
 }
 

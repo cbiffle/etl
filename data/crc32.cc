@@ -46,7 +46,7 @@ static constexpr T iterate(unsigned n, Fn const & fn, T seed) {
  * doesn't consider function references to be constexpr, even constexpr ones.
  */
 struct Step {
-  constexpr uint32_t operator()(uint32_t c) {
+  constexpr uint32_t operator()(uint32_t c) const {
     return (c & 1) ? (0xedb88320 ^ (c >> 1)) : (c >> 1);
   }
 };

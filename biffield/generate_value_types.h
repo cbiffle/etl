@@ -64,7 +64,7 @@
     /* zero constructor with all bits clear */ \
     constexpr __rn ## _value_t() : _bits(0) {} \
     /* explicit cast to access type */ \
-    explicit constexpr operator access_type() { return _bits; } \
+    explicit constexpr operator access_type() const { return _bits; } \
     /* now evaluate the fields */ \
     __VA_ARGS__ \
   private: \
@@ -93,14 +93,14 @@
 
 #define _ETL_BFF_FIELD_COMMON(__bf, __ft, __fn) \
   /* derivation function */ \
-  constexpr this_type with_ ## __fn(__ft value) { \
+  constexpr this_type with_ ## __fn(__ft value) const { \
     return this_type((_bits \
         & ~meta_type::__fn::in_place_mask) \
         | ((access_type(value) & meta_type::__fn::low_mask) \
                << meta_type::__fn::low_bit)); \
   } \
   \
-  constexpr __ft get_ ## __fn() { \
+  constexpr __ft get_ ## __fn() const { \
     return __ft((_bits >> meta_type::__fn::low_bit) \
                 & meta_type::__fn::low_mask); \
   }
@@ -108,14 +108,14 @@
 
 #define ETL_BFF_FIELD_ARRAY(__bf, __n, __ft, __fn) \
   /* derivation function */ \
-  constexpr this_type with_ ## __fn(unsigned idx, __ft value) { \
+  constexpr this_type with_ ## __fn(unsigned idx, __ft value) const { \
     return this_type((_bits \
         & ~meta_type::__fn::in_place_mask_of(idx)) \
         | ((access_type(value) & meta_type::__fn::low_element_mask) \
                << meta_type::__fn::low_bit_of(idx))); \
   } \
   \
-  constexpr __ft get_ ## __fn(unsigned idx) { \
+  constexpr __ft get_ ## __fn(unsigned idx) const { \
     return __ft((_bits >> meta_type::__fn::low_bit_of(idx)) \
                 & meta_type::__fn::low_element_mask); \
   }
