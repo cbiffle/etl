@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 
+#include "etl/bits.h"
 #include "etl/integer_sequence.h"
 
 using std::uint32_t;
@@ -14,18 +15,27 @@ namespace data {
 /*******************************************************************************
  * Table Generator
  *
- * We use the optimized CRC32 algorithm proposed in RFC1952.  It requires a
- * 256-entry lookup table,
+ * We use the optimized CRC32 algorithm proposed in RFC1952, parameterized by
+ * the lookup table size.
  *
  * The original implementation allocates the lookup table lazily and calculates
  * its contents at runtime.  In our applications we can't afford such things.
  * Instead, we use constexpr to compute the lookup table at compile time and
  * toss it into ROM.
  *
- * This costs 4KiB of ROM (at least, when this feature is linked in).  It's
- * possible that we should eschew such extravagance and choose a slower
- * algorithm using a smaller table.  I'll revisit this later.
+ * table_l2size below controls the log2 size of the lookup table.  The
+ * traditional version would use 8, for a 4KiB table and minimal operations per
+ * byte.
  */
+
+static constexpr unsigned table_l2size = 8;
+
+static_assert((table_l2size & (table_l2size - 1)) == 0,
+              "table_l2size must itself be a power of two");
+static_assert(table_l2size <= 8,
+              "table_l2size must not exceed 8");
+
+static constexpr unsigned table_size = 1u << table_l2size;
 
 /*
  * Here's a little function template for repeatedly applying a function object
@@ -65,15 +75,15 @@ struct Step {
 template <std::size_t ... Is>
 static constexpr auto generate_(etl::IndexSequence<Is...>)
     -> std::array<uint32_t, sizeof...(Is)> {
-  return {{ iterate(8, Step{}, uint32_t(Is))... }};
+  return {{ iterate(table_l2size, Step{}, uint32_t(Is))... }};
 }
 
 /*
- * Generates a CRC32 lookup table of 256 entries, one for each possible byte of
- * input.
+ * Generates a CRC32 lookup table of `table_size` entries, one for each
+ * possible chunk of input.
  */
-static constexpr std::array<uint32_t, 256> generate() {
-  return generate_(etl::MakeIndexSequence<256>{});
+static constexpr std::array<uint32_t, table_size> generate() {
+  return generate_(etl::MakeIndexSequence<table_size>{});
 }
 
 
@@ -92,8 +102,14 @@ static constexpr auto crc32_table = generate();
  */
 uint32_t crc32(RangePtr<std::uint8_t const> data, uint32_t seed) {
   uint32_t c = seed ^ 0xffffffff;
+  static constexpr auto chunk_mask = etl::bit_mask<table_l2size>();
+  static constexpr auto chunks_per_byte = 8 / table_l2size;
+
   for (auto byte : data) {
-    c = crc32_table[(c ^ byte) & 0xff] ^ (c >> 8);
+    for (unsigned i = 0; i < chunks_per_byte; ++i) {
+      unsigned chunk = (byte >> (i * table_l2size)) & chunk_mask;
+      c = crc32_table[(c ^ chunk) & chunk_mask] ^ (c >> table_l2size);
+    }
   }
   return c ^ 0xffffffff;
 }
