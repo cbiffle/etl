@@ -1,21 +1,20 @@
 #include "etl/data/crc32.h"
 
-#include <array>
 #include <cstddef>
 
-#include "etl/bits.h"
-#include "etl/integer_sequence.h"
-
 #include "etl/data/crc32_impl.h"
-
-using std::uint32_t;
 
 namespace etl {
 namespace data {
 
-static constexpr Crc32Table<4> crc32_table {};
+#ifndef ETL_DATA_CRC32_TABLE_L2SIZE
+#error To use this file you (or your build system) must define \
+       ETL_DATA_CRC32_TABLE_L2SIZE.
+#endif
 
-uint32_t crc32(RangePtr<std::uint8_t const> data, uint32_t seed) {
+static constexpr Crc32Table<ETL_DATA_CRC32_TABLE_L2SIZE> crc32_table {};
+
+std::uint32_t crc32(RangePtr<std::uint8_t const> data, std::uint32_t seed) {
   return crc32_table.process(data, seed);
 }
 

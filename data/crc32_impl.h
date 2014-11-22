@@ -14,6 +14,8 @@ namespace data {
 /*
  * CRC32 Lookup Table / Generator
  *
+ * Note: most cases can use the facade defined in crc32.h.
+ *
  * We use the optimized CRC32 algorithm proposed in RFC1952, parameterized by
  * the lookup table size.
  *
@@ -91,10 +93,19 @@ private:
   std::array<std::uint32_t, table_size> _table;
 
 public:
+  /*
+   * Creates a Crc32 implementation using 2^N table entries.
+   */
   constexpr Crc32Table() : _table(generate()) {}
 
-  uint32_t process(RangePtr<std::uint8_t const> data, uint32_t seed) const {
-    uint32_t c = seed ^ 0xffffffff;
+  /*
+   * Computes the (possibly partial) CRC-32 of the given range of data.  The
+   * seed, if provided, is the result from a previous CRC-32 pass -- this can
+   * be used to chain calls to incrementally compute the CRC of streaming data.
+   */
+  std::uint32_t process(RangePtr<std::uint8_t const> data,
+                        std::uint32_t seed = 0) const {
+    std::uint32_t c = seed ^ 0xffffffff;
     static constexpr auto chunk_mask = etl::bit_mask<table_l2size>();
     static constexpr auto chunks_per_byte = 8 / table_l2size;
   
