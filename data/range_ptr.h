@@ -151,7 +151,7 @@ public:
    * This may be bounds-checked, depending on the Policy.
    */
   ETL_INLINE constexpr RangePtr tail_from(std::size_t start) const {
-    return slice(start, _count - start);
+    return slice(start, _count);
   }
 
   /*
