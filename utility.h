@@ -16,17 +16,20 @@
 namespace etl {
 
 template <typename T>
-ETL_INLINE T && forward(typename std::remove_reference<T>::type & value) {
+ETL_INLINE
+constexpr T && forward(typename std::remove_reference<T>::type & value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE T && forward(typename std::remove_reference<T>::type && value) {
+ETL_INLINE
+constexpr T && forward(typename std::remove_reference<T>::type && value) {
   return static_cast<T &&>(value);
 }
 
 template <typename T>
-ETL_INLINE typename std::remove_reference<T>::type && move(T && value) {
+ETL_INLINE
+constexpr typename std::remove_reference<T>::type && move(T && value) {
   return static_cast<typename std::remove_reference<T>::type &&>(value);
 }
 
