@@ -1,18 +1,6 @@
 #ifndef _ETL_DATA_MAYBE_H_INCLUDED
 #define _ETL_DATA_MAYBE_H_INCLUDED
 
-#include <new>
-#include <type_traits>
-
-#include "etl/assert.h"
-#include "etl/attribute_macros.h"
-#include "etl/implicit.h"
-#include "etl/type_traits.h"
-#include "etl/utility.h"
-
-namespace etl {
-namespace data {
-
 /*
  * A Maybe<T> is a T-sized chunk of memory that may or may not contain useful
  * data.  It's intended as a replacement for passing around a (bool, address)
@@ -45,97 +33,223 @@ namespace data {
  * essentially acts like an empty Maybe<T> for any T, just as nullptr acts as
  * a null of any type.
  *
- * This is a crapload of code for such a simple concept.  Perhaps it can be
- * simplified; I don't see an obvious way.  I've already used universal
- * references where possible to reduce duplication.  C++ sure loves boilerplate
- * and corner cases!
+ *
+ * Implementation Discussion
+ * -------------------------
+ *
+ * This is a crapload of code for such a simple concept -- but then, perhaps
+ * this is simply not a simple concept in C++.  Getting correct move semantics,
+ * in-place construction, object lifecycle, etc. is nuanced and is simply not
+ * possible to describe in languages like Haskell with simpler Maybe types.
+ *
+ * Maybe<T> is currently a hierarchy with three levels.
+ *
+ * The top is MaybeTag, a common base type that can be used to detect Maybe
+ * types regardless of parameterization.
+ *
+ * Beneath this is *either* MaybeBaseNT or MaybeBaseT, depending on whether T
+ * has a non-trivial or trivial destructor, respectively.  These customize the
+ * available set of constructors, allowing Maybe<T> for T with trivial
+ * destructor to function as a literal type.
+ *
+ * The final layer is Maybe<T> itself, which factors out common code from the
+ * two base implementations.
+ *
+ * The overall factoring is inspired by Andrzej Krzemienski's work on
+ * optional<T>, though the implementation differs significantly in terms of
+ * what it permits for literal types and what it requires (and does not require)
+ * to be constexpr for non-literal types.
  */
 
-struct Nothing {};
-static Nothing constexpr nothing = {};
+#include <new>
+#include <type_traits>
 
-template <typename T> struct IsMaybe;
+#include "etl/assert.h"
+#include "etl/attribute_macros.h"
+#include "etl/implicit.h"
+#include "etl/invoke.h"
+#include "etl/type_traits.h"
+#include "etl/utility.h"
+
+namespace etl {
+namespace data {
+
+/*
+ * Nothing is the type of the polymorphic constant 'nothing', a stand-in for
+ * an empty Maybe<T> for any T.
+ */
+constexpr struct Nothing {} nothing {};
+
+/*
+ * InPlace is the type of the tag 'in_place', which distinguishes forwarded
+ * constructors from Maybe's own constructors.
+ */
+constexpr struct InPlace {} in_place {};
+
+/*
+ * MaybeTag is the root of the Maybe<T> hierarchy.
+ */
+struct MaybeTag {
+protected:
+  // Tag used internally.
+  static constexpr struct OnlyFullness {} only_fullness {};
+};
+
+/*
+ * IsMaybe<T> is a trait type that can recognize Maybes.
+ */
+template <typename T>
+struct IsMaybe : public std::is_base_of<MaybeTag, Invoke<std::decay<T>>> {};
+
+/*
+ * Base implementation of Maybe<T> for T with non-trivial destructor.
+ */
+template <typename T>
+struct MaybeBaseNT : MaybeTag {
+  bool _full;
+
+  union Storage {
+    struct {} dummy;
+    T object;
+
+    ETL_INLINE constexpr Storage() : dummy() {}
+
+    template <typename ... Args>
+    ETL_INLINE Storage(InPlace, Args && ... args)
+      : object(forward<Args>(args)...) {}
+
+    ETL_INLINE ~Storage() {}
+  } _storage;
+
+  ETL_INLINE MaybeBaseNT() : _full(false), _storage() {}
+
+  ETL_INLINE ETL_IMPLICIT MaybeBaseNT(Nothing) : _full(false), _storage() {}
+
+  ETL_INLINE MaybeBaseNT(OnlyFullness, bool full) : _full(full), _storage() {}
+
+  template <typename ... Args>
+  ETL_INLINE explicit MaybeBaseNT(InPlace, Args && ... args)
+    : _full(true),
+      _storage(in_place, forward<Args>(args)...) {}
+
+  ETL_INLINE MaybeBaseNT(T const & value)
+    : _full(true),
+      _storage(in_place, value) {}
+
+  ETL_INLINE MaybeBaseNT(T && value)
+    : _full(true),
+      _storage(in_place, move(value)) {}
+
+  ETL_INLINE ~MaybeBaseNT() {
+    if (_full) {
+      _storage.object.~T();
+    }
+  }
+};
+
+/*
+ * Base implementation of Maybe<T> for T with trivial destructor.
+ */
+template <typename T>
+struct MaybeBaseT : MaybeTag {
+  bool _full;
+
+  union Storage {
+    struct {} dummy;
+    T object;
+
+    ETL_INLINE constexpr Storage() : dummy() {}
+
+    template <typename ... Args>
+    ETL_INLINE constexpr Storage(InPlace, Args && ... args)
+      : object(forward<Args>(args)...) {}
+  } _storage;
+
+  ETL_INLINE constexpr MaybeBaseT() : _full(false), _storage() {}
+
+  ETL_INLINE
+  ETL_IMPLICIT constexpr MaybeBaseT(Nothing) : _full(false), _storage() {}
+
+  ETL_INLINE
+  constexpr MaybeBaseT(OnlyFullness, bool full) : _full(full), _storage() {}
+
+  template <typename ... Args>
+  ETL_INLINE constexpr explicit MaybeBaseT(InPlace, Args && ... args)
+    : _full(true),
+      _storage(in_place, forward<Args>(args)...) {}
+
+  ETL_INLINE constexpr MaybeBaseT(T const & value)
+    : _full(true),
+      _storage(in_place, value) {}
+
+  ETL_INLINE constexpr MaybeBaseT(T && value)
+    : _full(true),
+      _storage(in_place, move(value)) {}
+};
+
 
 struct LaxMaybeCheckPolicy;
 
-template <typename T, typename Policy = LaxMaybeCheckPolicy>
-class Maybe {
-  template <typename S, typename P> friend class Maybe;
- public:
-  /*
-   * Attempting to use Maybe<Nothing> causes all sorts of problems.
-   * This static_assert mostly serves to improve the error clarity.
-   */
-  static_assert(!std::is_same<Nothing, T>::value,
-                "Maybe<Nothing> is an illegal type.");
+template <typename T>
+using MaybeBase = ConditionalT<
+  std::is_trivially_destructible<T>::value,
+  MaybeBaseT<T>,
+  MaybeBaseNT<T>>;
 
-  /*
-   * Maybe<Maybe<...>> causes weird template match errors.
-   */
-  static_assert(!IsMaybe<T>::value, "Maybe cannot be nested.");
-
+template <typename T, typename Checking = LaxMaybeCheckPolicy>
+class Maybe : private MaybeBase<T> {
+public:
   /*****************************************************************
    * Construction, Destruction
    */
 
-  /*
-   * Creates an empty Maybe using the Nothing sentinel value.  Note that
-   * this conversion is implicit.
-   */
-  ETL_INLINE ETL_IMPLICIT Maybe(Nothing) : _full(false) {}
+  using Base = MaybeBase<T>;
+  using Base::Base;
 
   /*
    * Copies a Maybe<T> when the types match exactly.
+   *
+   * This needs to be here to suppress default copy constructor generation,
+   * even though the template version below *could* subsume it.
    */
-  ETL_INLINE Maybe(Maybe<T> const & other)
-    : _full(other._full) {
-    if (_full) new(&_value) T(other._value);
+  ETL_INLINE
+  Maybe(Maybe<T, Checking> const & other)
+    : MaybeBase<T>() {
+    if (other._full) in_place_construct(other._storage.object);
   }
 
   /*
    * Moves a Maybe<T> when the types match exactly.
+   *
+   * This needs to be here to suppress default copy constructor generation,
+   * even though the template version below *could* subsume it.
    */
-  ETL_INLINE Maybe(Maybe<T> && other) : _full(other._full) {
-    if (_full) {
-      new(&_value) T(::etl::move(other._value));
-      other._full = false;
-    }
+  ETL_INLINE
+  Maybe(Maybe<T, Checking> && other)
+    : MaybeBase<T>() {
+    if (other._full) in_place_construct(::etl::move(other._storage.object));
   }
-
-  /*
-   * Creates a full Maybe by universal reference to any type S assignable to T.
-   */
-  template <typename S>
-  explicit ETL_INLINE Maybe(S && value,
-      typename std::enable_if<!IsMaybe<S>::value, void *>::type = nullptr)
-    : _value(etl::forward<S>(value)),
-      _full(true) {}
 
   /*
    * Copies a Maybe<S>, where T is constructible from S.
    */
-  template <typename S>
-  explicit ETL_INLINE Maybe(Maybe<S> const & other,
-      typename std::enable_if<!std::is_same<T, S>::value,
-                              void *>::type = nullptr)
-    : _full(other._full) {
-    if (_full) new(&_value) T(other._value);
+  template <typename S, typename C>
+  ETL_INLINE
+  explicit Maybe(Maybe<S, C> const & other)
+    : MaybeBase<T>() {
+    if (other._full) in_place_construct(other._storage.object);
   }
 
   /*
    * Moves a Maybe<S>, where T is constructible from S.
    */
-  template <typename S>
-  explicit ETL_INLINE Maybe(Maybe<S> && other) : _full(other._full) {
-    if (_full) {
-      new(&_value) T(etl::move(other._value));
-      other._full = false;
-    }
+  template <typename S, typename C>
+  ETL_INLINE
+  explicit Maybe(Maybe<S, C> && other) : MaybeBase<T>() {
+    if (other._full) in_place_construct(etl::move(other._storage.object));
   }
 
-  ETL_INLINE ~Maybe() {
-    clear();
-  }
+  ~Maybe() = default;
  
   /*****************************************************************
    * Assignment
@@ -144,52 +258,33 @@ class Maybe {
   /*
    * Copy assignment.
    */
-  template <typename S>
-  Maybe &operator=(Maybe<S> const & other) {
-    if (other) {
-      if (_full) {
-        _value = other._value;
-      } else {
-        new(&_value) T(other._value);
-        _full = true;
-      }
-    } else {
-      clear();
-    }
+  template <typename S, typename C>
+  Maybe &operator=(Maybe<S, C> const & other) {
+    if (Base::_full && !other._full) clear();
+    else if (!Base::_full && other._full) in_place_construct(other.const_ref());
+    else if (Base::_full && other._full) assign(other.const_ref());
     return *this;
   }
 
-  template <typename S>
-  Maybe &operator=(Maybe<S> && other) {
-    if (other) {
-      if (_full) {
-        _value = etl::move(other._value);
-      } else {
-        new(&_value) T(etl::move(other._value));
-        _full = true;
-      }
-    } else {
-      clear();
-    }
+  template <typename S, typename C>
+  Maybe &operator=(Maybe<S, C> && other) {
+    if (Base::_full && !other._full) clear();
+    else if (!Base::_full && other._full) in_place_construct(move(other.ref()));
+    else if (Base::_full && other._full) assign(move(other.ref()));
     return *this;
   }
 
   /*
    * Move/copy an S into the Maybe, causing it to become full.  T must be
-   * constructible from S.  This implementation forwards to T's
-   * move assignment operator, unless this Maybe is empty, in which
-   * case there is no T on which to call the operator.  In that case
-   * we defer to the constructor.
+   * constructible and assignable from S.  This implementation forwards to T's
+   * move assignment operator, unless this Maybe is empty, in which case there
+   * is no T on which to call the operator.  In that case we defer to the
+   * constructor.
    */
   template <typename S>
   ETL_INLINE Maybe const & operator=(S && other) {
-    if (_full) {
-      _value = etl::forward<S>(other);
-    } else {
-      new(&_value) T(etl::forward<S>(other));
-      _full = true;
-    }
-
+    if (Base::_full) assign(forward<S>(other));
+    else in_place_construct(forward<S>(other));
     return *this;
   }
 
@@ -202,23 +297,25 @@ class Maybe {
    * Destroys any contained value, leaving the Maybe empty.
    */
   ETL_INLINE void clear() {
-    if (_full) {
-      _value.~T();
-      _full = false;
+    if (Base::_full) {
+      Base::_storage.object.~T();
+      Base::_full = false;
     }
   }
 
   /*
    * Checks to see if this Maybe is something, rather than nothing.
    */
-  ETL_INLINE bool is_something() const {
-    return _full;
+  ETL_INLINE
+  constexpr bool is_something() const {
+    return Base::_full;
   }
 
   /*
    * Inverse of is_something
    */
-  ETL_INLINE bool is_nothing() const {
+  ETL_INLINE
+  constexpr bool is_nothing() const {
     return !is_something();
   }
 
@@ -227,19 +324,21 @@ class Maybe {
    *
    * Precondition: is_something()
    */
-  ETL_INLINE T const & const_ref() const {
-    Policy::check_access(_full);
-    return _value;
+  ETL_INLINE
+  constexpr T const & const_ref() const {
+    return Checking::check_access(Base::_full), Base::_storage.object;
   }
 
   /*
    * Returns a reference to the contained value, if one exists.
    *
+   * TODO(cbiffle): this can become constexpr in C++14.
+   *
    * Precondition: is_something()
    */
-  ETL_INLINE T & ref() {
-    Policy::check_access(_full);
-    return _value;
+  ETL_INLINE
+  T & ref() {
+    return Checking::check_access(Base::_full), Base::_storage.object;
   }
 
   /*****************************************************************
@@ -257,7 +356,8 @@ class Maybe {
    *     // => foo.is_nothing();
    *   }
    */
-  ETL_INLINE explicit operator bool() const { return is_something(); }
+  ETL_INLINE
+  explicit constexpr operator bool() const { return is_something(); }
 
   /*
    * Convenience syntax for clearing a Maybe by assignment from nothing.
@@ -268,12 +368,30 @@ class Maybe {
     return *this;
   }
 
- private:
-  union {
-    T _value;
-  };
+private:
+  template <typename S, typename P> friend class Maybe;
 
-  bool _full;
+  template <typename ... Args>
+  void in_place_construct(Args && ... args) {
+    new (&Base::_storage.object) T(forward<Args>(args)...);
+    Base::_full = true;
+  }
+
+  template <typename S>
+  void assign(S && val) {
+    Base::_storage.object = forward<S>(val);
+  }
+
+};
+
+template <typename T, typename C1, typename C2>
+class Maybe<Maybe<T, C1>, C2> {
+  static_assert(sizeof(T) == 0, "Maybe<Maybe<...>> is not allowed.");
+};
+
+template <typename C>
+class Maybe<Nothing, C> {
+  static_assert(sizeof(C) == 0, "Maybe<Nothing> is not allowed.");
 };
 
 /*
@@ -282,63 +400,48 @@ class Maybe {
  * it's not obvious what the ordering between a user-defined type and nothing
  * would be.  Users can of course provide these if an ordering makes sense.
  */
-template <typename T, typename S>
-bool operator==(Maybe<T> const &t, Maybe<S> const &s) {
-  bool t_ = bool(t), s_ = bool(s);
-  return (!t_ && !s_) || ((t_ && s_) && t.const_ref() == s.const_ref());
+template <typename T1, typename C1, typename T2, typename C2>
+bool operator==(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
+  return (!bool(t) && !bool(s))
+      || ((bool(t) && bool(s)) && t.const_ref() == s.const_ref());
 }
 
-template <typename T, typename S>
-bool operator!=(Maybe<T> const &t, Maybe<S> const &s) {
-  bool t_ = bool(t), s_ = bool(s);
-  return (t_ != s_) || ((t_ && s_) && t.const_ref() != s.const_ref());
+template <typename T1, typename C1, typename T2, typename C2>
+bool operator!=(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
+  return (bool(t) != bool(s))
+      || ((bool(t) && bool(s)) && t.const_ref() != s.const_ref());
 }
 
 /*
  * Comparisons with Nothing.  We need this despite the implicit conversion
  * from Nothing -> Maybe<T> forall T, because implicit conversions don't kick
  * in during template argument matching for the templated operators above.
+ *
+ * On the plus side, we can confidently declare such operators constexpr.
  */
-template <typename T>
-bool operator==(Maybe<T> const &m, Nothing) {
+template <typename T, typename C>
+constexpr bool operator==(Maybe<T, C> const &m, Nothing) {
   return m.is_nothing();
 }
 
-template <typename T>
-bool operator==(Nothing, Maybe<T> const &m) {
+template <typename T, typename C>
+constexpr bool operator==(Nothing, Maybe<T, C> const &m) {
   return m.is_nothing();
 }
 
-template <typename T>
-bool operator!=(Maybe<T> const &m, Nothing) {
+template <typename T, typename C>
+constexpr bool operator!=(Maybe<T, C> const &m, Nothing) {
   return m.is_something();
 }
 
-template <typename T>
-bool operator!=(Nothing, Maybe<T> const &m) {
+template <typename T, typename C>
+constexpr bool operator!=(Nothing, Maybe<T, C> const &m) {
   return m.is_something();
 }
 
-
-template <typename T>
-struct IsRawMaybe : public ::etl::BoolConstant<false> {};
-
-template <typename T, typename P>
-struct IsRawMaybe<Maybe<T, P>> : public ::etl::BoolConstant<true> {};
-
-template <typename T>
-struct IsMaybe {
-private:
-  typedef typename std::remove_reference<T>::type Tnoref;
-  typedef typename std::remove_cv<Tnoref>::type Traw;
-
-public:
-  static constexpr bool value = IsRawMaybe<Traw>::value;
-};
-
-template <typename T>
-Maybe<T> just(T && value) {
-  return Maybe<T>(etl::forward<T>(value));
+template <typename T, typename C = LaxMaybeCheckPolicy>
+Maybe<T, C> just(T && arg) {
+  return Maybe<T, C>(in_place, forward<T>(arg));
 }
 
 
