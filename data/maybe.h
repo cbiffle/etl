@@ -21,9 +21,6 @@ namespace data {
  * cost: it's designed to boil down to the code you would have written by
  * hand, with no penalty to code generation.
  *
- * (TODO(cbiffle): once I work out how to assert from here, this will become
- * conditionally true.)
- *
  * For example, imagine a function that gets the latest altitude measurement,
  * if one is available.  Traditionally it might have the signature:
  *
