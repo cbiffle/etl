@@ -212,97 +212,99 @@ See: `generated_constants.h`
 Each field `foo` has a corresponding `foo_meta` struct containing structural
 metadata.
 
-    struct Reg {
-      ...
+```c++
+struct Reg {
+  ...
 
-      // Structural metadata holder for CTRL register
-      struct CTRL_meta {
-        // This struct acts as a namespace, disallow creation.
-        CTRL_meta() = delete;
-        CTRL_meta(CTRL_meta const &) = delete;
+  // Structural metadata holder for CTRL register
+  struct CTRL_meta {
+    // This struct acts as a namespace, disallow creation.
+    CTRL_meta() = delete;
+    CTRL_meta(CTRL_meta const &) = delete;
 
-        // The type of memory access used to read/write the register.
-        typedef uint16_t access_type;
+    // The type of memory access used to read/write the register.
+    typedef uint16_t access_type;
 
-        // Per-field metadata begins here
+    // Per-field metadata begins here
 
-        // Speed field structural metadata - typical of scalar fields
-        struct speed {
-          // This struct acts as a namespace, disallow creation.
-          speed() = delete;
-          speed(speed const &) = delete;
+    // Speed field structural metadata - typical of scalar fields
+    struct speed {
+      // This struct acts as a namespace, disallow creation.
+      speed() = delete;
+      speed(speed const &) = delete;
 
-          // Bit range and count
-          static constexpr unsigned low_bit = 8;
-          static constexpr unsigned high_bit = 15;
-          static constexpr unsigned bit_count = 8;
+      // Bit range and count
+      static constexpr unsigned low_bit = 8;
+      static constexpr unsigned high_bit = 15;
+      static constexpr unsigned bit_count = 8;
 
-          // Masks, both right-justified and in-place.
-          static constexpr access_type low_mask = 0xFF;
-          static constexpr accss_type in_place_mask = 0xFF00;
-        };
-
-        // ch_enable field structural metadata - typical of array fields.
-        struct ch_enable {
-          // This struct acts as a namespace, disallow creation.
-          ch_enable() = delete;
-          ch_enable(ch_enable const &) = delete;
-
-          // Bit range and count
-          static constexpr unsigned low_bit = 0;
-          static constexpr unsigned high_bit = 7;
-          static constexpr unsigned bit_count = 8;
-
-          // Masks, both right-justified and in-place.
-          static constexpr access_type low_mask = 0xFF;
-          static constexpr accss_type in_place_mask = 0xFF00;
-
-          // Array element geometry
-          static constexpr unsigned bits_per_element = 1;
-          static constexpr unsigned element_count = 8;
-          static constexpr access_type low_element_mask = 0x1;
-
-          // Low bit of element by index.
-          static constexpr unsigned low_bit_of(unsigned index) {
-            return low_bit + index * bits_per_element;
-          }
-
-          // In-place element mask by index.
-          static constexpr access_type in_place_mask_of(unsigned index) {
-            return low_element_mask << low_bit_of(index);
-          }
-        };
-      };
-
-      // Structural metadata holder for PRIO register array.
-      struct PRIO_meta {
-        // This struct acts as a namespace, disallow creation.
-        PRIO_meta() = delete;
-        PRIO_meta(PRIO_meta const &) = delete;
-
-        // The type of memory access used to read/write the registers.
-        typedef uint8_t access_type;
-
-        // Per-field metadata begins here
-
-        // priority field structural metadata
-        struct priority {
-          // This struct acts as a namespace, disallow creation.
-          priority() = delete;
-          priority(priority const &) = delete;
-
-          // Bit range and count
-          static constexpr unsigned low_bit = 0;
-          static constexpr unsigned high_bit = 7;
-          static constexpr unsigned bit_count = 8;
-
-          // Masks, both right-justified and in-place.
-          static constexpr access_type low_mask = 0xFF;
-          static constexpr accss_type in_place_mask = 0xFF;
-        };
-      };
-      ...
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF00;
     };
+
+    // ch_enable field structural metadata - typical of array fields.
+    struct ch_enable {
+      // This struct acts as a namespace, disallow creation.
+      ch_enable() = delete;
+      ch_enable(ch_enable const &) = delete;
+
+      // Bit range and count
+      static constexpr unsigned low_bit = 0;
+      static constexpr unsigned high_bit = 7;
+      static constexpr unsigned bit_count = 8;
+
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF00;
+
+      // Array element geometry
+      static constexpr unsigned bits_per_element = 1;
+      static constexpr unsigned element_count = 8;
+      static constexpr access_type low_element_mask = 0x1;
+
+      // Low bit of element by index.
+      static constexpr unsigned low_bit_of(unsigned index) {
+        return low_bit + index * bits_per_element;
+      }
+
+      // In-place element mask by index.
+      static constexpr access_type in_place_mask_of(unsigned index) {
+        return low_element_mask << low_bit_of(index);
+      }
+    };
+  };
+
+  // Structural metadata holder for PRIO register array.
+  struct PRIO_meta {
+    // This struct acts as a namespace, disallow creation.
+    PRIO_meta() = delete;
+    PRIO_meta(PRIO_meta const &) = delete;
+
+    // The type of memory access used to read/write the registers.
+    typedef uint8_t access_type;
+
+    // Per-field metadata begins here
+
+    // priority field structural metadata
+    struct priority {
+      // This struct acts as a namespace, disallow creation.
+      priority() = delete;
+      priority(priority const &) = delete;
+
+      // Bit range and count
+      static constexpr unsigned low_bit = 0;
+      static constexpr unsigned high_bit = 7;
+      static constexpr unsigned bit_count = 8;
+
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF;
+    };
+  };
+  ...
+};
+```
 
 
 Value Types
@@ -331,48 +333,50 @@ time.  There is essentially no cost to this abstraction.
 
 Continuing our running example:
 
-    struct Reg {
-      ...
+```c++
+struct Reg {
+  ...
 
-      class CTRL_value_t {
-      public:
-        // Shorthand reference to structural metadata produced above.
-        typedef CTRL_meta meta_type;
-        // Shorthand self-reference type.
-        typedef CTRL_value_t this_type;
-        // Shorthand for the memory access type
-        typedef CTRL_meta::access_type access_type;  // aka uint16_t
+  class CTRL_value_t {
+  public:
+    // Shorthand reference to structural metadata produced above.
+    typedef CTRL_meta meta_type;
+    // Shorthand self-reference type.
+    typedef CTRL_value_t this_type;
+    // Shorthand for the memory access type
+    typedef CTRL_meta::access_type access_type;  // aka uint16_t
 
-        // Explicit conversion from the access type integer.
-        explicit constexpr CTRL_value_t(uint16_t);
+    // Explicit conversion from the access type integer.
+    explicit constexpr CTRL_value_t(uint16_t);
 
-        // Zero constructor has all bits clear.
-        constexpr CTRL_value_t();
+    // Zero constructor has all bits clear.
+    constexpr CTRL_value_t();
 
-        // Explicit cast to the memory access type.
-        explicit constexpr operator uint16_t() const;
+    // Explicit cast to the memory access type.
+    explicit constexpr operator uint16_t() const;
 
-        // Per-field features begin here
+    // Per-field features begin here
 
-        // speed-field features, typical for a scalar field
-        // Derive a copy of this value with the speed field altered.
-        constexpr CTRL_value_t with_speed(uint8_t value) const;
-        // Extract the speed field.
-        constexpr uint8_t get_speed() const;
+    // speed-field features, typical for a scalar field
+    // Derive a copy of this value with the speed field altered.
+    constexpr CTRL_value_t with_speed(uint8_t value) const;
+    // Extract the speed field.
+    constexpr uint8_t get_speed() const;
 
-        // ch_enable-field features, typical for an array field.
-        // Derive a copy of this value with one ch_enable field altered.
-        constexpr CTRL_value_t with_ch_enable(unsigned index, bool value) const;
-        // Extract a single ch_enable.
-        constexpr bool get_ch_enable(unsigned index) const;
+    // ch_enable-field features, typical for an array field.
+    // Derive a copy of this value with one ch_enable field altered.
+    constexpr CTRL_value_t with_ch_enable(unsigned index, bool value) const;
+    // Extract a single ch_enable.
+    constexpr bool get_ch_enable(unsigned index) const;
 
-      private:
-        // The actual representation
-        uint16_t _bits;
-      };
+  private:
+    // The actual representation
+    uint16_t _bits;
+  };
 
-      ...
-    };
+  ...
+};
+```
 
 
 Register Accessors
@@ -404,44 +408,46 @@ In the case of an array field, each of these functions takes an index.
 
 To continue our example:
 
-    struct Reg {
-      ...
+```c++
+struct Reg {
+  ...
 
-      // Performs a single read of the CTRL register.
-      CTRL_value_t read_CTRL();
+  // Performs a single read of the CTRL register.
+  CTRL_value_t read_CTRL();
 
-      // Updates the CTRL register unconditionally.
-      void write_CTRL(CTRL_value_t);
+  // Updates the CTRL register unconditionally.
+  void write_CTRL(CTRL_value_t);
 
-      // Attempts an atomic compare-exchange of the CTRL register's contents.
-      // Returns true on success, false on failure.
-      bool swap_CTRL(CTRL_value_t old, CTRL_value_t new);
+  // Attempts an atomic compare-exchange of the CTRL register's contents.
+  // Returns true on success, false on failure.
+  bool swap_CTRL(CTRL_value_t old, CTRL_value_t new);
 
-      // Performs an atomic update of the CTRL register's contents, using the
-      // provided function object to make the change and looping if needed to
-      // win the compare-exchange.
-      template <typename Fn>
-      void update_CTRL(Fn &&);
+  // Performs an atomic update of the CTRL register's contents, using the
+  // provided function object to make the change and looping if needed to
+  // win the compare-exchange.
+  template <typename Fn>
+  void update_CTRL(Fn &&);
 
 
-      // Performs a single read of one of the PRIO registers.
-      PRIO_value_t read_PRIO(unsigned index);
+  // Performs a single read of one of the PRIO registers.
+  PRIO_value_t read_PRIO(unsigned index);
 
-      // Updates one of the PRIO registers unconditionally.
-      void write_PRIO(unsigned index, PRIO_value_t);
+  // Updates one of the PRIO registers unconditionally.
+  void write_PRIO(unsigned index, PRIO_value_t);
 
-      // Attempts an atomic compare-exchange of one of the PRIO registers'
-      // contents.  Returns true on success, false on failure.
-      bool swap_PRIO(unsigned index, PRIO_value_t old, PRIO_value_t new);
+  // Attempts an atomic compare-exchange of one of the PRIO registers'
+  // contents.  Returns true on success, false on failure.
+  bool swap_PRIO(unsigned index, PRIO_value_t old, PRIO_value_t new);
 
-      // Performs an atomic update of one of the PRIO registers' contents, using
-      // the provided function object to make the change and looping if needed
-      // to win the compare-exchange.
-      template <typename Fn>
-      void update_PRIO(unsigned index, Fn &&);
+  // Performs an atomic update of one of the PRIO registers' contents, using
+  // the provided function object to make the change and looping if needed
+  // to win the compare-exchange.
+  template <typename Fn>
+  void update_PRIO(unsigned index, Fn &&);
 
-      ...
-    };
+  ...
+};
+```
 
 Note that, at the moment, only the swap and update operations imply memory
 barriers.
