@@ -1,7 +1,7 @@
 #include "etl/stm32f4xx/rcc.h"
 
+#include "etl/assert.h"
 #include "etl/armv7m/instructions.h"
-
 #include "etl/stm32f4xx/flash.h"
 
 using etl::armv7m::data_synchronization_barrier;
@@ -120,8 +120,7 @@ static Rcc::cfgr_value_t::hpre_t get_hpre(unsigned divisor) {
     #undef X
 
     default:
-      // TODO(cbiffle): assert
-      while (1);
+      ETL_ASSERT(false);
   }
 }
 
@@ -136,8 +135,7 @@ static Rcc::pprex_t get_ppre(unsigned divisor) {
     #undef X
 
     default:
-      // TODO(cbiffle): assert
-      while (1);
+      ETL_ASSERT(false);
   }
 }
 
@@ -170,8 +168,7 @@ float Rcc::get_clock_hz(ApbPeripheral p) const {
     case 1: return clock_speeds.apb2;
 
     default:
-      // TODO(cbiffle): assert
-      while (1);
+      ETL_ASSERT(false);
   }
 }
 

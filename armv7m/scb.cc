@@ -1,5 +1,6 @@
 #include "etl/armv7m/scb.h"
 
+#include "etl/assert.h"
 #include "etl/armv7m/instructions.h"
 
 namespace etl {
@@ -18,11 +19,7 @@ void Scb::enable_faults() {
 
 void Scb::set_exception_priority(Exception e, Byte p) {
   unsigned index = static_cast<unsigned>(e);
-  if (index < 4 || index > 15) {
-    // Not configurable.
-    // TODO(cbiffle): assert.
-    return;
-  }
+  ETL_ASSERT(index >= 4 && index <= 15);
 
   unsigned bank = (index - 4) / 4;
   unsigned slot = index % 4;
