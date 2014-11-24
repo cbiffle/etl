@@ -35,11 +35,9 @@ void Nvic::set_irq_priority(unsigned irq, Byte priority) {
   unsigned bank = irq / 4;
   unsigned index = irq % 4;
 
-  bool succeeded;
-  do {
-    auto before = read_ipr(bank);
-    succeeded = swap_ipr(bank, before, before.with_priority(index, priority));
-  } while (!succeeded);
+  update_ipr(bank, [&](ipr_value_t x) {
+      return x.with_priority(index, priority);
+  });
 
   // swap implies a DMB.
   instruction_synchronization_barrier();

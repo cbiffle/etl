@@ -7,13 +7,11 @@ namespace etl {
 namespace armv7m {
 
 void Scb::enable_faults() {
-  bool succeeded = false;
-  do {
-    auto before = read_shcsr();
-    succeeded = swap_shcsr(before, before.with_memfaultena(true)
-                                         .with_busfaultena(true)
-                                         .with_usgfaultena(true));
-  } while (!succeeded);
+  update_shcsr([] (shcsr_value_t v) {
+      return v.with_memfaultena(true)
+              .with_busfaultena(true)
+              .with_usgfaultena(true);
+  });
   instruction_synchronization_barrier();
 }
 

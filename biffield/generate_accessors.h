@@ -39,6 +39,15 @@
     __at old_bits = __at(old_value); \
     __at new_bits = __at(new_value); \
     return __sync_bool_compare_and_swap(&_##__rn[index], old_bits, new_bits); \
+  } \
+  \
+  template <typename F> \
+  void update_##__rn(unsigned index, F && fn) { \
+    bool succeeded = false; \
+    do { \
+      auto before = this->read_##__rn(index); \
+      succeeded = this->swap_##__rn(index, before, fn(before)); \
+    } while (!succeeded); \
   }
 
 
@@ -65,7 +74,17 @@
     __at old_bits = __at(old_value); \
     __at new_bits = __at(new_value); \
     return __sync_bool_compare_and_swap(&_##__n, old_bits, new_bits); \
+  } \
+  \
+  template <typename F> \
+  void update_##__n(F && fn) { \
+    bool succeeded = false; \
+    do { \
+      auto before = this->read_##__n(); \
+      succeeded = this->swap_##__n(before, fn(before)); \
+    } while (!succeeded); \
   }
+
 
 
 
