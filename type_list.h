@@ -19,8 +19,10 @@
  */
 
 #include <cstddef>
+#include <type_traits>
 
 #include "etl/invoke.h"
+#include "etl/type_traits.h"
 
 namespace etl {
 
@@ -78,6 +80,53 @@ struct IndexHelper<0, Head, Rest...> {
 template <std::size_t N, typename Head, typename ... Rest>
 struct IndexHelper<N, Head, Rest...> : IndexHelper<N - 1, Rest...> {};
 
+template <typename, typename ...>
+struct ContainsHelper : std::integral_constant<bool, false> {};
+
+template <typename Target, typename First, typename ... Rest>
+struct ContainsHelper<Target, First, Rest...>
+  : std::integral_constant<bool, std::is_same<Target, First>::value ? true
+                      : ContainsHelper<Target, Rest...>::value> {};
+
+template <typename ... Types>
+struct UniqueHelper : std::integral_constant<bool, true> {};
+
+template <typename First, typename ... Types>
+struct UniqueHelper<First, Types...> : std::integral_constant<bool,
+  !ContainsHelper<First, Types...>::value && UniqueHelper<Types...>::value
+> {};
+
+template <template <typename> class F, typename ...>
+struct MaxF;
+
+template <template <typename> class F, typename First, typename ... Rest>
+struct MaxF<F, First, Rest...>
+  : std::integral_constant<decltype(F<First>::value),
+                           (F<First>::value > MaxF<F, Rest...>::value)
+                              ? F<First>::value
+                              : MaxF<F, Rest...>::value> {};
+
+template <template <typename> class F, typename First>
+struct MaxF<F, First>
+  : std::integral_constant<decltype(F<First>::value),
+                           F<First>::value> {};
+
+template <typename First, typename ... Rest>
+using MaxSizeOf = MaxF<etl::SizeOf, First, Rest...>;
+
+template <typename First, typename ... Rest>
+using MaxAlignOf = MaxF<etl::AlignOf, First, Rest...>;
+
+template <typename T, typename ... Types>
+struct IndexOfHelper : std::integral_constant<int, -1> {};
+
+template <typename T, typename First, typename ... Rest>
+struct IndexOfHelper<T, First, Rest...>
+  : std::integral_constant<int,
+                           std::is_same<T, First>::value
+                             ? 0
+                             : 1 + IndexOfHelper<T, Rest...>::value> {};
+
 }  // namespace _type_list
 
 /*
@@ -105,6 +154,19 @@ struct TypeList {
   using At = Invoke<_type_list::IndexHelper<Index, Types...>>;
 
   /*
+   * Does this TypeList contain the given type?
+   */
+  template <typename X>
+  static constexpr bool contains() {
+    return _type_list::ContainsHelper<X, Types...>::value;
+  }
+
+  /*
+   * Is each type in this TypeList unique?
+   */
+  static constexpr bool all_unique = _type_list::UniqueHelper<Types...>::value;
+
+  /*
    * Number of types in this TypeList.
    *
    * This is a constexpr static member function to parallel the structure of
@@ -114,7 +176,32 @@ struct TypeList {
   static constexpr std::size_t size() {
     return sizeof...(Types);
   }
+
+  /*
+   * Index of the given type in this TypeList.
+   */
+  template <typename T>
+  static constexpr std::size_t index_of() {
+    using R = _type_list::IndexOfHelper<T, Types...>;
+    static_assert(R::value != -1, "Type not found in type list");
+
+    return std::size_t(R::value);
+  }
 };
+
+template <typename TL>
+struct MaxSizeOf;
+
+template <typename First, typename ... Rest>
+struct MaxSizeOf<TypeList<First, Rest...>>
+    : _type_list::MaxSizeOf<First, Rest...> {};
+
+template <typename TL>
+struct MaxAlignOf;
+
+template <typename First, typename ... Rest>
+struct MaxAlignOf<TypeList<First, Rest...>>
+    : _type_list::MaxAlignOf<First, Rest...> {};
 
 }  // namespace etl
 
