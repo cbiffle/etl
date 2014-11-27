@@ -33,6 +33,20 @@ constexpr typename std::remove_reference<T>::type && move(T && value) {
   return static_cast<typename std::remove_reference<T>::type &&>(value);
 }
 
+template <typename T>
+void swap(T & a, T & b) {
+  T intermediate = move(a);
+  a = move(b);
+  b = move(intermediate);
+}
+
+template <typename T, std::size_t count>
+void swap(T (&a)[count], T (&b)[count]) {
+  for (std::size_t i = 0; i < count; ++i) {
+    swap(a[i], b[i]);
+  }
+}
+
 }  // namespace etl
 
 #endif  // _ETL_UTILITY_H_INCLUDED
