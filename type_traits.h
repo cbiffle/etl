@@ -65,6 +65,17 @@ template <typename Source, typename Dest>
 using MatchQualifiers =
     MatchConst<Source, typename MatchVolatile<Source, Dest>::Type>;
 
+
+/*******************************************************************************
+ * Template metafunction versions of sizeof, alignof.
+ */
+
+template <typename T>
+using SizeOf = std::integral_constant<std::size_t, sizeof(T)>;
+
+template <typename T>
+using AlignOf = std::integral_constant<std::size_t, alignof(T)>;
+
 }  // namespace etl
 
 #endif  // _ETL_TYPE_TRAITS_H_INCLUDED
