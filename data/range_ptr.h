@@ -128,6 +128,13 @@ public:
     return result;
   }
 
+  /*
+   * Checks whether the given pointer falls within this range.
+   */
+  ETL_INLINE constexpr bool contains(void * ptr) const {
+    return (_base <= ptr) && (ptr < &_base[_count]);
+  }
+
   /*****************************************************************
    * Deriving new RangePtrs
    */
