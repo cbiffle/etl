@@ -161,6 +161,11 @@ struct TypeList {
     return _type_list::ContainsHelper<X, Types...>::value;
   }
 
+  template <typename X>
+  struct Contains
+    : std::integral_constant<bool,
+                             _type_list::ContainsHelper<X, Types...>::value> {};
+
   /*
    * Is each type in this TypeList unique?
    */
