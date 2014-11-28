@@ -236,6 +236,16 @@ private:
   template <class A, class B> \
   constexpr bool operator _op_(NonNull<A> const & a, NonNull<B> const & b) { \
     return a.get() _op_ b.get(); \
+  } \
+  \
+  template <class A, class B> \
+  constexpr bool operator _op_(NonNull<A> const &a, B * b) { \
+    return a.get() _op_ b; \
+  } \
+  \
+  template <class A, class B> \
+  constexpr bool operator _op_(A * a, NonNull<B> const & b) { \
+    return a _op_ b.get(); \
   }
 
 ETL_NON_NULL_RELATIONAL_OPERATOR(==)
