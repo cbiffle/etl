@@ -78,6 +78,15 @@ public:
       : _base(base), _count(count) {}
 
   /*
+   * Creates a RangePtr from explicit begin and end pointers.
+   *
+   * Note that you should rarely need to do this.  The array overloads above
+   * provide a safer and more convenient alternative.
+   */
+  ETL_INLINE constexpr RangePtr(E *begin, E const *end)
+      : _base(begin), _count(end - begin) {}
+
+  /*
    * Implicit conversion from a RangePtr<T> to a RangePtr<T const>.
    */
   ETL_INLINE ETL_IMPLICIT constexpr operator RangePtr<E const>() const {
