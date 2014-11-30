@@ -23,17 +23,10 @@
 #include <cstdint>
 
 #include "etl/assert.h"
-#include "etl/data/maybe.h"
 #include "etl/data/range_ptr.h"
 
 namespace etl {
 namespace mem {
-
-/*
- * A convenient type for describing a range of memory, modeled using
- * RangePtr.
- */
-using Region = etl::data::RangePtr<std::uint8_t>;
 
 /*
  * Forward declarations of the policy defaults; see the bottom of this file for
@@ -52,14 +45,13 @@ template <
 class Arena : public TrackingPolicy {
 public:
   /*
-   * Creates an Arena using the given range of Regions, which may be in ROM.
-   * The Arena will deny allocation requests until it has been reset().
+   * Creates an Arena using the given memory region.  The Arena is created in an
+   * exhausted state and will deny allocation requests until it has been
+   * reset().
    */
-  Arena(etl::data::RangePtr<Region const> rom_table)
-    : _prototype(rom_table),
-      _table(),
-      _total_bytes(0),
-      _free_bytes(0) {}
+  Arena(etl::data::RangePtr<std::uint8_t> range)
+    : _total(range),
+      _free() {}
 
   /*
    * Restores this Arena to its unoccupied state, freeing any previous
@@ -69,38 +61,7 @@ public:
   void reset() {
     TrackingPolicy::check_reset();
 
-    // We need to steal some memory from the first region for our bookkeeping.
-    // Make sure that'll work...
-    auto region_count = _prototype.count();
-    if (region_count == 0) return;
-  
-    // TODO(cbiffle): drop bytes from beginning to achieve alignment.
-  
-    auto table_size = sizeof(Region) * region_count;
-    ETL_ASSERT(_prototype[0].byte_length() >= table_size);
-  
-    // Yay!
-  
-    // Point our RAM table at the bottom section of the first region.
-    // Double-casting nonsense deals with alignment change.
-    _table = {
-      static_cast<Region *>(static_cast<void *>(_prototype[0].base())),
-      region_count
-    };
-  
-    // Now copy the ROM table into RAM, accumulating the total byte count.
-    _total_bytes = 0;
-  
-    // TODO(cbiffle): align the regions to our minimum allocation granule as
-    // they are copied.
-    for (unsigned i = 0; i < region_count; ++i) {
-      _table[i] = _prototype[i];
-      _total_bytes += _table[i].byte_length();
-    }
-  
-    // Adjust first entry to account for what we've used.
-    _table[0] = _table[0].tail_from(table_size);
-    _free_bytes = _total_bytes - table_size;
+    _free = _total;
   }
 
   /*
@@ -115,27 +76,22 @@ public:
     bytes = (bytes + 3) & ~3u;
   
     // Take space from the first region that can satisfy the request.
-    for (auto & region : _table) {
-      if (region.byte_length() >= bytes) {
-        void * p = region.base();
-        region = region.tail_from(bytes);
-        _free_bytes -= bytes;
-        TrackingPolicy::note_allocation(p, bytes);
-        return p;
-      }
+    if (_free.byte_length() >= bytes) {
+      void * p = _free.base();
+      _free = _free.tail_from(bytes);
+      TrackingPolicy::note_allocation(p, bytes);
+      return p;
+    } else {
+      return FailurePolicy::allocation_failed();
     }
-  
-    return FailurePolicy::allocation_failed();
   }
 
-  std::size_t get_free_count() const { return _free_bytes; }
-  std::size_t get_total_count() const { return _total_bytes; }
+  std::size_t get_free_count() const { return _free.byte_length(); }
+  std::size_t get_total_count() const { return _total.byte_length(); }
 
 private:
-  etl::data::RangePtr<Region const> _prototype;
-  etl::data::RangePtr<Region> _table;
-  std::size_t _total_bytes;
-  std::size_t _free_bytes;
+  etl::data::RangePtr<std::uint8_t> _total;
+  etl::data::RangePtr<std::uint8_t> _free;
 };
 
 
