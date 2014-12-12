@@ -5,6 +5,8 @@
  * C++ function wrappers for GCC ARM intrinsics and inline assembly.
  */
 
+#include <cstdint>
+
 #include "etl/attribute_macros.h"
 
 namespace etl {
@@ -76,6 +78,28 @@ ETL_INLINE unsigned usat(unsigned v) {
   } else {
     static_assert(S >= 0 || (-S >= 1 && -S <= 31), "right shift out of range");
     asm ("usat %0, %1, %2, ASR %3"
+         : "=r" (r)
+         : "I" (N), "r" (v), "I" (-S));
+    return r;
+  }
+}
+
+/*
+ * Saturate a signed integer to a certain number of bit positions with an
+ * optional shift.  Negative shift distance shift right.
+ */
+template <unsigned N, int S = 0>
+ETL_INLINE std::int32_t ssat(std::int32_t v) {
+  std::int32_t r;
+  if (S >= 0) {
+    static_assert(S < 0 || (S <= 31), "left shift out of range");
+    asm ("ssat %0, %1, %2, LSL %3"
+         : "=r" (r)
+         : "I" (N), "r" (v), "I" (S));
+    return r;
+  } else {
+    static_assert(S >= 0 || (-S >= 1 && -S <= 31), "right shift out of range");
+    asm ("ssat %0, %1, %2, ASR %3"
          : "=r" (r)
          : "I" (N), "r" (v), "I" (-S));
     return r;
