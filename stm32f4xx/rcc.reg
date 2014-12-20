@@ -150,3 +150,17 @@ ETL_BFF_REG_RW(Word, plli2scfgr,
   ETL_BFF_FIELD(30:28, unsigned, plli2sr)
   ETL_BFF_FIELD(14: 6, unsigned, plli2sn)
 )
+
+ETL_BFF_REG_RW(Word, pllsaicfgr,
+  ETL_BFF_FIELD(30:28, unsigned, pllsair)
+  ETL_BFF_FIELD(27:24, unsigned, pllsaiq)
+  ETL_BFF_FIELD(14: 6, unsigned, pllsain)
+)
+ETL_BFF_REG_RW(Word, dckcfgr,
+  ETL_BFF_FIELD(24:24, bool, timpre)
+  ETL_BFF_FIELD(23:22, unsigned, sai1bsrc)
+  ETL_BFF_FIELD(21:20, unsigned, sai1asrc)
+  ETL_BFF_FIELD(17:16, unsigned, pllsaidivr)
+  ETL_BFF_FIELD(12: 8, unsigned, pllsaidivq)
+  ETL_BFF_FIELD( 4: 0, unsigned, plli2sdivq)
+)
