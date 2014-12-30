@@ -413,6 +413,29 @@ bool operator!=(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
 }
 
 /*
+ * Comparisons between Maybe and non-maybe types.
+ */
+template <typename T1, typename C1, typename S>
+bool operator==(Maybe<T1, C1> const &t, S const &s) {
+  return bool(t) && t.const_ref() == s;
+}
+
+template <typename T1, typename C1, typename S>
+bool operator==(S const & s, Maybe<T1, C1> const &t) {
+  return bool(t) && s == t.const_ref();
+}
+
+template <typename T1, typename C1, typename S>
+bool operator!=(Maybe<T1, C1> const &t, S const &s) {
+  return bool(t) && t.const_ref() != s;
+}
+
+template <typename T1, typename C1, typename S>
+bool operator!=(S const & s, Maybe<T1, C1> const &t) {
+  return bool(t) && s != t.const_ref();
+}
+
+/*
  * Comparisons with Nothing.  We need this despite the implicit conversion
  * from Nothing -> Maybe<T> forall T, because implicit conversions don't kick
  * in during template argument matching for the templated operators above.
