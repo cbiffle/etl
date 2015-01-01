@@ -1,0 +1,36 @@
+ETL_BFF_REG_RW(Word, cr1,
+  ETL_BFF_FIELD( 7: 7, bool, arpe)
+  ETL_BFF_FIELD( 3: 3, bool, opm)
+  ETL_BFF_FIELD( 2: 2, bool, urs)
+  ETL_BFF_FIELD( 1: 1, bool, udis)
+  ETL_BFF_FIELD( 0: 0, bool, cen)
+)
+
+ETL_BFF_REG_RW(Word, cr2,
+)
+
+ETL_BFF_REG_RESERVED(Word, 8, 1)
+
+ETL_BFF_REG_RW(Word, dier,
+  ETL_BFF_FIELD( 8: 8, bool, ude)
+  ETL_BFF_FIELD( 0: 0, bool, uie)
+)
+
+ETL_BFF_REG_RW(Word, sr,
+  ETL_BFF_FIELD( 0: 0, bool, uif)
+)
+
+ETL_BFF_REG_RW(Word, egr,
+  ETL_BFF_FIELD( 0: 0, bool, ug)
+)
+
+ETL_BFF_REG_RESERVED(Word, 18, 3)
+
+ETL_BFF_REG_RW(Word, cnt,
+)
+
+ETL_BFF_REG_RW(Word, psc,
+)
+
+ETL_BFF_REG_RW(Word, arr,
+)
