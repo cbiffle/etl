@@ -105,7 +105,14 @@ ETL_BFF_REG_RW(Word, sr,
 
   ETL_BFF_FIELD( 0: 0, bool, uif)
 )
-ETL_BFF_REG_RW(Word, egr, )
+ETL_BFF_REG_RW(Word, egr,
+  ETL_BFF_FIELD( 6: 6, bool, tg)
+  ETL_BFF_FIELD( 4: 4, bool, cc4g)
+  ETL_BFF_FIELD( 3: 3, bool, cc3g)
+  ETL_BFF_FIELD( 2: 2, bool, cc2g)
+  ETL_BFF_FIELD( 1: 1, bool, cc1g)
+  ETL_BFF_FIELD( 0: 0, bool, ug)
+)
 ETL_BFF_REG_RW(Word, ccmr1,
   /* output compare mode */
   ETL_BFF_FIELD(15:15, bool, oc2ce)
