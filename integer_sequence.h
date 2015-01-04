@@ -34,14 +34,15 @@ struct ConcatHelper<IntegerSequence<T, S1...>, IntegerSequence<T, S2...>>
  * same type.
  */
 template <typename S1, typename S2>
-using Concat = Invoke<ConcatHelper<S1, S2>>;
+using Concat = typename ConcatHelper<S1, S2>::Type;
 
 
 // Helper struct for MakeIntegerSequence.
 template <typename T, T N, T B = T(0), bool = N == T(0), bool = N == T(1)>
 struct MakeIntegerSequenceHelper {
-  using Left = Invoke<MakeIntegerSequenceHelper<T, N / 2, B>>;
-  using Right = Invoke<MakeIntegerSequenceHelper<T, N - N / 2, B + N / 2>>;
+  using Left = typename MakeIntegerSequenceHelper<T, N / 2, B>::Type;
+  using Right =
+      typename MakeIntegerSequenceHelper<T, N - N / 2, B + N / 2>::Type;
 
   using Type = Concat<Left, Right>;
 };
@@ -61,7 +62,7 @@ struct MakeIntegerSequenceHelper<T, N, B, true, false>
  * This is a backport of C++14's make_integer_sequence.
  */
 template <typename T, T N, T B = T(0)>
-using MakeIntegerSequence = Invoke<MakeIntegerSequenceHelper<T, N, B>>;
+using MakeIntegerSequence = typename MakeIntegerSequenceHelper<T, N, B>::Type;
 
 
 /*
