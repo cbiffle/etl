@@ -16,6 +16,14 @@ inline Word get_psp() {
 }
 
 /*
+ * Sets the contents of the Process Stack Pointer.  Note that this will blow
+ * the compiler's mind if done while executing from the PSP.
+ */
+inline void set_psp(Word value) {
+  asm ("msr PSP, %0" :: "r"(value));
+}
+
+/*
  * Reads the contents of the Main Stack Pointer.
  */
 inline Word get_msp() {
