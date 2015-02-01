@@ -50,4 +50,24 @@ extern "C" {
   extern etl::armv7m::Word const etl_armv7m_initial_stack_top;
 }
 
+namespace etl {
+namespace armv7m {
+
+// ARMv7-M ISR entry points look like this:
+typedef void (*ExceptionHandler)(void);
+
+struct ExceptionTable {
+  Word const *initial_stack_top;
+  ExceptionHandler reset_handler;
+
+  #define ETL_ARMV7M_EXCEPTION(name) ExceptionHandler name ## _handler;
+  #define ETL_ARMV7M_EXCEPTION_RESERVED(n) ExceptionHandler __reserved ## n;
+  #include "etl/armv7m/exceptions.def"
+  #undef ETL_ARMV7M_EXCEPTION
+  #undef ETL_ARMV7M_EXCEPTION_RESERVED
+};
+
+}  // namespace armv7m
+}  // namespace etl
+
 #endif  // _ETL_ARMV7M_EXCEPTION_TABLE_H_INCLUDED

@@ -5,20 +5,6 @@
 namespace etl {
 namespace armv7m {
 
-// ARMv7-M ISR entry points look like this:
-typedef void (*ExceptionHandler)(void);
-
-struct ExceptionTable {
-  Word const *initial_stack_top;
-  ExceptionHandler reset_handler;
-
-  #define ETL_ARMV7M_EXCEPTION(name) ExceptionHandler name ## _handler;
-  #define ETL_ARMV7M_EXCEPTION_RESERVED(n) ExceptionHandler __reserved ## n;
-  #include "etl/armv7m/exceptions.def"
-  #undef ETL_ARMV7M_EXCEPTION
-  #undef ETL_ARMV7M_EXCEPTION_RESERVED
-};
-
 // Architectural sanity check:
 static_assert(sizeof(ExceptionTable) == 16 * sizeof(Word),
               "ExceptionTable size is wrong.");
