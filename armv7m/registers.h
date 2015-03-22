@@ -20,7 +20,7 @@ inline Word get_psp() {
  * the compiler's mind if done while executing from the PSP.
  */
 inline void set_psp(Word value) {
-  asm ("msr PSP, %0" :: "r"(value));
+  asm volatile ("msr PSP, %0" :: "r"(value));
 }
 
 /*
@@ -30,6 +30,13 @@ inline Word get_msp() {
   Word result;
   asm ("mrs %0, MSP" : "=r"(result));
   return result;
+}
+
+/*
+ * Sets the contents of the CONTROL register.
+ */
+inline void set_control(Word value) {
+  asm volatile ("msr CONTROL, %0" :: "r"(value));
 }
 
 }  // namespace armv7m
