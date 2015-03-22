@@ -1,0 +1,99 @@
+// vim:syntax=cpp:
+// ARMv7-M Memory Protection Unit register definitions
+
+/*
+ * The MPU Type Register can be read to discover the type of MPU present
+ * in the current system.  This is important, since the MPU is not a
+ * mandatory feature.
+ *
+ * Note that the basic shape of this register is shared with some other
+ * architecture profiles, specifically ARMv7-R, so it has some apparently
+ * superfluous fields.
+ */
+ETL_BFF_REG_RO(Word, type,
+  // Number of instruction regions supported (always 0 on v7-M)
+  ETL_BFF_FIELD(23:16, Byte, iregion)
+  // Number of data regions supported (>0 if MPU implemented)
+  ETL_BFF_FIELD(15: 8, Byte, dregion)
+  // Are instruction and data accesses handled separately?  (false on v7-M)
+  ETL_BFF_FIELD( 0: 0, bool, separate)
+)
+
+/*
+ * The MPU Control Register does essentially what its name implies.
+ */
+ETL_BFF_REG_RW(Word, ctrl,
+  // Is the default memory map available as an implicit "region -1" for
+  // privileged accesses?  (If false, any privileged accesses outside the
+  // current MPU map will fault.)
+  ETL_BFF_FIELD( 2: 2, bool, privdefena)
+  // Is the MPU active for hard fault and NMI?  (If true, double fault
+  // lockup becomes significantly easier to produce.)
+  ETL_BFF_FIELD( 1: 1, bool, hfnmiena)
+  // Is the MPU enabled at all?  Other MPU settings are significant only
+  // when this is true.
+  ETL_BFF_FIELD( 0: 0, bool, enable)
+)
+
+/*
+ * The MPU Region Number Register controls which MPU region is accessible
+ * through the RBAR/RASR registers.
+ *
+ * Note that, on ARMv7-M, one can also select a region directly by setting
+ * the 'valid' and 'region' bits in the RBAR.
+ */
+ETL_BFF_REG_RW(Word, rnr,
+  ETL_BFF_FIELD( 7: 0, Byte, region)
+)
+
+/*
+ * The MPU Region Base Address Register holds the base address of the
+ * region currently selected in the Region Number Register.
+ *
+ * On writes, if 'valid' is set, the content of the 'region' field replaces
+ * the contents of the Region Number Register and controls which region
+ * is affected.
+ *
+ * On reads, the 'region' field always reads the bottom four bits of the
+ * Region Number Register, and 'valid' is always false.
+ */
+ETL_BFF_REG_RW(Word, rbar,
+  // The top 27 bits of the address.
+  ETL_BFF_FIELD(31: 5, Word, addr_27)
+  // On writes, when true, the Region Number Register is updated from the
+  // contents of 'region' below.
+  ETL_BFF_FIELD( 4: 4, bool, valid)
+  ETL_BFF_FIELD( 3: 0, Byte, region)
+)
+
+/*
+ * The MPU Region Attribute and Size Register controls (wait for it) the
+ * attributes and size of the currently selected region.
+ */
+ETL_BFF_REG_RW(Word, rasr,
+  // Execute Never - when true and this region is enabled, instruction
+  // fetches from this region will fault.
+  ETL_BFF_FIELD(28:28, bool, xn)
+  // Access Permissions determine which processor modes can access this
+  // region and for what purpose.
+  ETL_BFF_FIELD(26:24, AccessPermissions, ap)
+
+  // TEX:S:C:B control ordering, cacheability, shareability, and writeback
+  // behavior.  The overall encoding is quite complex and non-orthogonal.
+  // See the ARMv7-M ARM for more details (section B3.5.7).
+  ETL_BFF_FIELD(21:19, Byte, tex)
+  ETL_BFF_FIELD(18:18, bool, s)
+  ETL_BFF_FIELD(17:17, bool, c)
+  ETL_BFF_FIELD(16:16, bool, b)
+
+  // Subregion Disable bits, when set, "knock out" the corresponding eighth
+  // of this region.  (Only affects regions of 128 bytes or larger.)
+  ETL_BFF_FIELD(15: 8, Byte, srd)
+
+  // The size of the region, log2, minus 1.  That is, a 'size' of 4 indicates
+  // a 32-byte region.
+  ETL_BFF_FIELD( 5: 1, Byte, size)
+
+  // Is this region enabled?
+  ETL_BFF_FIELD( 0: 0, bool, enable)
+)
