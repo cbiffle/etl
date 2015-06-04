@@ -336,6 +336,15 @@ struct AssertRangeCheckPolicy {
   }
 };
 
+/*
+ * A convenient way to capture a static array as a RangePtr, in a context where
+ * the implicit conversion constructor doesn't apply.
+ */
+template <typename T, size_t n>
+inline RangePtr<T> range(T (&arr)[n]) {
+  return RangePtr<T>(arr);
+}
+
 }  // namespace data
 }  // namespace etl
 
