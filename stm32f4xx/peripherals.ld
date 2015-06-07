@@ -13,6 +13,8 @@ _ZN3etl9stm32f4xx6usart3E = 0x40004800;
 
 _ZN3etl9stm32f4xx4iic1E = 0x40005400;
 
+_ZN3etl9stm32f4xx3pwrE = 0x40007000;
+
 _ZN3etl9stm32f4xx3dacE = 0x40007400;
 
 _ZN3etl9stm32f4xx4tim1E = 0x40010000;
