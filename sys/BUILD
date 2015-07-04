@@ -5,3 +5,10 @@ c_library('libm',
     'link_srcs': [ '-lm' ],
   },
 )
+
+c_library('libgcc',
+  using = {
+    'link_srcs': [ '-lgcc' ],
+  },
+)
+
