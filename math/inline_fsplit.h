@@ -13,7 +13,7 @@ namespace math {
 inline SplitFloat fsplit_inl(float const value) {
   auto const bits = math::float_to_bits(value);
   auto const exp = int32_t((bits >> 23) & 0xFF) - 127;
-  auto const sign = math::float_from_bits(bits & (1 << 31));
+  auto const sign = math::float_from_bits(bits & (1u << 31));
 
   float i_part = value;
   float f_part = sign;

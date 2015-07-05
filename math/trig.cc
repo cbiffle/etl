@@ -63,7 +63,7 @@ namespace _sin {
   template <std::size_t ... is>
   static constexpr std::array<__fp16, sizeof...(is)>
       gen_(IndexSequence<is...>) {
-    return {{ std::sin(float(is) * (2 * float(M_PI)) / points)... }};
+    return {{ __fp16(std::sin(float(is) * (2 * float(M_PI)) / points))... }};
   }
 
   static constexpr std::array<__fp16, points> gen() {
@@ -93,7 +93,7 @@ namespace _cos {
   template <std::size_t ... is>
   static constexpr std::array<__fp16, sizeof...(is)>
       gen_(IndexSequence<is...>) {
-    return {{ std::cos(float(is) * (2 * float(M_PI)) / points)... }};
+    return {{ __fp16(std::cos(float(is) * (2 * float(M_PI)) / points))... }};
   }
 
   static constexpr std::array<__fp16, points> gen() {
