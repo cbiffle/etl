@@ -4,6 +4,7 @@
 #include "etl/utility.h"
 #include "etl/integer_sequence.h"
 #include "etl/type_list.h"
+#include "etl/functor.h"
 
 namespace etl {
 namespace math {
@@ -75,47 +76,16 @@ struct VectorBase : public VectorTag {
   explicit constexpr VectorBase(VectorBase<dim, S, o2> const & other)
     : elements{other.elements} {}
 
-  template <typename F>
-  constexpr auto unary(F && fn) const
-      -> Vector<dim, decltype(fn(elements[0])), _orient> {
-    return unary_(forward<F>(fn), MakeIndexSequence<dim>{});
+  template <std::size_t n>
+  constexpr T get() const {
+    static_assert(n < dim, "vector element out of range");
+    return elements[n];
   }
 
-  template <typename F, typename S>
-  constexpr auto binary(VectorBase<dim, S, _orient> const & other,
-                        F && fn) const
-      -> Vector<dim, decltype(fn(T{}, S{})), _orient> {
-    return binary_(other, forward<F>(fn), MakeIndexSequence<dim>{});
-  }
-
-  template <typename F>
-  constexpr auto reduce(F && fn) const -> T {
-    return reduce_(forward<F>(fn), MakeIndexSequence<dim>{});
-  }
-
-private:
-  template <typename F, typename S, std::size_t... I>
-  constexpr auto binary_(VectorBase<dim, S, _orient> const & other,
-                         F && fn,
-                         IndexSequence<I...>) const
-      -> Vector<dim, decltype(fn(T{}, S{})), _orient> {
-    return { fn(elements[I], other.elements[I])... };
-  }
-
-  template <typename F, std::size_t... I>
-  constexpr auto unary_(F && fn, IndexSequence<I...>) const
-      -> Vector<dim, decltype(fn(T{})), _orient> {
-    return { fn(elements[I])... };
-  }
-
-  template <typename F, std::size_t I0, std::size_t I1, std::size_t... I>
-  constexpr auto reduce_(F && fn, IndexSequence<I0, I1, I...>) const -> T {
-    return fn(elements[I0], reduce_(forward<F>(fn), IndexSequence<I1, I...>{}));
-  }
-
-  template <typename F, std::size_t I0>
-  constexpr auto reduce_(F && fn, IndexSequence<I0>) const -> T {
-    return elements[I0];
+  template <std::size_t n>
+  T & get() {
+    static_assert(n < dim, "vector element out of range");
+    return elements[n];
   }
 };
 
@@ -131,22 +101,16 @@ struct VectorBase<2, T, _orient> : public VectorTag {
   constexpr VectorBase(T x_, T y_) : x{x_}, y{y_} {}
   constexpr VectorBase(T v) : x{v}, y{v} {}
 
-  template <typename F>
-  constexpr auto unary(F && fn) const
-      -> Vector<2, decltype(fn(T{})), _orient> {
-    return { fn(x), fn(y) };
+  template <std::size_t n>
+  constexpr T get() const {
+    static_assert(n < 2, "vector element out of range");
+    return n == 0 ? x : y;
   }
 
-  template <typename F, typename S>
-  constexpr auto binary(VectorBase<2, S, _orient> const & other,
-                        F && fn) const
-      -> Vector<2, decltype(fn(T{}, S{})), _orient> {
-    return { fn(x, other.x), fn(y, other.y) };
-  }
-
-  template <typename F>
-  constexpr auto reduce(F && fn) const -> T {
-    return fn(x, y);
+  template <std::size_t n>
+  T & get() {
+    static_assert(n < 2, "vector element out of range");
+    return n == 0 ? x : y;
   }
 };
 
@@ -166,22 +130,20 @@ struct VectorBase<3, T, _orient> : public VectorTag {
   constexpr VectorBase(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
   constexpr VectorBase(T v) : x{v}, y{v}, z{v} {}
 
-  template <typename F>
-  constexpr auto unary(F && fn) const
-      -> Vector<3, decltype(fn(x)), _orient> {
-    return { fn(x), fn(y), fn(z) };
+  template <std::size_t n>
+  constexpr T get() const {
+    static_assert(n < 3, "vector element out of range");
+    return n == 0 ? x
+                  : n == 1 ? y
+                           : z;
   }
 
-  template <typename F, typename S>
-  constexpr auto binary(VectorBase<3, S, _orient> const & other,
-                        F && fn) const
-      -> Vector<3, decltype(fn(x, other.x)), _orient> {
-    return { fn(x, other.x), fn(y, other.y), fn(z, other.z) };
-  }
-
-  template <typename F>
-  constexpr auto reduce(F && fn) const -> T {
-    return fn(x, fn(y, z));
+  template <std::size_t n>
+  T & get() {
+    static_assert(n < 3, "vector element out of range");
+    return n == 0 ? x
+                  : n == 1 ? y
+                           : z;
   }
 };
 
@@ -197,22 +159,22 @@ struct VectorBase<4, T, _orient> : public VectorTag {
     : x{x_}, y{y_}, z{z_}, w{w_} {}
   constexpr VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
 
-  template <typename F>
-  constexpr auto unary(F && fn) const
-      -> Vector<4, decltype(fn(x)), _orient> {
-    return { fn(x), fn(y), fn(z), fn(w) };
+  template <std::size_t n>
+  constexpr T get() const {
+    static_assert(n < 4, "vector element out of range");
+    return n == 0 ? x
+                  : n == 1 ? y
+                           : n == 2 ? z
+                                    : w;
   }
 
-  template <typename F, typename S>
-  constexpr auto binary(VectorBase<4, S, _orient> const & other,
-                        F && fn) const
-      -> Vector<4, decltype(fn(x, other.x)), _orient> {
-    return { fn(x, other.x), fn(y, other.y), fn(z, other.z), fn(w, other.w) };
-  }
-
-  template <typename F>
-  constexpr auto reduce(F && fn) const -> T {
-    return fn(x, fn(y, fn(z, w)));
+  template <std::size_t n>
+  T & get() {
+    static_assert(n < 4, "vector element out of range");
+    return n == 0 ? x
+                  : n == 1 ? y
+                           : n == 2 ? z
+                                    : w;
   }
 };
 
@@ -238,9 +200,6 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
   constexpr Vector(Vector const &) = default;
 
   using _vec::VectorBase<_dim, T, _orient>::VectorBase;
-  using _vec::VectorBase<_dim, T, _orient>::binary;
-  using _vec::VectorBase<_dim, T, _orient>::unary;
-  using _vec::VectorBase<_dim, T, _orient>::reduce;
 
   template <typename S>
   constexpr explicit Vector(Vector<_dim, S, _orient> const & other)
@@ -249,32 +208,68 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
   template <typename S>
   using WithType = Vector<_dim, S, _orient>;
 
+  template <std::size_t I>
+  constexpr T get() const {
+    return this->VectorBase::template get<I>();
+  }
+
+  template <std::size_t I0, std::size_t I1, std::size_t... I>
+  constexpr auto get() const
+      -> Vector<sizeof...(I) + 2, T, _orient> {
+    return Vector<sizeof...(I) + 2, T, _orient>{
+      this->template get<I0>(),
+      this->template get<I1>(),
+      this->template get<I>()...
+    };
+  }
+
+  /********************************************************************
+   * Lift combinators
+   */
+
+  template <typename F>
+  constexpr auto unary(F && fn) const
+      -> WithType<decltype(fn(T{}))> {
+    return unary_(forward<F>(fn), MakeIndexSequence<dim>{});
+  }
+
+  template <typename F, typename S>
+  constexpr auto binary(WithType<S> const & other, F && fn) const
+      -> WithType<decltype(fn(T{}, S{}))> {
+    return binary_(other, forward<F>(fn), MakeIndexSequence<dim>{});
+  }
+
+  template <typename F>
+  constexpr auto reduce(F && fn) const -> T {
+    return reduce_(forward<F>(fn), MakeIndexSequence<dim>{});
+  }
+
   /********************************************************************
    * Lifted operators
    */
 
   constexpr This operator-() const {
-    return unary([](T a) { return -a; });
+    return unary(functor::Negate<T>{});
   }
 
   template <typename S>
   constexpr This operator+(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a + b; });
+    return binary(other, functor::Add<T, S>{});
   }
 
   template <typename S>
   constexpr This operator-(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a - b; });
+    return binary(other, functor::Subtract<T, S>{});
   }
 
   template <typename S>
   constexpr This operator*(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a * b; });
+    return binary(other, functor::Multiply<T, S>{});
   }
 
   template <typename S>
   constexpr This operator/(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a / b; });
+    return binary(other, functor::Divide<T, S>{});
   }
 
 
@@ -313,16 +308,41 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
 
   template <typename S>
   constexpr bool operator==(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a == b; })
-          .reduce([](bool a, bool b) { return a && b; });
+    return binary(other, functor::Equal<T, S>{})
+          .reduce(functor::LogicalAnd<bool, bool>{});
   }
 
   template <typename S>
   constexpr bool operator!=(WithType<S> const & other) const {
-    return binary(other, [](T a, S b) { return a != b; })
-          .reduce([](bool a, bool b) { return a || b; });
+    return binary(other, functor::NotEqual<T, S>{})
+          .reduce(functor::LogicalOr<bool, bool>{});
   }
 
+private:
+  template <typename F, std::size_t... I>
+  constexpr auto unary_(F && fn, IndexSequence<I...>) const
+      -> WithType<decltype(fn(T{}))> {
+    return { fn(this->template get<I>())... };
+  }
+
+  template <typename F, typename S, std::size_t... I>
+  constexpr auto binary_(WithType<S> const & other,
+                         F && fn,
+                         IndexSequence<I...>) const
+      -> WithType<decltype(fn(T{}, S{}))> {
+    return { fn(this->template get<I>(), other.template get<I>())... };
+  }
+
+  template <typename F, std::size_t I0, std::size_t I1, std::size_t... I>
+  constexpr T reduce_(F && fn, IndexSequence<I0, I1, I...>) const {
+    return fn(this->template get<I0>(),
+              reduce_(forward<F>(fn), IndexSequence<I1, I...>{}));
+  }
+
+  template <typename F, std::size_t I0>
+  constexpr T reduce_(F && fn, IndexSequence<I0>) const {
+    return this->template get<I0>();
+  }
 };
 
 
@@ -370,7 +390,7 @@ constexpr auto transpose(V const & v) -> typename V::Transposed {
 template <typename V>
 inline constexpr auto dot(V const & a, V const & b) -> typename V::Element {
   using E = typename V::Element;
-  return (a * b).reduce([](E x, E y) { return x + y; });
+  return (a * b).reduce(functor::Add<E, E>{});
 }
 
 template <typename T>
