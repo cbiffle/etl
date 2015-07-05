@@ -88,6 +88,22 @@ struct ContainsHelper<Target, First, Rest...>
   : std::integral_constant<bool, std::is_same<Target, First>::value ? true
                       : ContainsHelper<Target, Rest...>::value> {};
 
+template <template<typename>class, typename ...>
+struct AnyHelper : std::integral_constant<bool, false> {};
+
+template <template<typename> class P, typename First, typename ... Rest>
+struct AnyHelper<P, First, Rest...>
+  : std::integral_constant<bool, P<First>::value ? true
+                      : AnyHelper<P, Rest...>::value> {};
+
+template <template<typename>class, typename ...>
+struct AllHelper : std::integral_constant<bool, true> {};
+
+template <template<typename> class P, typename First, typename ... Rest>
+struct AllHelper<P, First, Rest...>
+  : std::integral_constant<bool, !P<First>::value ? false
+                      : AllHelper<P, Rest...>::value> {};
+
 template <typename ... Types>
 struct UniqueHelper : std::integral_constant<bool, true> {};
 
@@ -193,6 +209,21 @@ struct TypeList {
     return std::size_t(R::value);
   }
 };
+
+template <template <typename> class P, typename T>
+struct Any : std::integral_constant<bool, true> {};
+
+template <template <typename> class P, typename... Types>
+struct Any<P, TypeList<Types...>> : _type_list::AnyHelper<P, Types...> {};
+
+template <template <typename> class P, typename T>
+struct None : std::integral_constant<bool, !Any<P, T>::value> {};
+
+template <template <typename> class P, typename T>
+struct All : std::integral_constant<bool, false> {};
+
+template <template <typename> class P, typename... Types>
+struct All<P, TypeList<Types...>> : _type_list::AllHelper<P, Types...> {};
 
 template <typename TL>
 struct MaxSizeOf;
