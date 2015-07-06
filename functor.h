@@ -16,6 +16,18 @@ namespace etl {
 namespace functor {
 
 /*******************************************************************************
+ * Types and creation
+ */
+
+template <typename A, typename B>
+struct Construct {
+  constexpr B operator()(A const & a) const {
+    return B(a);
+  }
+};
+
+
+/*******************************************************************************
  * Unary arithmetic operators
  */
 
