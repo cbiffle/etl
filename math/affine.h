@@ -125,6 +125,17 @@ constexpr Mat4<T> persp(T l, T t,
   };
 }
 
+template <typename T>
+constexpr Mat3<T> rotate(T a) {
+  using namespace std;
+  return {
+    { cos(a), -sin(a), 0 },
+    { sin(a), cos(a),  0 },
+    { 0,      0,       1 },
+  };
+}
+
+
 }  // namespace math
 }  // namespace etl
 
