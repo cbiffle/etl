@@ -203,7 +203,7 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
 
   template <typename S>
   constexpr explicit Vector(Vector<_dim, S, _orient> const & other)
-    : Vector(other.unary([] (S x) { return T(x); })) {}
+    : Vector(parallel(other, [] (S x) { return T(x); })) {}
 
   template <typename S>
   using WithType = Vector<_dim, S, _orient>;
@@ -222,164 +222,243 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
       this->template get<I>()...
     };
   }
-
-  /********************************************************************
-   * Lift combinators
-   */
-
-  template <typename F>
-  constexpr auto unary(F && fn) const
-      -> WithType<decltype(fn(T{}))> {
-    return unary_(forward<F>(fn), MakeIndexSequence<dim>{});
-  }
-
-  template <typename F, typename S>
-  constexpr auto binary(WithType<S> const & other, F && fn) const
-      -> WithType<decltype(fn(T{}, S{}))> {
-    return binary_(other, forward<F>(fn), MakeIndexSequence<dim>{});
-  }
-
-  template <typename F>
-  constexpr auto reduce(F && fn) const -> T {
-    return reduce_(forward<F>(fn), MakeIndexSequence<dim>{});
-  }
-
-  /********************************************************************
-   * Lifted operators
-   */
-
-  constexpr This operator-() const {
-    return unary(functor::Negate<T>{});
-  }
-
-  template <typename S>
-  constexpr This operator+(WithType<S> const & other) const {
-    return binary(other, functor::Add<T, S>{});
-  }
-
-  template <typename S>
-  constexpr This operator-(WithType<S> const & other) const {
-    return binary(other, functor::Subtract<T, S>{});
-  }
-
-  template <typename S>
-  constexpr This operator*(WithType<S> const & other) const {
-    return binary(other, functor::Multiply<T, S>{});
-  }
-
-  template <typename S>
-  constexpr This operator/(WithType<S> const & other) const {
-    return binary(other, functor::Divide<T, S>{});
-  }
-
-
-  /********************************************************************
-   * Compound assignment
-   */
-
-  template <typename S>
-  This & operator+=(WithType<S> const & other) {
-    *this = *this + other;
-    return *this;
-  }
-
-  template <typename S>
-  This & operator-=(WithType<S> const & other) {
-    *this = *this - other;
-    return *this;
-  }
-
-  template <typename S>
-  This & operator*=(WithType<S> const & other) {
-    *this = *this * other;
-    return *this;
-  }
-
-  template <typename S>
-  This & operator/=(WithType<S> const & other) {
-    *this = *this / other;
-    return *this;
-  }
-
-
-  /********************************************************************
-   * Comparison
-   */
-
-  template <typename S>
-  constexpr bool operator==(WithType<S> const & other) const {
-    return binary(other, functor::Equal<T, S>{})
-          .reduce(functor::LogicalAnd<bool, bool>{});
-  }
-
-  template <typename S>
-  constexpr bool operator!=(WithType<S> const & other) const {
-    return binary(other, functor::NotEqual<T, S>{})
-          .reduce(functor::LogicalOr<bool, bool>{});
-  }
-
-private:
-  template <typename F, std::size_t... I>
-  constexpr auto unary_(F && fn, IndexSequence<I...>) const
-      -> WithType<decltype(fn(T{}))> {
-    return { fn(this->template get<I>())... };
-  }
-
-  template <typename F, typename S, std::size_t... I>
-  constexpr auto binary_(WithType<S> const & other,
-                         F && fn,
-                         IndexSequence<I...>) const
-      -> WithType<decltype(fn(T{}, S{}))> {
-    return { fn(this->template get<I>(), other.template get<I>())... };
-  }
-
-  template <typename F, std::size_t I0, std::size_t I1, std::size_t... I>
-  constexpr T reduce_(F && fn, IndexSequence<I0, I1, I...>) const {
-    return fn(this->template get<I0>(),
-              reduce_(forward<F>(fn), IndexSequence<I1, I...>{}));
-  }
-
-  template <typename F, std::size_t I0>
-  constexpr T reduce_(F && fn, IndexSequence<I0>) const {
-    return this->template get<I0>();
-  }
 };
 
+template <typename T, Orient orient = Orient::col>
+using Vec2 = Vector<2, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec3 = Vector<3, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec4 = Vector<4, T, orient>;
+
+using Vec2f = Vec2<float>;
+using Vec3f = Vec3<float>;
+using Vec4f = Vec4<float>;
+
 
 /*******************************************************************************
- * Mixed vector-scalar operations.
+ * Parallel and horizontal combinators.
+ *
+ * These templates lift operations on scalars to operations on vectors in one
+ * of two ways:
+ * - Parallel combinators apply a scalar operation separately to each element
+ *   of a vector, or to corresponding elements of two vectors.
+ * - Horizontal combinators apply a scalar operation across the elements of
+ *   a vector, producing a scalar.
  */
 
+namespace _vec {
+  template <
+    std::size_t dim,
+    typename T,
+    Orient orient,
+    typename F,
+    std::size_t... I
+  >
+  constexpr auto parallel_(Vector<dim, T, orient> const & v,
+                           F && fn,
+                           IndexSequence<I...>)
+      -> Vector<dim, decltype(fn(T{})), orient> {
+    return { fn(v.template get<I>())... };
+  }
+
+  template <
+    std::size_t dim,
+    typename T,
+    typename S,
+    Orient orient,
+    typename F,
+    std::size_t... I
+  >
+  constexpr auto parallel_(Vector<dim, T, orient> const & a,
+                           Vector<dim, S, orient> const & b,
+                           F && fn,
+                           IndexSequence<I...>)
+      -> Vector<dim, decltype(fn(T{}, S{})), orient> {
+    return { fn(a.template get<I>(), b.template get<I>())... };
+  }
+  
+  template <
+    std::size_t dim,
+    typename T,
+    Orient orient,
+    typename F,
+    std::size_t I0,
+    std::size_t I1,
+    std::size_t... I
+  >
+  constexpr auto horizontal_(Vector<dim, T, orient> const & v,
+                             F && fn,
+                             IndexSequence<I0, I1, I...>)
+      -> T {
+    return fn(v.template get<I0>(),
+              horizontal_(v, forward<F>(fn), IndexSequence<I1, I...>{}));
+  }
+  
+  template <
+    std::size_t dim,
+    typename T,
+    Orient orient,
+    typename F,
+    std::size_t I0
+  >
+  constexpr auto horizontal_(Vector<dim, T, orient> const & v,
+                             F && fn,
+                             IndexSequence<I0>)
+      -> T {
+    return v.template get<I0>();
+  }
+
+}  // namespace _vec
+
 /*
+ * Produces a new vector by applying 'fn' to each element of 'v'.
+ */
 template <
-  typename V,
-  typename S,
-  typename = std::enable_if<!IsVector<S>::value>,
-  typename E = typename V::Element,
-  typename R = Vector<V::dim, decltype(E{} + S{}), V::orient>
+  std::size_t dim,
+  typename T,
+  Orient orient,
+  typename F
 >
-inline constexpr R operator+(V const & v, S const & s) {
-  return v.unary([&](E e) { return e + s; });
+constexpr auto parallel(Vector<dim, T, orient> const & v, F && fn)
+    -> decltype(parallel_(v, forward<F>(fn), MakeIndexSequence<dim>{})) {
+  return parallel_(v, forward<F>(fn), MakeIndexSequence<dim>{});
 }
 
-template <typename V, typename S>
-inline constexpr auto operator*(V const & v, S const & s)
-    -> typename std::enable_if<!std::is_base_of<VectorTag, S>::value,
-                               decltype(typename V::Element{} * S{})>::type {
-  return v.unary([&](typename V::Element e) { return e * s; });
+/*
+ * Produces a new vector by applying 'fn' to corresponding elements of 'a' and
+ * 'b'.
+ */
+template <
+  std::size_t dim,
+  typename T,
+  typename S,
+  Orient orient,
+  typename F,
+  std::size_t... I
+>
+constexpr auto parallel(Vector<dim, T, orient> const & a,
+                        Vector<dim, S, orient> const & b,
+                        F && fn)
+    -> decltype(parallel_(a, b, forward<F>(fn), MakeIndexSequence<dim>{})) {
+  return parallel_(a, b, forward<F>(fn), MakeIndexSequence<dim>{});
 }
 
-template <typename V, typename S>
-inline constexpr auto operator*(S const & s, V const & v)
-    -> typename std::enable_if<!std::is_base_of<VectorTag, S>::value,
-                               decltype(S{} * typename V::Element{})>::type {
-  return v.unary([&](typename V::Element e) { return s * e; });
+/*
+ * Applies 'fn' to pairs of elements in 'v' until all elements have been
+ * considered, and returns the result.
+ */
+template <
+  std::size_t dim,
+  typename T,
+  Orient orient,
+  typename F,
+  std::size_t... I
+>
+constexpr auto horizontal(Vector<dim, T, orient> const & v,
+                          F && fn)
+    -> decltype(horizontal_(v, forward<F>(fn), MakeIndexSequence<dim>{})) {
+  return horizontal_(v, forward<F>(fn), MakeIndexSequence<dim>{});
 }
-*/
 
 
 /*******************************************************************************
- * Vector-specific operations implemented as non-member functions.
+ * Lifted arithmetic operators.  These implementations follow a common pattern
+ * using the parallel combinator.
+ */
+
+// Negation
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto operator-(Vector<dim, T, orient> const & v)
+    -> Vector<dim, decltype(-T{}), orient> {
+  return parallel(v, functor::Negate<T>{});
+}
+
+// Addition
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto operator+(Vector<dim, T, orient> const & a,
+                         Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} + S{}), orient> {
+  return parallel(a, b, functor::Add<T, S>{});
+}
+
+// Subtraction
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto operator-(Vector<dim, T, orient> const & a,
+                         Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} - S{}), orient> {
+  return parallel(a, b, functor::Subtract<T, S>{});
+}
+
+// Multiplication
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto operator*(Vector<dim, T, orient> const & a,
+                         Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} * S{}), orient> {
+  return parallel(a, b, functor::Multiply<T, S>{});
+}
+
+// Division
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto operator/(Vector<dim, T, orient> const & a,
+                         Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} / S{}), orient> {
+  return parallel(a, b, functor::Divide<T, S>{});
+}
+
+/*******************************************************************************
+ * Compound assignment.  These are derived from the binary operators using a
+ * common pattern.
+ */
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+Vector<dim, T, orient> & operator+=(Vector<dim, T, orient> & target,
+                                    Vector<dim, S, orient> const & other) {
+  return target = target + other;
+}
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+Vector<dim, T, orient> & operator-=(Vector<dim, T, orient> & target,
+                                    Vector<dim, S, orient> const & other) {
+  return target = target - other;
+}
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+Vector<dim, T, orient> & operator*=(Vector<dim, T, orient> & target,
+                                    Vector<dim, S, orient> const & other) {
+  return target = target * other;
+}
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+Vector<dim, T, orient> & operator/=(Vector<dim, T, orient> & target,
+                                    Vector<dim, S, orient> const & other) {
+  return target = target / other;
+}
+
+/*******************************************************************************
+ * Comparison operators.  These combine element-wise comparison with a
+ * horizontal conjunction.
+ */
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr bool operator==(Vector<dim, T, orient> const & a,
+                          Vector<dim, S, orient> const & b) {
+  return horizontal(parallel(a, b, functor::Equal<T, S>{}),
+                    functor::LogicalAnd<bool, bool>{});
+}
+
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr bool operator!=(Vector<dim, T, orient> const & a,
+                          Vector<dim, S, orient> const & b) {
+  return horizontal(parallel(a, b, functor::NotEqual<T, S>{}),
+                    functor::LogicalOr<bool, bool>{});
+}
+
+
+/*******************************************************************************
+ * Vector-specific operations.
  */
 
 template <typename V>
@@ -390,21 +469,16 @@ constexpr auto transpose(V const & v) -> typename V::Transposed {
 template <typename V>
 inline constexpr auto dot(V const & a, V const & b) -> typename V::Element {
   using E = typename V::Element;
-  return (a * b).reduce(functor::Add<E, E>{});
+  return horizontal(a * b, functor::Add<E, E>{});
 }
 
-template <typename T>
-using Vec2 = Vector<2, T, Orient::col>;
-
-template <typename T>
-using Vec3 = Vector<3, T, Orient::col>;
-
-template <typename T>
-using Vec4 = Vector<4, T, Orient::col>;
-
-using Vec2f = Vec2<float>;
-using Vec3f = Vec3<float>;
-using Vec4f = Vec4<float>;
+template <typename T, typename S, Orient orient>
+inline constexpr auto cross(Vec3<T, orient> const & a,
+                            Vec3<S, orient> const & b)
+    -> Vec3<decltype(T{} * S{} - T{} * S{}), orient> {
+  return (a.template get<1, 2, 0>() * b.template get<2, 0, 1>())
+       - (a.template get<2, 0, 1>() * b.template get<1, 2, 0>());
+}
 
 }  // namespace math
 }  // namespace etl
