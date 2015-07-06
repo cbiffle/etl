@@ -69,11 +69,11 @@ struct VectorBase : public VectorTag {
   >
   constexpr VectorBase(A && ... args) : elements{forward<A>(args)...} {}
 
+  // Repetition ctor
   constexpr explicit VectorBase(T val) : elements{[0 ... (dim-1)] = val} {}
 
-  // Type/orientation conversion ctor
-  template <typename S, Orient o2>
-  explicit constexpr VectorBase(VectorBase<dim, S, o2> const & other)
+  // Transpose ctor
+  constexpr VectorBase(VectorBase<dim, T, flip(_orient)> const & other)
     : elements{other.elements} {}
 
   template <std::size_t n>
@@ -97,9 +97,16 @@ template <typename T, Orient _orient>
 struct VectorBase<2, T, _orient> : public VectorTag {
   T x, y;
 
+  // Default ctor
   constexpr VectorBase() = default;
+  // Element-wise ctor
   constexpr VectorBase(T x_, T y_) : x{x_}, y{y_} {}
+  // Repetition ctor
   constexpr VectorBase(T v) : x{v}, y{v} {}
+
+  // Transpose ctor
+  constexpr VectorBase(VectorBase<2, T, flip(_orient)> const & other)
+    : x{other.x}, y{other.y} {}
 
   template <std::size_t n>
   constexpr T get() const {
@@ -121,14 +128,16 @@ template <typename T, Orient _orient>
 struct VectorBase<3, T, _orient> : public VectorTag {
   T x, y, z;
 
+  // Default ctor
   constexpr VectorBase() = default;
-
-  template <typename S, Orient o2>
-  explicit constexpr VectorBase(VectorBase<3, S, o2> const & other)
-    : x{other.x}, y{other.y}, z{other.z} {}
-
+  // Element-wise ctor
   constexpr VectorBase(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
+  // Repetition ctor
   constexpr VectorBase(T v) : x{v}, y{v}, z{v} {}
+
+  // Transpose ctor
+  constexpr VectorBase(VectorBase<3, T, flip(_orient)> const & other)
+    : x{other.x}, y{other.y}, z{other.z} {}
 
   template <std::size_t n>
   constexpr T get() const {
@@ -154,10 +163,17 @@ template <typename T, Orient _orient>
 struct VectorBase<4, T, _orient> : public VectorTag {
   T x, y, z, w;
 
+  // Default ctor
   constexpr VectorBase() = default;
+  // Element-wise ctor
   constexpr VectorBase(T x_, T y_, T z_, T w_)
     : x{x_}, y{y_}, z{z_}, w{w_} {}
+  // Repetition ctor
   constexpr VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
+
+  // Transpose ctor
+  constexpr VectorBase(VectorBase<4, T, flip(_orient)> const & other)
+    : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
 
   template <std::size_t n>
   constexpr T get() const {
@@ -193,7 +209,6 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
   static constexpr std::size_t dim = _dim;
   static constexpr Orient orient = _orient;
 
-  using This = Vector<_dim, T, _orient>;
   using Transposed = Vector<_dim, T, flip(_orient)>;
   using Element = T;
 
@@ -203,7 +218,7 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
 
   template <typename S>
   constexpr explicit Vector(Vector<_dim, S, _orient> const & other)
-    : Vector(parallel(other, [] (S x) { return T(x); })) {}
+    : Vector(parallel(other, functor::Construct<S, T>{})) {}
 
   template <typename S>
   using WithType = Vector<_dim, S, _orient>;
