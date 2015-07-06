@@ -220,6 +220,7 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
   using Element = T;
   using Base = _vec::VectorBase<_dim, T, _orient>;
 
+  constexpr Vector() = default;
   constexpr Vector(Vector const &) = default;
 
   using _vec::VectorBase<_dim, T, _orient>::VectorBase;
