@@ -26,6 +26,13 @@
 
 namespace etl {
 
+/*******************************************************************************
+ * Internal implementation details
+ */
+
+template <typename ... Types>
+struct TypeList;
+
 namespace _type_list {
 
 template <
@@ -112,6 +119,16 @@ struct UniqueHelper<First, Types...> : std::integral_constant<bool,
   !ContainsHelper<First, Types...>::value && UniqueHelper<Types...>::value
 > {};
 
+template <typename T, std::size_t count, typename... R>
+struct RepeatHelper {
+  using Type = typename RepeatHelper<T, count - 1, T, R...>::Type;
+};
+
+template <typename T, typename... R>
+struct RepeatHelper<T, 0, R...> {
+  using Type = TypeList<R...>;
+};
+
 template <template <typename> class F, typename ...>
 struct MaxF;
 
@@ -145,6 +162,11 @@ struct IndexOfHelper<T, First, Rest...>
 
 }  // namespace _type_list
 
+
+/*******************************************************************************
+ * TypeList itself
+ */
+
 /*
  * A compile-time list of types.
  */
@@ -170,13 +192,16 @@ struct TypeList {
   using At = Invoke<_type_list::IndexHelper<Index, Types...>>;
 
   /*
-   * Does this TypeList contain the given type?
+   * Does this TypeList contain the given type?  (Constexpr version.)
    */
   template <typename X>
   static constexpr bool contains() {
     return _type_list::ContainsHelper<X, Types...>::value;
   }
 
+  /*
+   * Does this TypeList contain the given type?  (Template version.)
+   */
   template <typename X>
   struct Contains
     : std::integral_constant<bool,
@@ -210,21 +235,47 @@ struct TypeList {
   }
 };
 
+
+/*******************************************************************************
+ * TypeList-associated utilities.
+ */
+
+/*
+ * Repeat<T, x> is a TypeList containing T repeated x times.
+ */
+template <typename T, std::size_t count>
+using Repeat = typename _type_list::RepeatHelper<T, count>::Type;
+
+/*
+ * Do any types in the TypeList match predicate template P?  If the TypeList
+ * is empty, the result is false.
+ */
 template <template <typename> class P, typename T>
-struct Any : std::integral_constant<bool, true> {};
+struct Any;
 
 template <template <typename> class P, typename... Types>
 struct Any<P, TypeList<Types...>> : _type_list::AnyHelper<P, Types...> {};
 
+/*
+ * Do *none* of the types in the TypeList match predicate template P?  Inverse
+ * of Any.
+ */
 template <template <typename> class P, typename T>
 struct None : std::integral_constant<bool, !Any<P, T>::value> {};
 
+/*
+ * Do *all* of the types in the TypeList match predicate template P?  If the
+ * TypeList is empty, the result is true.
+ */
 template <template <typename> class P, typename T>
-struct All : std::integral_constant<bool, false> {};
+struct All;
 
 template <template <typename> class P, typename... Types>
 struct All<P, TypeList<Types...>> : _type_list::AllHelper<P, Types...> {};
 
+/*
+ * Maximum size (as measured by `sizeof`) of all the types in the TypeList.
+ */
 template <typename TL>
 struct MaxSizeOf;
 
@@ -232,6 +283,10 @@ template <typename First, typename ... Rest>
 struct MaxSizeOf<TypeList<First, Rest...>>
     : _type_list::MaxSizeOf<First, Rest...> {};
 
+/*
+ * Maximum alignment (as measured by `alignof`) of all the types in the
+ * TypeList.
+ */
 template <typename TL>
 struct MaxAlignOf;
 
