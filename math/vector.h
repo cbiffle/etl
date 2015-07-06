@@ -237,6 +237,17 @@ using Vec2f = Vec2<float>;
 using Vec3f = Vec3<float>;
 using Vec4f = Vec4<float>;
 
+template <std::size_t I, std::size_t dim, typename T, Orient orient>
+constexpr T get(Vector<dim, T, orient> const & v) {
+  return v.template get<I>();
+}
+
+template <std::size_t I0, std::size_t I1, std::size_t... I,
+          std::size_t dim, typename T, Orient orient>
+constexpr auto get(Vector<dim, T, orient> const & v)
+      -> Vector<sizeof...(I) + 2, T, orient> {
+  return v.template get<I0, I1, I...>();
+}
 
 /*******************************************************************************
  * Parallel and horizontal combinators.
@@ -261,7 +272,7 @@ namespace _vec {
                            F && fn,
                            IndexSequence<I...>)
       -> Vector<dim, decltype(fn(T{})), orient> {
-    return { fn(v.template get<I>())... };
+    return { fn(get<I>(v))... };
   }
 
   template <
@@ -277,7 +288,7 @@ namespace _vec {
                            F && fn,
                            IndexSequence<I...>)
       -> Vector<dim, decltype(fn(T{}, S{})), orient> {
-    return { fn(a.template get<I>(), b.template get<I>())... };
+    return { fn(get<I>(a), get<I>(b))... };
   }
   
   template <
@@ -293,7 +304,7 @@ namespace _vec {
                              F && fn,
                              IndexSequence<I0, I1, I...>)
       -> T {
-    return fn(v.template get<I0>(),
+    return fn(get<I0>(v),
               horizontal_(v, forward<F>(fn), IndexSequence<I1, I...>{}));
   }
   
@@ -308,7 +319,7 @@ namespace _vec {
                              F && fn,
                              IndexSequence<I0>)
       -> T {
-    return v.template get<I0>();
+    return get<I0>(v);
   }
 
 }  // namespace _vec
@@ -476,8 +487,8 @@ template <typename T, typename S, Orient orient>
 inline constexpr auto cross(Vec3<T, orient> const & a,
                             Vec3<S, orient> const & b)
     -> Vec3<decltype(T{} * S{} - T{} * S{}), orient> {
-  return (a.template get<1, 2, 0>() * b.template get<2, 0, 1>())
-       - (a.template get<2, 0, 1>() * b.template get<1, 2, 0>());
+  return (get<1, 2, 0>(a) * get<2, 0, 1>(b))
+       - (get<2, 0, 1>(a) * get<1, 2, 0>(b));
 }
 
 }  // namespace math
