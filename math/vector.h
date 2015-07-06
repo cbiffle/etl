@@ -252,6 +252,10 @@ using Vec2f = Vec2<float>;
 using Vec3f = Vec3<float>;
 using Vec4f = Vec4<float>;
 
+using Vec2i = Vec2<int>;
+using Vec3i = Vec3<int>;
+using Vec4i = Vec4<int>;
+
 template <std::size_t I, std::size_t dim, typename T, Orient orient>
 constexpr T get(Vector<dim, T, orient> const & v) {
   return v.template get<I>();
