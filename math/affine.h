@@ -4,6 +4,8 @@
 #include <cmath>
 
 #include "etl/algorithm.h"
+#include "etl/math/matrix.h"
+#include "etl/math/vector.h"
 
 namespace etl {
 namespace math {
