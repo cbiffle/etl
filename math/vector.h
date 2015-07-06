@@ -186,9 +186,20 @@ struct Vector;
  * Its specializations contain only code for operating on the vector's
  * components.  To avoid repeating ourselves, actual operations like addition
  * or dot product should be defined on the general Vector template, below.
+ *
+ * VectorBase is parameterized with a TypeList containing its components.
+ * This is an odd use of a TypeList, since all its types are equal (they're all
+ * T), but is the only way to generate the element-wise constructor sequence
+ * we want.
  */
 
 namespace _vec {  // implementation details
+
+/*
+ * Common prototype.
+ */
+template <std::size_t dim, typename T, Orient _orient, typename TL>
+struct VectorBase;
 
 /*
  * The catch-all specialization for vectors of 0, 1, or many components.
@@ -196,28 +207,23 @@ namespace _vec {  // implementation details
  * Such vectors do not have named fields; the fields are accessed as
  * elements[n].
  */
-template <std::size_t dim, typename T, Orient _orient>
-struct VectorBase : public VectorTag {
+template <std::size_t dim, typename T, Orient _orient, typename... Es>
+struct VectorBase<dim, T, _orient, TypeList<Es...>> : public VectorTag {
   T elements[dim];
 
   // Default ctor.
   constexpr VectorBase() = default;
 
   // Element-wise ctor
-  template <
-    typename ... A,
-    typename TL = TypeList<A...>,
-    typename = typename std::enable_if<None<IsVector, TL>::value>::type,
-    typename = typename std::enable_if<sizeof...(A) == dim>::type
-  >
-  constexpr VectorBase(A && ... args) : elements{forward<A>(args)...} {}
+  constexpr VectorBase(Es const & ...args) : elements{args...} {}
 
   // Repetition ctor
   constexpr explicit VectorBase(T val)
       : VectorBase{repl(val, MakeIndexSequence<dim>{})} {}
 
   // Transpose ctor
-  constexpr VectorBase(VectorBase<dim, T, flip(_orient)> const & other)
+  constexpr VectorBase(
+      VectorBase<dim, T, flip(_orient), TypeList<Es...>> const & other)
     : elements{other.elements} {}
 
   template <std::size_t n>
@@ -243,8 +249,8 @@ private:
 /*
  * Specialization of VectorBase for 2-vectors with fields named x, y.
  */
-template <typename T, Orient _orient>
-struct VectorBase<2, T, _orient> : public VectorTag {
+template <typename T, Orient _orient, typename... Es>
+struct VectorBase<2, T, _orient, TypeList<Es...>> : public VectorTag {
   T x, y;
 
   // Default ctor
@@ -255,7 +261,8 @@ struct VectorBase<2, T, _orient> : public VectorTag {
   constexpr VectorBase(T v) : x{v}, y{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(VectorBase<2, T, flip(_orient)> const & other)
+  constexpr VectorBase(
+      VectorBase<2, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y} {}
 
   template <std::size_t n>
@@ -274,8 +281,8 @@ struct VectorBase<2, T, _orient> : public VectorTag {
 /*
  * Specialization of VectorBase for 3-vectors with fields named x, y, z.
  */
-template <typename T, Orient _orient>
-struct VectorBase<3, T, _orient> : public VectorTag {
+template <typename T, Orient _orient, typename... Es>
+struct VectorBase<3, T, _orient, TypeList<Es...>> : public VectorTag {
   T x, y, z;
 
   // Default ctor
@@ -286,7 +293,8 @@ struct VectorBase<3, T, _orient> : public VectorTag {
   constexpr VectorBase(T v) : x{v}, y{v}, z{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(VectorBase<3, T, flip(_orient)> const & other)
+  constexpr VectorBase(
+      VectorBase<3, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y}, z{other.z} {}
 
   template <std::size_t n>
@@ -309,8 +317,8 @@ struct VectorBase<3, T, _orient> : public VectorTag {
 /*
  * Specialization of VectorBase for 4-vectors with fields named x, y, z, w.
  */
-template <typename T, Orient _orient>
-struct VectorBase<4, T, _orient> : public VectorTag {
+template <typename T, Orient _orient, typename... Es>
+struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
   T x, y, z, w;
 
   // Default ctor
@@ -322,7 +330,8 @@ struct VectorBase<4, T, _orient> : public VectorTag {
   constexpr VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(VectorBase<4, T, flip(_orient)> const & other)
+  constexpr VectorBase(
+      VectorBase<4, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
 
   template <std::size_t n>
@@ -344,7 +353,10 @@ struct VectorBase<4, T, _orient> : public VectorTag {
   }
 };
 
-}  // namespace vec
+template <std::size_t dim, typename T, Orient orient>
+using VectorBaseHelper = VectorBase<dim, T, orient, Repeat<T, dim>>;
+
+}  // namespace _vec
 
 /*******************************************************************************
  * Vector is the actual vector type, derived from VectorBase.
@@ -355,18 +367,18 @@ struct VectorBase<4, T, _orient> : public VectorTag {
  */
 
 template <std::size_t _dim, typename T, Orient _orient>
-struct Vector : public _vec::VectorBase<_dim, T, _orient> {
+struct Vector : public _vec::VectorBaseHelper<_dim, T, _orient> {
   static constexpr std::size_t dim = _dim;
   static constexpr Orient orient = _orient;
 
   using Transposed = Vector<_dim, T, flip(_orient)>;
   using Element = T;
-  using Base = _vec::VectorBase<_dim, T, _orient>;
+  using Base = _vec::VectorBaseHelper<_dim, T, _orient>;
 
   constexpr Vector() = default;
   constexpr Vector(Vector const &) = default;
 
-  using _vec::VectorBase<_dim, T, _orient>::VectorBase;
+  using Base::Base;
 
   template <typename S>
   constexpr explicit Vector(Vector<_dim, S, _orient> const & other)
