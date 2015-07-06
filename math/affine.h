@@ -31,9 +31,10 @@ namespace _affine {
   template <std::size_t row, std::size_t n, typename T, std::size_t... N>
   constexpr auto scale_row(Vector<n, T> scale, IndexSequence<N...> ns)
       -> Vector<n + 1, T, Orient::row> {
+    // N is the column index here.
     return { (row != N ? T{0}
-                       : row != n-1 ? get<min(row, n-2)>(scale)
-                                    : T{1}) ... };
+                       : row < n ? get<min(row, n-1)>(scale)
+                                 : T{1}) ... };
   }
 
   template <std::size_t n, typename T, std::size_t... N>
