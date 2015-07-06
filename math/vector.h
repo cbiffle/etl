@@ -70,7 +70,8 @@ struct VectorBase : public VectorTag {
   constexpr VectorBase(A && ... args) : elements{forward<A>(args)...} {}
 
   // Repetition ctor
-  constexpr explicit VectorBase(T val) : elements{[0 ... (dim-1)] = val} {}
+  constexpr explicit VectorBase(T val)
+      : VectorBase{repl(val, MakeIndexSequence<dim>{})} {}
 
   // Transpose ctor
   constexpr VectorBase(VectorBase<dim, T, flip(_orient)> const & other)
@@ -86,6 +87,12 @@ struct VectorBase : public VectorTag {
   T & get() {
     static_assert(n < dim, "vector element out of range");
     return elements[n];
+  }
+
+private:
+  template <std::size_t... D>
+  static constexpr VectorBase repl(T val, IndexSequence<D...>) {
+    return { ((void) D, val)... };
   }
 };
 
@@ -211,6 +218,7 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
 
   using Transposed = Vector<_dim, T, flip(_orient)>;
   using Element = T;
+  using Base = _vec::VectorBase<_dim, T, _orient>;
 
   constexpr Vector(Vector const &) = default;
 
@@ -225,7 +233,7 @@ struct Vector : public _vec::VectorBase<_dim, T, _orient> {
 
   template <std::size_t I>
   constexpr T get() const {
-    return this->VectorBase::template get<I>();
+    return this->Base::template get<I>();
   }
 
   template <std::size_t I0, std::size_t I1, std::size_t... I>
