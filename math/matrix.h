@@ -152,11 +152,15 @@ private:
  */
 
 template <typename T>
+using Mat2 = Matrix<2, 2, T>;
+
+template <typename T>
 using Mat3 = Matrix<3, 3, T>;
 
 template <typename T>
 using Mat4 = Matrix<4, 4, T>;
 
+using Mat2f = Mat2<float>;
 using Mat3f = Mat3<float>;
 using Mat4f = Mat4<float>;
 
