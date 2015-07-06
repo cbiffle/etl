@@ -1,6 +1,143 @@
 #ifndef _ETL_MATH_VECTOR_H_INCLUDED
 #define _ETL_MATH_VECTOR_H_INCLUDED
 
+/*
+ * Vectors, in the mathematical sense, not the C++ STL sense.
+ *
+ * Wikipedia's too-thorough-to-be-valuable discussion:
+ *   https://en.wikipedia.org/wiki/Vector_(mathematics_and_physics)
+ *
+ * For our purposes, a vector is a fixed-length collection of scalars, all of
+ * which have the same type.
+ *
+ * Different types of vectors are represented by instantiations of the `Vector`
+ * template, e.g. `Vector<3, float>`.  Template aliases are provided as
+ * shorthand for common types, e.g. `Vec3<float>` and `Vec3f`.
+ *
+ *
+ * Column and Row Vectors
+ * ======================
+ *
+ * Vectors come in two flavors, which affect how they interact with each other
+ * and with matrices (see matrix.h): column vectors and row vectors.
+ *
+ * Column vectors are the default in this library.  See:
+ *   http://chrishecker.com/Column_vs_row_vectors
+ *
+ * Column and row vectors can't be mixed, but you can convert one to the other
+ * using `transpose(v)`.
+ * 
+ *
+ * Operations on Vectors
+ * =====================
+ *
+ * This discussion refers to some vector type `V`.  I'll get more specific only
+ * when required.
+ * 
+ * Static attributes
+ * -----------------
+ *
+ * `V::dim` is an integer constant giving the number of dimensions (elements)
+ * in the vector type.
+ *
+ * `V::orient` gives the vector type's orientation, either `Orient::col` or
+ * `Orient::row`.
+ *
+ * `V::Transposed` is a vector type of the same size and type as `V` but with
+ * opposed orientation.
+ *
+ * `V::Element` is the type of the vector's scalar elements.
+ *
+ * `V::WithType<S>` is a vector type of the same size and orientation as `V`
+ * but with scalar element type `S`.
+ *
+ * Creation
+ * --------
+ *
+ * You can create vectors four ways:
+ * - Default: `V{}`, which default-constructs the elements.  This is implicit
+ *   and can often be written `{}`.
+ * - Elements: `V{a, b, c...}`.  This is also implicit and can often be written
+ *   `{a, b, c...}`.
+ * - Repeat: `V{scalar}`, which repeats a single scalar into all positions
+ *   (explicit).
+ * - Copy/conversion: `V{vector}`, which is treated as an explicit conversion
+ *   and will cast elements into a new type and/or alter the orientation (see
+ *   below).
+ *
+ * The `transpose(v)` function can also be used to derive a row vector from a
+ * column vector, or vice versa.  Row and column vectors cannot be mixed in any
+ * of the operations below.
+ *
+ * Arithmetic
+ * ----------
+ *
+ * Once you have some vectors, you can combine them element-wise using the
+ * standard C arithmetic operators:
+ * - `-v1` inverts the vector (element-wise negation).
+ * - `v1 + v2` is the vector sum (element-wise sum).
+ * - `v1 - v2` is vector subtraction.
+ * - `v1 * v2` is element-wise multiplication (*not* dot or vector product).
+ * - `v1 / v2` is element-wise division.
+ *
+ * All those operations are also available in compound assignment form (e.g.
+ * `v1 += v2`).
+ *
+ * `v1 == v2` and `v1 != v2` perform element-wise comparison and then reduce
+ * the result to a single `bool`.
+ *
+ * Vector-specific product types are provided as functions:
+ * - `dot(v1, v2)` is the dot product.
+ * - `cross(v1, v2)` is the cross product.
+ *
+ * This library doesn't currently provide for direct operations between vectors
+ * and scalars, though the element repetition syntax makes promoting a scalar
+ * to a vector relatively compact: `v1 * V{4}`.
+ *
+ * Element access
+ * --------------
+ *
+ * To access the elements of the vector, there are two options, both checked
+ * at compile time:
+ * - `get<X>(v)` accesses element `X` (0-based) of vector `v`.  This is the
+ *   most general method.  It can also be written using member notation:
+ *   `v.get<X>()`.
+ * - For vectors of 2, 3, or 4 elements, the elements can be accessed using
+ *   field notation by their traditional names: `v.x`, `v.y`, `v.z`, `v.w`.
+ *
+ * To derive a new vector by shuffling, the `get` template can accept more than
+ * one index: `v.get<0, 1, 0>()` produces a 3-vector of the same type as `v`
+ * whose elements are element 0, 1, and 0 again of `v`.
+ *
+ * Combinators
+ * -----------
+ *
+ * To simplify lifting an operation over scalars to an operation over vectors,
+ * this library provides two kinds of combinators, `parallel` and `horizontal`.
+ *
+ * A `parallel` combinator takes an operation over scalars and converts it
+ * into an element-wise operation over vectors.  `parallel` is available in
+ * both unary and binary forms, e.g.
+ *
+ *    // Add corresponding vector elements (equivalent to operator+)
+ *    auto sum = parallel(v1, v2, [](float a, float b) { return a + b; });
+ *    // Square each element.
+ *    auto sqr = parallel(v, [](float a) { return a * a; });
+ *
+ * A `horizontal` combinator takes an operation of scalars and applies it
+ * *within* a single vector to that vector's elements, reducing them to a scalar
+ * result.  For example, to sum the elements of a vector:
+ *
+ *    auto sum = horizontal(v, [](float a, float b) { return a + b; });
+ *
+ * Unlike combinators in more civilized languages, these do not return a
+ * functor, but apply themselves immediately, for efficiency reasons.
+ *
+ * Both `parallel` and `horizontal` are implemented `constexpr` and can be
+ * used at compile time if the scalar operation is also `constexpr` (which
+ * unfortunately excludes all the examples above due to the use of lambdas).
+ */
+
 #include "etl/utility.h"
 #include "etl/integer_sequence.h"
 #include "etl/type_list.h"
@@ -16,6 +153,9 @@ namespace math {
  */
 enum class Orient : bool { row, col };
 
+/*
+ * `flip(o)` produces the opposed orientation to `o`.
+ */
 constexpr inline Orient flip(Orient o) {
   return o == Orient::row ? Orient::col : Orient::row;
 }
@@ -25,6 +165,9 @@ constexpr inline Orient flip(Orient o) {
  */
 struct VectorTag {};
 
+/*
+ * Predicate template for checking whether something is a vector.
+ */
 template <typename T>
 using IsVector = std::is_base_of<VectorTag, T>;
 
