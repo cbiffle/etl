@@ -34,12 +34,25 @@
  * This discussion refers to some vector type `V`.  I'll get more specific only
  * when required.
  *
- * Basically all vector operations that don't require mutation are declared as
- * constexpr optimistically.  Fully constexpr vector support relies on
- * constexpr versions of `sqrt`, among other things, that are not required by
- * the C++ standard as of C++11.  However, GCC provides these as an extension,
- * so if you're using GCC with `std=gnu++11` or later, you should have constexpr
- * vectors.  (Note that Clang 3.6.1 does not agree.)
+ * Constexpr
+ * ---------
+ * 
+ * This library has been designed with constexpr in mind.  All vector operations
+ * that don't require mutation are declared along the C++11 constexpr rules.
+ *
+ * Note that this means that operations over the elements of a vector are
+ * unrolled at compile time.  For small vectors, this is almost always what
+ * you want.  For large vectors of, say, 16 elements and up, this may not be
+ * the right library.
+ *
+ * Whether the vector operations can actually be used in a constexpr context
+ * depends on your compiler and the operations you use.  For example,
+ * normalizing a vector in a constexpr context requires a constexpr `sqrt`
+ * defined for the vector's element type.  C++11 explicitly defines `sqrt` as
+ * non-constexpr; GCC (with `std=gnu++11` or later) allows `sqrt` in constexpr
+ * contexts, but Clang (3.6.1) does not, even with GNU extensions enabled.
+ *
+ * When in doubt, test.
  * 
  * Static attributes
  * -----------------
@@ -169,7 +182,7 @@ enum class Orient : bool { row, col };
 /*
  * `flip(o)` produces the opposed orientation to `o`.
  */
-constexpr inline Orient flip(Orient o) {
+constexpr Orient flip(Orient o) {
   return o == Orient::row ? Orient::col : Orient::row;
 }
 
@@ -388,23 +401,30 @@ struct Vector : public _vec::VectorBaseHelper<_dim, T, _orient> {
   using Element = T;
   using Base = _vec::VectorBaseHelper<_dim, T, _orient>;
 
+  template <typename S>
+  using WithType = Vector<_dim, S, _orient>;
+
   constexpr Vector() = default;
   constexpr Vector(Vector const &) = default;
 
   using Base::Base;
 
+  /*
+   * Conversion from vector of S to vector of T when size and orientation are
+   * the same.
+   */
   template <typename S>
   constexpr explicit Vector(Vector<_dim, S, _orient> const & other)
     : Vector(parallel(other, functor::Construct<S, T>{})) {}
-
-  template <typename S>
-  using WithType = Vector<_dim, S, _orient>;
 
   template <std::size_t I>
   constexpr T get() const {
     return this->Base::template get<I>();
   }
 
+  /*
+   * Shuffle accessor.
+   */
   template <std::size_t I0, std::size_t I1, std::size_t... I>
   constexpr auto get() const
       -> Vector<sizeof...(I) + 2, T, _orient> {
@@ -415,6 +435,30 @@ struct Vector : public _vec::VectorBaseHelper<_dim, T, _orient> {
     };
   }
 };
+
+/*
+ * Element accessor function; alternative to the member template.
+ */
+template <std::size_t I, std::size_t dim, typename T, Orient orient>
+constexpr auto get(Vector<dim, T, orient> const & v)
+    -> typename std::enable_if<I < dim, T>::type {
+  return v.template get<I>();
+}
+
+/*
+ * Element shuffle function; alternative to the member template.
+ */
+template <std::size_t I0, std::size_t I1, std::size_t... I,
+          std::size_t dim, typename T, Orient orient>
+constexpr auto get(Vector<dim, T, orient> const & v)
+      -> Vector<sizeof...(I) + 2, T, orient> {
+  return v.template get<I0, I1, I...>();
+}
+
+
+/*******************************************************************************
+ * Aliases for common vector types.
+ */
 
 template <typename T, Orient orient = Orient::col>
 using Vec2 = Vector<2, T, orient>;
@@ -433,18 +477,7 @@ using Vec2i = Vec2<int>;
 using Vec3i = Vec3<int>;
 using Vec4i = Vec4<int>;
 
-template <std::size_t I, std::size_t dim, typename T, Orient orient>
-constexpr auto get(Vector<dim, T, orient> const & v)
-    -> typename std::enable_if<I < dim, T>::type {
-  return v.template get<I>();
-}
 
-template <std::size_t I0, std::size_t I1, std::size_t... I,
-          std::size_t dim, typename T, Orient orient>
-constexpr auto get(Vector<dim, T, orient> const & v)
-      -> Vector<sizeof...(I) + 2, T, orient> {
-  return v.template get<I0, I1, I...>();
-}
 
 /*******************************************************************************
  * Parallel and horizontal combinators.
@@ -622,24 +655,28 @@ constexpr auto operator/(Vector<dim, T, orient> const & a,
  */
 
 template <std::size_t dim, typename T, typename S, Orient orient>
+inline
 Vector<dim, T, orient> & operator+=(Vector<dim, T, orient> & target,
                                     Vector<dim, S, orient> const & other) {
   return target = target + other;
 }
 
 template <std::size_t dim, typename T, typename S, Orient orient>
+inline
 Vector<dim, T, orient> & operator-=(Vector<dim, T, orient> & target,
                                     Vector<dim, S, orient> const & other) {
   return target = target - other;
 }
 
 template <std::size_t dim, typename T, typename S, Orient orient>
+inline
 Vector<dim, T, orient> & operator*=(Vector<dim, T, orient> & target,
                                     Vector<dim, S, orient> const & other) {
   return target = target * other;
 }
 
 template <std::size_t dim, typename T, typename S, Orient orient>
+inline
 Vector<dim, T, orient> & operator/=(Vector<dim, T, orient> & target,
                                     Vector<dim, S, orient> const & other) {
   return target = target / other;
@@ -696,14 +733,14 @@ constexpr auto norm(Vector<dim, T, orient> const & a)
 }
 
 template <std::size_t dim, typename T, Orient orient>
-inline constexpr auto normalized(Vector<dim, T, orient> const & a)
+constexpr auto normalized(Vector<dim, T, orient> const & a)
     -> Vector<dim, T, orient> {
   return a / Vector<dim, T, orient>{norm(a)};
 }
 
 template <typename T, typename S, Orient orient>
-inline constexpr auto cross(Vec3<T, orient> const & a,
-                            Vec3<S, orient> const & b)
+constexpr auto cross(Vec3<T, orient> const & a,
+                     Vec3<S, orient> const & b)
     -> Vec3<decltype(T{} * S{} - T{} * S{}), orient> {
   return (get<1, 2, 0>(a) * get<2, 0, 1>(b))
        - (get<2, 0, 1>(a) * get<1, 2, 0>(b));
