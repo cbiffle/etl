@@ -771,6 +771,12 @@ constexpr auto normalized(Vector<dim, T, orient> const & a)
       a / Vector<dim, T, orient>{norm(a)});
 }
 
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto normalized(UnitVector<dim, T, orient> const & a)
+    -> UnitVector<dim, T, orient> {
+  return a;
+}
+
 
 /*******************************************************************************
  * Aliases for common vector types.
