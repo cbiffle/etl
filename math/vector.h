@@ -42,8 +42,8 @@
  *
  * A `UnitVector` is a `Vector`, so it can be used with any vector operation.
  * 
- * Vector unit status is preserved across normalization.  Other operations will
- * return a non-unit `Vector`.
+ * Vector unit status is preserved across normalization and negation.  Other
+ * operations will return a non-unit `Vector`.
  *
  *
  * Operations on Vectors
@@ -775,6 +775,16 @@ template <std::size_t dim, typename T, Orient orient>
 constexpr auto normalized(UnitVector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
   return a;
+}
+
+template <
+  std::size_t dim,
+  typename T,
+  Orient orient,
+  typename R = UnitVector<dim, decltype(-T{}), orient>
+>
+constexpr R operator-(UnitVector<dim, T, orient> const & v) {
+  return R::from_arbitrary(-Vector<dim, T, orient>{v});
 }
 
 
