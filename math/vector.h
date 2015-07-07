@@ -240,14 +240,14 @@ struct VectorBase<dim, T, _orient, TypeList<Es...>> : public VectorTag {
     : elements{other.elements} {}
 
   template <std::size_t n>
-  constexpr T get() const {
-    static_assert(n < dim, "vector element out of range");
+  constexpr auto get() const
+      -> typename std::enable_if<n < dim, T>::type {
     return elements[n];
   }
 
   template <std::size_t n>
-  T & get() {
-    static_assert(n < dim, "vector element out of range");
+  auto get()
+      -> typename std::enable_if<n < dim, T &>::type {
     return elements[n];
   }
 
@@ -279,14 +279,14 @@ struct VectorBase<2, T, _orient, TypeList<Es...>> : public VectorTag {
     : x{other.x}, y{other.y} {}
 
   template <std::size_t n>
-  constexpr T get() const {
-    static_assert(n < 2, "vector element out of range");
+  constexpr auto get() const
+      -> typename std::enable_if<n < 2, T>::type {
     return n == 0 ? x : y;
   }
 
   template <std::size_t n>
-  T & get() {
-    static_assert(n < 2, "vector element out of range");
+  auto get()
+      -> typename std::enable_if<n < 2, T &>::type {
     return n == 0 ? x : y;
   }
 };
@@ -311,16 +311,16 @@ struct VectorBase<3, T, _orient, TypeList<Es...>> : public VectorTag {
     : x{other.x}, y{other.y}, z{other.z} {}
 
   template <std::size_t n>
-  constexpr T get() const {
-    static_assert(n < 3, "vector element out of range");
+  constexpr auto get() const
+      -> typename std::enable_if<n < 3, T>::type {
     return n == 0 ? x
                   : n == 1 ? y
                            : z;
   }
 
   template <std::size_t n>
-  T & get() {
-    static_assert(n < 3, "vector element out of range");
+  auto get()
+      -> typename std::enable_if<n < 3, T &>::type {
     return n == 0 ? x
                   : n == 1 ? y
                            : z;
@@ -348,8 +348,8 @@ struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
     : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
 
   template <std::size_t n>
-  constexpr T get() const {
-    static_assert(n < 4, "vector element out of range");
+  constexpr auto get() const
+      -> typename std::enable_if<n < 4, T>::type {
     return n == 0 ? x
                   : n == 1 ? y
                            : n == 2 ? z
@@ -357,8 +357,8 @@ struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
   }
 
   template <std::size_t n>
-  T & get() {
-    static_assert(n < 4, "vector element out of range");
+  auto get()
+      -> typename std::enable_if<n < 3, T &>::type {
     return n == 0 ? x
                   : n == 1 ? y
                            : n == 2 ? z
@@ -434,7 +434,8 @@ using Vec3i = Vec3<int>;
 using Vec4i = Vec4<int>;
 
 template <std::size_t I, std::size_t dim, typename T, Orient orient>
-constexpr T get(Vector<dim, T, orient> const & v) {
+constexpr auto get(Vector<dim, T, orient> const & v)
+    -> typename std::enable_if<I < dim, T>::type {
   return v.template get<I>();
 }
 
