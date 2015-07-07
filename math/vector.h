@@ -25,7 +25,7 @@
  *   http://chrishecker.com/Column_vs_row_vectors
  *
  * Column and row vectors can't be mixed, but you can convert one to the other
- * using `transpose(v)`.
+ * using `transposed(v)`.
  * 
  *
  * Operations on Vectors
@@ -85,7 +85,7 @@
  *   and will cast elements into a new type and/or alter the orientation (see
  *   below).
  *
- * The `transpose(v)` function can also be used to derive a row vector from a
+ * The `transposed(v)` function can also be used to derive a row vector from a
  * column vector, or vice versa.  Row and column vectors cannot be mixed in any
  * of the operations below.
  *
@@ -113,7 +113,7 @@
  *   is the square of the norm (cheaper to compute and sometimes useful).
  * - `normalized(v)` is a vector pointing in the same direction as `v` but with
  *   unit length.
- * - `transpose(v)` is a vector with the same elements as `v` but opposed
+ * - `transposed(v)` is a vector with the same elements as `v` but opposed
  *   orientation.
  *
  * This library doesn't currently provide for direct operations between vectors
@@ -707,7 +707,7 @@ constexpr bool operator!=(Vector<dim, T, orient> const & a,
  */
 
 template <std::size_t dim, typename T, Orient orient>
-constexpr auto transpose(Vector<dim, T, orient> const & v)
+constexpr auto transposed(Vector<dim, T, orient> const & v)
     -> Vector<dim, T, flip(orient)> {
   return Vector<dim, T, flip(orient)>{v};
 }

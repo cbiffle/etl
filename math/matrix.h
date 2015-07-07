@@ -30,7 +30,7 @@
  * Multiplication by row vectors (`v * m`) and multiplication by scalars are
  * not currently supported because I haven't needed it.
  *
- * Matrix transposition is written `transpose(m)`.
+ * Matrix transposition is written `transposed(m)`.
  */
 
 #include <type_traits>
@@ -296,7 +296,7 @@ constexpr bool operator!=(Matrix<r, c, T> const & a,
  * flipping around the diagonal.
  */
 template <std::size_t r, std::size_t c, typename T>
-constexpr auto transpose(Matrix<r, c, T> const & m) -> Matrix<c, r, T> {
+constexpr auto transposed(Matrix<r, c, T> const & m) -> Matrix<c, r, T> {
   return _matrix::transpose_(m, MakeIndexSequence<r>{}, MakeIndexSequence<c>{});
 }
 
@@ -314,7 +314,7 @@ namespace _matrix {
                          Vector<n, V> const & v,
                          IndexSequence<I...>)
       -> Vector<n, decltype(M{} * V{})> {
-    return { dot(transpose(m.row[I]), v)... };
+    return { dot(transposed(m.row[I]), v)... };
   }
 
   /*
