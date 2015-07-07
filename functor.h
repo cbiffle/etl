@@ -38,6 +38,42 @@ struct Negate {
   }
 };
 
+template <typename A, typename B>
+struct MultiplyValueBy {
+  A x;
+
+  constexpr auto operator()(B const & b) const -> decltype(x * b) {
+    return x * b;
+  }
+};
+
+template <typename A, typename B>
+struct MultiplyByValue {
+  B x;
+
+  constexpr auto operator()(A const & a) const -> decltype(a * x) {
+    return a * x;
+  }
+};
+
+template <typename A, typename B>
+struct DivideValueBy {
+  A a;
+
+  constexpr auto operator()(B const & b) const -> decltype(a / b) {
+    return a / b;
+  }
+};
+
+template <typename A, typename B>
+struct DivideByValue {
+  B b;
+  constexpr auto operator()(A const & a) const -> decltype(a / b) {
+    return a / b;
+  }
+};
+
+
 /*******************************************************************************
  * Binary arithmetic operators
  */

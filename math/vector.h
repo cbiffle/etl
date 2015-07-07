@@ -115,8 +115,8 @@
  * - `-v1` inverts the vector (element-wise negation).
  * - `v1 + v2` is the vector sum (element-wise sum).
  * - `v1 - v2` is vector subtraction.
- * - `v1 * v2` is element-wise multiplication (*not* dot or vector product).
- * - `v1 / v2` is element-wise division.
+ * - `v1 * s` and `s * v1` are element-wise multiplication by scalars.
+ * - `v1 / s` and `s / v1` are element-wise division by scalars.
  *
  * All those operations are also available in compound assignment form (e.g.
  * `v1 += v2`).
@@ -133,10 +133,6 @@
  *   unit length.
  * - `transposed(v)` is a vector with the same elements as `v` but opposed
  *   orientation.
- *
- * This library doesn't currently provide for direct operations between vectors
- * and scalars, though the element repetition syntax makes promoting a scalar
- * to a vector relatively compact: `v1 * V{4}`.
  *
  * Element access and shuffling
  * ----------------------------
@@ -629,20 +625,54 @@ constexpr auto operator-(Vector<dim, T, orient> const & a,
   return parallel(a, b, functor::Subtract<T, S>{});
 }
 
-// Multiplication
-template <std::size_t dim, typename T, typename S, Orient orient>
-constexpr auto operator*(Vector<dim, T, orient> const & a,
-                         Vector<dim, S, orient> const & b)
+// Multiplication by scalar
+template <
+  std::size_t dim,
+  typename T,
+  typename S,
+  Orient orient,
+  typename = typename std::enable_if<!IsVector<T>::value>::type
+>
+constexpr auto operator*(T a, Vector<dim, S, orient> const & b)
     -> Vector<dim, decltype(T{} * S{}), orient> {
-  return parallel(a, b, functor::Multiply<T, S>{});
+  return parallel(b, functor::MultiplyValueBy<T, S>{a});
 }
 
-// Division
-template <std::size_t dim, typename T, typename S, Orient orient>
-constexpr auto operator/(Vector<dim, T, orient> const & a,
-                         Vector<dim, S, orient> const & b)
+template <
+  std::size_t dim,
+  typename T,
+  typename S,
+  Orient orient,
+  typename = typename std::enable_if<!IsVector<S>::value>::type
+>
+constexpr auto operator*(Vector<dim, T, orient> const & a, S b)
+    -> Vector<dim, decltype(T{} * S{}), orient> {
+  return parallel(a, functor::MultiplyByValue<T, S>{b});
+}
+
+// Division by scalar
+template <
+  std::size_t dim,
+  typename T,
+  typename S,
+  Orient orient,
+  typename = typename std::enable_if<!IsVector<S>::value>::type
+>
+constexpr auto operator/(Vector<dim, T, orient> const & a, S b)
     -> Vector<dim, decltype(T{} / S{}), orient> {
-  return parallel(a, b, functor::Divide<T, S>{});
+  return parallel(a, functor::DivideByValue<T, S>{b});
+}
+
+template <
+  std::size_t dim,
+  typename T,
+  typename S,
+  Orient orient,
+  typename = typename std::enable_if<!IsVector<T>::value>::type
+>
+constexpr auto operator/(T a, Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} / S{}), orient> {
+  return parallel(b, functor::DivideValueBy<T, S>{a});
 }
 
 /*******************************************************************************
@@ -664,18 +694,28 @@ Vector<dim, T, orient> & operator-=(Vector<dim, T, orient> & target,
   return target = target - other;
 }
 
-template <std::size_t dim, typename T, typename S, Orient orient>
-inline
-Vector<dim, T, orient> & operator*=(Vector<dim, T, orient> & target,
-                                    Vector<dim, S, orient> const & other) {
-  return target = target * other;
+template <
+  std::size_t dim,
+  typename T,
+  Orient orient,
+  typename S,
+  typename = typename std::enable_if<!IsVector<S>::value>::type
+>
+inline Vector<dim, T, orient> & operator*=(Vector<dim, T, orient> & target,
+                                           S scalar) {
+  return target = target * scalar;
 }
 
-template <std::size_t dim, typename T, typename S, Orient orient>
-inline
-Vector<dim, T, orient> & operator/=(Vector<dim, T, orient> & target,
-                                    Vector<dim, S, orient> const & other) {
-  return target = target / other;
+template <
+  std::size_t dim,
+  typename T,
+  Orient orient,
+  typename S,
+  typename = typename std::enable_if<!IsVector<S>::value>::type
+>
+inline Vector<dim, T, orient> & operator/=(Vector<dim, T, orient> & target,
+                                           S scalar) {
+  return target = target / scalar;
 }
 
 /*******************************************************************************
@@ -709,10 +749,18 @@ constexpr auto transposed(Vector<dim, T, orient> const & v)
 }
 
 template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto parallel_mul(Vector<dim, T, orient> const & a,
+                            Vector<dim, S, orient> const & b)
+    -> Vector<dim, decltype(T{} * S{}), orient> {
+  return parallel(a, b, functor::Multiply<T, S>{});
+}
+
+template <std::size_t dim, typename T, typename S, Orient orient>
 constexpr auto dot(Vector<dim, T, orient> const & a,
                    Vector<dim, S, orient> const & b)
     -> decltype(T{} * S{}) {
-  return horizontal(a * b, functor::Add<T, S>{});
+  return horizontal(parallel_mul(a, b),
+                    functor::Add<T, S>{});
 }
 
 template <std::size_t dim, typename T, Orient orient>
@@ -732,8 +780,8 @@ template <typename T, typename S, Orient orient>
 constexpr auto cross(Vector<3, T, orient> const & a,
                      Vector<3, S, orient> const & b)
     -> Vector<3, decltype(T{} * S{} - T{} * S{}), orient> {
-  return (get<1, 2, 0>(a) * get<2, 0, 1>(b))
-       - (get<2, 0, 1>(a) * get<1, 2, 0>(b));
+  return parallel_mul(get<1, 2, 0>(a), get<2, 0, 1>(b))
+       - parallel_mul(get<2, 0, 1>(a), get<1, 2, 0>(b));
 }
 
 
@@ -767,8 +815,7 @@ private:
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto normalized(Vector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
-  return UnitVector<dim, T, orient>::from_arbitrary(
-      a / Vector<dim, T, orient>{norm(a)});
+  return UnitVector<dim, T, orient>::from_arbitrary(a / norm(a));
 }
 
 template <std::size_t dim, typename T, Orient orient>

@@ -68,9 +68,7 @@ constexpr auto operator*(Quaternion<T> const & p, Quaternion<S> const & q)
     -> Quaternion<decltype(T{} * S{})> {
   return {
     p.scalar * q.scalar - dot(p.vector, q.vector),
-    Vec3<T>{p.scalar} * q.vector 
-      + Vec3<T>{q.scalar} * p.vector 
-      + cross(p.vector, q.vector)
+    p.scalar * q.vector + q.scalar * p.vector + cross(p.vector, q.vector)
   };
 }
 
@@ -129,7 +127,7 @@ template <typename T>
 constexpr UnitQuaternion<T> normalized(Quaternion<T> const & q) {
   return UnitQuaternion<T>::from_parts(
       q.scalar / norm(q),
-      q.vector / Vec3<T>(norm(q)));
+      q.vector / norm(q));
 }
 
 template <typename T>
@@ -147,7 +145,7 @@ namespace _quat {
   constexpr UnitQuaternion<T> rotation_vec_unit_step2(T m, Vec3<T> cr) {
     return UnitQuaternion<T>::from_parts(
         T{0.5} * m,
-        Vec3<T>{T{1} / m} * cr);
+        (T{1} / m) * cr);
   }
 
   template <typename T>
@@ -171,7 +169,7 @@ constexpr UnitQuaternion<T> rotation(UVec3<T> axis, T angle) {
   using namespace std;
   return UnitQuaternion<T>::from_parts(
       cos(angle/2),
-      axis * Vec3<T>{sin(angle/2)}
+      axis * sin(angle/2)
   );
 }
 
