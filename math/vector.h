@@ -235,7 +235,7 @@ struct VectorBase<dim, T, _orient, TypeList<Es...>> : public VectorTag {
       : VectorBase{repl(val, MakeIndexSequence<dim>{})} {}
 
   // Transpose ctor
-  constexpr VectorBase(
+  constexpr explicit VectorBase(
       VectorBase<dim, T, flip(_orient), TypeList<Es...>> const & other)
     : elements{other.elements} {}
 
@@ -271,10 +271,10 @@ struct VectorBase<2, T, _orient, TypeList<Es...>> : public VectorTag {
   // Element-wise ctor
   constexpr VectorBase(T x_, T y_) : x{x_}, y{y_} {}
   // Repetition ctor
-  constexpr VectorBase(T v) : x{v}, y{v} {}
+  constexpr explicit VectorBase(T v) : x{v}, y{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(
+  constexpr explicit VectorBase(
       VectorBase<2, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y} {}
 
@@ -303,10 +303,10 @@ struct VectorBase<3, T, _orient, TypeList<Es...>> : public VectorTag {
   // Element-wise ctor
   constexpr VectorBase(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
   // Repetition ctor
-  constexpr VectorBase(T v) : x{v}, y{v}, z{v} {}
+  constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(
+  constexpr explicit VectorBase(
       VectorBase<3, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y}, z{other.z} {}
 
@@ -340,10 +340,10 @@ struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
   constexpr VectorBase(T x_, T y_, T z_, T w_)
     : x{x_}, y{y_}, z{z_}, w{w_} {}
   // Repetition ctor
-  constexpr VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
+  constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
 
   // Transpose ctor
-  constexpr VectorBase(
+  constexpr explicit VectorBase(
       VectorBase<4, T, flip(_orient), TypeList<Es...>> const & other)
     : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
 
