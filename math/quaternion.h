@@ -94,10 +94,6 @@ struct UnitQuaternion : public Quaternion<T> {
   // There's no obvious "default" or "zero" unit quaternion.
   UnitQuaternion() = delete;
 
-  // Copying, moving another unit quaternion is safe.
-  constexpr UnitQuaternion(UnitQuaternion<T> const &) = default;
-  constexpr UnitQuaternion(UnitQuaternion<T> &&) = default;
-
   // Unsafe coercion backdoor, for when you really just want to plug in the
   // components.
   static constexpr UnitQuaternion from_parts(T w, Vec3<T> v) {
