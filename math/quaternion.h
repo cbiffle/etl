@@ -123,6 +123,11 @@ private:
 };
 
 template <typename T>
+constexpr UnitQuaternion<T> identity_quat() {
+  return UnitQuaternion<T>::from_parts(1, Vec3<T>{0});
+}
+
+template <typename T>
 constexpr UnitQuaternion<T> normalized(Quaternion<T> const & q) {
   return UnitQuaternion<T>::from_parts(
       q.scalar / norm(q),
