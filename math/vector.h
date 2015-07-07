@@ -182,6 +182,8 @@
  * unfortunately excludes all the examples above due to the use of lambdas).
  */
 
+#include <cmath>
+
 #include "etl/utility.h"
 #include "etl/integer_sequence.h"
 #include "etl/type_list.h"
