@@ -26,7 +26,25 @@
  *
  * Column and row vectors can't be mixed, but you can convert one to the other
  * using `transposed(v)`.
+ *
+ *
+ * Unit Vectors
+ * ============
+ *
+ * Some operations are slightly cheaper when applied to vectors of unit length,
+ * but only if the author or compiler can verify that at compile time.  To help
+ * with this, this library distinguishes between the general `Vector` template
+ * and the `UnitVector` subtype.
+ *
+ * You can get a `UnitVector` from `normalized(v)`, or by creating your own
+ * with `from_arbitrary` -- effectively asserting to the compiler that the
+ * vector is unit-length.
+ *
+ * A `UnitVector` is a `Vector`, so it can be used with any vector operation.
  * 
+ * Vector unit status is preserved across cross product and normalization.
+ * Other operations will return a non-unit `Vector`.
+ *
  *
  * Operations on Vectors
  * =====================
@@ -456,28 +474,6 @@ constexpr auto get(Vector<dim, T, orient> const & v)
 }
 
 
-/*******************************************************************************
- * Aliases for common vector types.
- */
-
-template <typename T, Orient orient = Orient::col>
-using Vec2 = Vector<2, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using Vec3 = Vector<3, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using Vec4 = Vector<4, T, orient>;
-
-using Vec2f = Vec2<float>;
-using Vec3f = Vec3<float>;
-using Vec4f = Vec4<float>;
-
-using Vec2i = Vec2<int>;
-using Vec3i = Vec3<int>;
-using Vec4i = Vec4<int>;
-
-
 
 /*******************************************************************************
  * Parallel and horizontal combinators.
@@ -732,19 +728,96 @@ constexpr auto norm(Vector<dim, T, orient> const & a)
   return sqrt(norm_squared(a));
 }
 
-template <std::size_t dim, typename T, Orient orient>
-constexpr auto normalized(Vector<dim, T, orient> const & a)
-    -> Vector<dim, T, orient> {
-  return a / Vector<dim, T, orient>{norm(a)};
-}
-
 template <typename T, typename S, Orient orient>
-constexpr auto cross(Vec3<T, orient> const & a,
-                     Vec3<S, orient> const & b)
-    -> Vec3<decltype(T{} * S{} - T{} * S{}), orient> {
+constexpr auto cross(Vector<3, T, orient> const & a,
+                     Vector<3, S, orient> const & b)
+    -> Vector<3, decltype(T{} * S{} - T{} * S{}), orient> {
   return (get<1, 2, 0>(a) * get<2, 0, 1>(b))
        - (get<2, 0, 1>(a) * get<1, 2, 0>(b));
 }
+
+
+/*******************************************************************************
+ * Unit vector subtype.
+ *
+ * The usual way of obtaining a UnitVector is by calling `normalized(v)`.
+ *
+ * In general, a unit vector can be substituted for a vector, but most
+ * operations on vectors don't preserve the norm and thus lose the result's unit
+ * status.  Operations that preserve unit status are overloaded below.
+ */
+
+template <std::size_t _dim, typename T, Orient _orient>
+struct UnitVector : public Vector<_dim, T, _orient> {
+  using Base = Vector<_dim, T, _orient>;
+
+  UnitVector() = delete;
+
+  // It's safe to copy unit vectors.
+  constexpr UnitVector(UnitVector const &) = default;
+
+  static constexpr UnitVector from_arbitrary(Base const & v) {
+    return UnitVector{v};
+  }
+
+private:
+  constexpr explicit UnitVector(Base const & v) : Base(v) {}
+};
+
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto normalized(Vector<dim, T, orient> const & a)
+    -> UnitVector<dim, T, orient> {
+  return UnitVector<dim, T, orient>::from_arbitrary(
+      a / Vector<dim, T, orient>{norm(a)});
+}
+
+/*
+ * Cross product is overloaded to preserve unit status.
+ */
+template <typename T, typename S, Orient orient>
+constexpr auto cross(UnitVector<3, T, orient> const & a,
+                     UnitVector<3, S, orient> const & b)
+    -> UnitVector<3, decltype(T{} * S{} - T{} * S{}), orient> {
+  using R = UnitVector<3, decltype(T{} * S{} - T{} * S{}), orient>;
+  using V = Vector<3, decltype(T{} * S{} - T{} * S{}), orient>;
+
+  return R::from_arbitrary(cross(V{a}, V{b}));
+}
+
+
+/*******************************************************************************
+ * Aliases for common vector types.
+ */
+
+template <typename T, Orient orient = Orient::col>
+using Vec2 = Vector<2, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec3 = Vector<3, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec4 = Vector<4, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using UVec2 = UnitVector<2, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using UVec3 = UnitVector<3, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using UVec4 = UnitVector<4, T, orient>;
+
+using Vec2f = Vec2<float>;
+using Vec3f = Vec3<float>;
+using Vec4f = Vec4<float>;
+
+using Vec2i = Vec2<int>;
+using Vec3i = Vec3<int>;
+using Vec4i = Vec4<int>;
+
+using UVec2f = UVec2<float>;
+using UVec3f = UVec3<float>;
+using UVec4f = UVec4<float>;
 
 }  // namespace math
 }  // namespace etl
