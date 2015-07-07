@@ -49,6 +49,10 @@ namespace math {
 // Common parent of all matrices.
 struct MatrixTag {};
 
+// Convenient alias for matrix rows.
+template <std::size_t cols, typename T>
+using MatrixRow = Vector<cols, T, Orient::row>;
+
 /*
  * Base class of matrices of a given size and type.  Defines storage, type
  * aliases, and constructors so that we don't have to repeat them in the
@@ -73,7 +77,7 @@ template <
   typename T,
   typename... Rs>
 struct MatrixBase<rows, cols, T, TypeList<Rs...>> : public MatrixTag {
-  using Row = Vector<cols, T, Orient::row>;
+  using Row = MatrixRow<cols, T>;
 
   Row row[rows];
 
@@ -95,7 +99,7 @@ template <
   typename T
 >
 using MatrixBaseHelper = MatrixBase<rows, cols, T,
-      Repeat<Vector<cols, T, Orient::row>, rows>>;
+      Repeat<MatrixRow<cols, T>, rows>>;
 
 /*
  * General Matrix template; used for rectangular matrices.
@@ -184,7 +188,7 @@ namespace _matrix {
                            Matrix<r, c, S> const & b,
                            F && fn,
                            IndexSequence<R...>)
-      -> Vector<r, decltype(fn(T{}, S{}))> {
+      -> Vector<r, decltype(fn(MatrixRow<c, T>{}, MatrixRow<c, S>{}))> {
     return { fn(a.row[R], b.row[R])... };
   }
 
@@ -198,7 +202,7 @@ namespace _matrix {
   constexpr auto row_wise_(Matrix<r, c, T> const & a,
                            F && fn,
                            IndexSequence<R...>)
-      -> Vector<r, decltype(fn(T{}))> {
+      -> Vector<r, decltype(fn(MatrixRow<c, T>{}))> {
     return { fn(a.row[R])... };
   }
 
@@ -211,7 +215,7 @@ namespace _matrix {
   >
   constexpr auto transpose_row(Matrix<r, c, T> const & a,
                                IndexSequence<R...>)
-      -> Vector<r, T, Orient::row> {
+      -> MatrixRow<r, T> {
     return { get<col>(a.row[R])... };
   }
 
@@ -236,11 +240,19 @@ namespace _matrix {
  * pairs of rows in matrices 'a' and 'b', producing a column vector containing
  * the result for each row.
  */
-template <std::size_t r, std::size_t c, typename T, typename S, typename F>
+template <
+  std::size_t r,
+  std::size_t c,
+  typename T,
+  typename S,
+  typename F,
+  typename R1 = typename Matrix<r, c, T>::Row,
+  typename R2 = typename Matrix<r, c, S>::Row
+>
 constexpr auto row_wise(Matrix<r, c, T> const & a,
                         Matrix<r, c, S> const & b,
                         F && fn)
-    -> Vector<r, decltype(fn(T{}, S{}))> {
+    -> Vector<r, decltype(fn(MatrixRow<c, T>{}, MatrixRow<c, S>{}))> {
   return _matrix::row_wise_(a, b, forward<F>(fn), MakeIndexSequence<r>{});
 }
 
@@ -251,7 +263,7 @@ constexpr auto row_wise(Matrix<r, c, T> const & a,
 template <std::size_t r, std::size_t c, typename T, typename F>
 constexpr auto row_wise(Matrix<r, c, T> const & a,
                         F && fn)
-    -> Vector<r, decltype(fn(T{}))> {
+    -> Vector<r, decltype(fn(MatrixRow<c, T>{}))> {
   return _matrix::row_wise_(a, forward<F>(fn), MakeIndexSequence<r>{});
 }
 
@@ -350,7 +362,7 @@ namespace _matrix {
                              Matrix<m, p, T2> const & b,
                              IndexSequence<M...> ms,
                              IndexSequence<P...>)
-      -> Vector<p, decltype(T1{} * T2{}), Orient::row> {
+      -> MatrixRow<p, decltype(T1{} * T2{})> {
     return { mul_m_m_1<row, P>(a, b, ms)... };
   }
 
