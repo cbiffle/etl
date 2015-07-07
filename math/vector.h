@@ -573,8 +573,7 @@ template <
   typename T,
   typename S,
   Orient orient,
-  typename F,
-  std::size_t... I
+  typename F
 >
 constexpr auto parallel(Vector<dim, T, orient> const & a,
                         Vector<dim, S, orient> const & b,
@@ -591,8 +590,7 @@ template <
   std::size_t dim,
   typename T,
   Orient orient,
-  typename F,
-  std::size_t... I
+  typename F
 >
 constexpr auto horizontal(Vector<dim, T, orient> const & v,
                           F && fn)
