@@ -33,6 +33,13 @@
  *
  * This discussion refers to some vector type `V`.  I'll get more specific only
  * when required.
+ *
+ * Basically all vector operations that don't require mutation are declared as
+ * constexpr optimistically.  Fully constexpr vector support relies on
+ * constexpr versions of `sqrt`, among other things, that are not required by
+ * the C++ standard as of C++11.  However, GCC provides these as an extension,
+ * so if you're using GCC with `std=gnu++11` or later, you should have constexpr
+ * vectors.  (Note that Clang 3.6.1 does not agree.)
  * 
  * Static attributes
  * -----------------
@@ -88,14 +95,20 @@
  *
  * Vector-specific product types are provided as functions:
  * - `dot(v1, v2)` is the dot product.
- * - `cross(v1, v2)` is the cross product.
+ * - `cross(v1, v2)` is the cross product (only defined for 3-vectors).
+ * - `norm(v)` is the vector norm (length or magnitude) and `norm_squared(v)`
+ *   is the square of the norm (cheaper to compute and sometimes useful).
+ * - `normalized(v)` is a vector pointing in the same direction as `v` but with
+ *   unit length.
+ * - `transpose(v)` is a vector with the same elements as `v` but opposed
+ *   orientation.
  *
  * This library doesn't currently provide for direct operations between vectors
  * and scalars, though the element repetition syntax makes promoting a scalar
  * to a vector relatively compact: `v1 * V{4}`.
  *
- * Element access
- * --------------
+ * Element access and shuffling
+ * ----------------------------
  *
  * To access the elements of the vector, there are two options, both checked
  * at compile time:
@@ -107,7 +120,7 @@
  *
  * To derive a new vector by shuffling, the `get` template can accept more than
  * one index: `v.get<0, 1, 0>()` produces a 3-vector of the same type as `v`
- * whose elements are element 0, 1, and 0 again of `v`.
+ * whose elements are equal to element 0, 1, and 0 again of `v`.
  *
  * Combinators
  * -----------
@@ -655,15 +668,36 @@ constexpr bool operator!=(Vector<dim, T, orient> const & a,
  * Vector-specific operations.
  */
 
-template <typename V>
-constexpr auto transpose(V const & v) -> typename V::Transposed {
-  return typename V::Transposed{v};
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto transpose(Vector<dim, T, orient> const & v)
+    -> Vector<dim, T, flip(orient)> {
+  return Vector<dim, T, flip(orient)>{v};
 }
 
-template <typename V>
-inline constexpr auto dot(V const & a, V const & b) -> typename V::Element {
-  using E = typename V::Element;
-  return horizontal(a * b, functor::Add<E, E>{});
+template <std::size_t dim, typename T, typename S, Orient orient>
+constexpr auto dot(Vector<dim, T, orient> const & a,
+                   Vector<dim, S, orient> const & b)
+    -> decltype(T{} * S{}) {
+  return horizontal(a * b, functor::Add<T, S>{});
+}
+
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto norm_squared(Vector<dim, T, orient> const & a)
+    -> decltype(dot(a, a)) {
+  return dot(a, a);
+}
+
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto norm(Vector<dim, T, orient> const & a)
+    -> decltype(norm_squared(a)) {
+  using namespace std;
+  return sqrt(norm_squared(a));
+}
+
+template <std::size_t dim, typename T, Orient orient>
+inline constexpr auto normalized(Vector<dim, T, orient> const & a)
+    -> Vector<dim, T, orient> {
+  return a / Vector<dim, T, orient>{norm(a)};
 }
 
 template <typename T, typename S, Orient orient>
