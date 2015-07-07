@@ -560,8 +560,8 @@ template <
   typename F
 >
 constexpr auto parallel(Vector<dim, T, orient> const & v, F && fn)
-    -> decltype(parallel_(v, forward<F>(fn), MakeIndexSequence<dim>{})) {
-  return parallel_(v, forward<F>(fn), MakeIndexSequence<dim>{});
+    -> decltype(_vec::parallel_(v, forward<F>(fn), {})) {
+  return _vec::parallel_(v, forward<F>(fn), MakeIndexSequence<dim>{});
 }
 
 /*
@@ -579,8 +579,8 @@ template <
 constexpr auto parallel(Vector<dim, T, orient> const & a,
                         Vector<dim, S, orient> const & b,
                         F && fn)
-    -> decltype(parallel_(a, b, forward<F>(fn), MakeIndexSequence<dim>{})) {
-  return parallel_(a, b, forward<F>(fn), MakeIndexSequence<dim>{});
+    -> decltype(_vec::parallel_(a, b, forward<F>(fn), {})) {
+  return _vec::parallel_(a, b, forward<F>(fn), MakeIndexSequence<dim>{});
 }
 
 /*
@@ -596,8 +596,8 @@ template <
 >
 constexpr auto horizontal(Vector<dim, T, orient> const & v,
                           F && fn)
-    -> decltype(horizontal_(v, forward<F>(fn), MakeIndexSequence<dim>{})) {
-  return horizontal_(v, forward<F>(fn), MakeIndexSequence<dim>{});
+    -> decltype(_vec::horizontal_(v, forward<F>(fn), MakeIndexSequence<1>{})) {
+  return _vec::horizontal_(v, forward<F>(fn), MakeIndexSequence<dim>{});
 }
 
 
