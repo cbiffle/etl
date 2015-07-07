@@ -3,7 +3,9 @@
 
 #include <cmath>
 #include <type_traits>
+
 #include "etl/math/vector.h"
+#include "etl/math/matrix.h"
 
 namespace etl {
 namespace math {
@@ -147,6 +149,17 @@ namespace _quat {
         T{0.5} * m,
         Vec3<T>{T{1} / m} * cr);
   }
+
+  template <typename T>
+  constexpr Mat4<T> rotation_matrix_helper(T w, T x, T y, T z) {
+    return {
+      {w*w + x*x - y*y - z*z, 2*x*y - 2*w*z, 2*x*z + 2*w*y, 0},
+      {2*x*y + 2*w*z, w*w - x*x + y*y - z*z, 2*y*z - 2*w*x, 0},
+      {2*x*z - 2*w*y, 2*y*z + 2*w*x, w*w - x*x - y*y + z*z, 0},
+      {0,             0,             0,                     1},
+    };
+  }
+
 }  // namespace _quat
 
 /*
@@ -190,6 +203,15 @@ template <typename T>
 constexpr UnitQuaternion<T> rotation(Vec3<T> start, Vec3<T> end) {
   return _quat::rotation_vec_nonunit_step2(
       quat(dot(start, end), cross(start, end)));
+}
+
+/*
+ * Constructs a 4x4 augmented rotation matrix equivalent to a unit quaternion.
+ */
+template <typename T>
+constexpr Mat4<T> rotation_matrix(UnitQuaternion<T> const & u) {
+  return _quat::rotation_matrix_helper(
+      u.scalar, u.vector.x, u.vector.y, u.vector.z);
 }
 
 
