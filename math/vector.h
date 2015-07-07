@@ -42,8 +42,8 @@
  *
  * A `UnitVector` is a `Vector`, so it can be used with any vector operation.
  * 
- * Vector unit status is preserved across cross product and normalization.
- * Other operations will return a non-unit `Vector`.
+ * Vector unit status is preserved across normalization.  Other operations will
+ * return a non-unit `Vector`.
  *
  *
  * Operations on Vectors
@@ -769,19 +769,6 @@ constexpr auto normalized(Vector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
   return UnitVector<dim, T, orient>::from_arbitrary(
       a / Vector<dim, T, orient>{norm(a)});
-}
-
-/*
- * Cross product is overloaded to preserve unit status.
- */
-template <typename T, typename S, Orient orient>
-constexpr auto cross(UnitVector<3, T, orient> const & a,
-                     UnitVector<3, S, orient> const & b)
-    -> UnitVector<3, decltype(T{} * S{} - T{} * S{}), orient> {
-  using R = UnitVector<3, decltype(T{} * S{} - T{} * S{}), orient>;
-  using V = Vector<3, decltype(T{} * S{} - T{} * S{}), orient>;
-
-  return R::from_arbitrary(cross(V{a}, V{b}));
 }
 
 
