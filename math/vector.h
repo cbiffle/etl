@@ -527,14 +527,9 @@ namespace _vec {  // implementation details
   }
 
   /*
-   * Horizontal combinator helper -- 2+ element case.
+   * Horizontal combinator helper -- 1+ element case.
    *
-   * Recurses on the tail of the index sequence, and then applies `fn` to the
-   * first named element and the result of the recursion.
-   *
-   * In Haskell terms this is `foldr`.  It's not clear whether pivoting it into
-   * `foldl` would improve compilation, but it might make precedence for
-   * operators such as `/` more obvious.
+   * In Haskell terms this is `foldl`.
    *
    * Note that this will have compile-time recursion depth proportional to the
    * dimension of the vectors.  Vectors are expected to be small, so this is
@@ -546,31 +541,32 @@ namespace _vec {  // implementation details
     Orient orient,
     typename F,
     std::size_t I0,
-    std::size_t I1,
     std::size_t... I
   >
   constexpr T horizontal_(Vector<dim, T, orient> const & v,
+                          T accum,
                           F && fn,
-                          IndexSequence<I0, I1, I...>) {
-    return fn(get<I0>(v),
-              horizontal_(v, forward<F>(fn), IndexSequence<I1, I...>{}));
+                          IndexSequence<I0, I...>) {
+    return horizontal_(v,
+                       fn(accum, get<I0>(v)),
+                       forward<F>(fn),
+                       IndexSequence<I...>{});
   }
 
   /*
-   * Horizontal combinator helper -- 1 element case.  Simply applies `fn` to
-   * the named element.
+   * Horizontal combinator helper -- base case.
    */
   template <
     std::size_t dim,
     typename T,
     Orient orient,
-    typename F,
-    std::size_t I0
+    typename F
   >
-  constexpr T horizontal_(Vector<dim, T, orient> const & v,
-                          F && fn,
-                          IndexSequence<I0>) {
-    return get<I0>(v);
+  constexpr T horizontal_(Vector<dim, T, orient> const &,
+                          T accum,
+                          F &&,
+                          IndexSequence<>) {
+    return accum;
   }
 
 }  // namespace _vec
@@ -632,9 +628,12 @@ constexpr auto parallel(Vector<d, T, orient> const & a,
  * Applies 'fn' to pairs of elements in 'v' until all elements have been
  * considered, and returns the result.
  *
+ * `fn` is treated as left-associative, that is, applying `fn` to the vector
+ * `{a, b, c}` produces `fn(fn(a, b), c)`, *not* `fn(a, fn(b, c))`.
+ *
  *   auto a = Vec3f{1, 2, 3};
- *   auto b = parallel(a, [](float x, float y) { return x + y; });
- *   // b = 6.0f
+ *   auto b = parallel(a, [](float x, float y) { return x / y; });
+ *   // b = 1.f / 6
  */
 template <
   std::size_t d,
@@ -644,8 +643,11 @@ template <
 >
 constexpr auto horizontal(Vector<d, T, orient> const & v,
                           F && fn)
-    -> decltype(_vec::horizontal_(v, forward<F>(fn), MakeIndexSequence<d>{})) {
-  return _vec::horizontal_(v, forward<F>(fn), MakeIndexSequence<d>{});
+    -> decltype(fn(T{}, T{})) {
+  return _vec::horizontal_(v,
+                           get<0>(v),
+                           forward<F>(fn),
+                           MakeIndexSequence<d>::tail());
 }
 
 
