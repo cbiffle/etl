@@ -1,14 +1,16 @@
-#ifndef _ETL_MATH_AFFINE_H_INCLUDED
-#define _ETL_MATH_AFFINE_H_INCLUDED
+#ifndef _ETL_MATH_AFFINE_TRANSFORM_H_INCLUDED
+#define _ETL_MATH_AFFINE_TRANSFORM_H_INCLUDED
 
 #include <cmath>
 
 #include "etl/algorithm.h"
+#include "etl/math/linear_transform.h"
 #include "etl/math/matrix.h"
 #include "etl/math/vector.h"
 
 namespace etl {
 namespace math {
+namespace affine_transform {
 
 /*******************************************************************************
  * IMPLEMENTATION DETAIL - NOT PUBLIC API
@@ -16,7 +18,7 @@ namespace math {
  * Transformation helpers.
  */
 
-namespace _affine {
+namespace _priv {
   template <
     std::size_t d,
     typename T,
@@ -27,6 +29,32 @@ namespace _affine {
                                 IndexSequence<N...>)
       -> Vector<d + 1, T, o> {
     return { get<N>(v)..., T{1} };
+  }
+
+  template <
+    std::size_t r,
+    std::size_t n,
+    typename T,
+    std::size_t... N
+  >
+  constexpr auto augment_row_helper(Matrix<n, n, T> const & m,
+                                    IndexSequence<N...>)
+      -> MatrixRow<n + 1, T> {
+    return {get<N>(m.row[r])..., 0};
+  }
+
+  template <
+    std::size_t n,
+    typename T,
+    std::size_t... N
+  >
+  constexpr auto augment_helper(Matrix<n, n, T> const & m,
+                                IndexSequence<N...> ns)
+      -> Matrix<n + 1, n + 1, T> {
+    return {
+      augment_row_helper<N>(m, ns)...,
+      {((void) N, T{0})..., T{1}},
+    };
   }
 
   template <
@@ -53,33 +81,22 @@ namespace _affine {
       -> Matrix<n + 1, n + 1, T> {
     return { translate_row<N>(disp, ns)... };
   }
+}  // namespace _priv
 
-  template <std::size_t row, std::size_t n, typename T, std::size_t... N>
-  constexpr auto scale_row(Vector<n, T> scale, IndexSequence<N...> ns)
-      -> Vector<n + 1, T, Orient::row> {
-    // N is the column index here.
-    return { (row != N ? T{0}
-                       : row < n ? get<min(row, n-1)>(scale)
-                                 : T{1}) ... };
-  }
-
-  template <std::size_t n, typename T, std::size_t... N>
-  constexpr auto scale_(Vector<n, T> scale, IndexSequence<N...> ns)
-      -> Matrix<n + 1, n + 1, T> {
-    return { scale_row<N>(scale, ns)... };
-  }
-}  // namespace _affine
 
 /*******************************************************************************
- * Transformation-related utilities.
+ * Augmentations and projections for moving between affine and linear
+ * transforms (euclidean and homogeneous coordinate spaces).
  */
 
 /*
  * Augments a point in Euclidean space with an extra 1, placing it on the
  * w=1 plane in homogeneous space.
  *
- * In other words, converts a coordinate into a form that can be used with the
- * augmented matrices produced by the transformations below.
+ * In other words, converts a basic vector into a form that can be used with
+ * affine transforms.
+ *
+ * To convert back, use `project`.
  */
 template <
   std::size_t d,
@@ -87,7 +104,19 @@ template <
   Orient o
 >
 constexpr Vector<d + 1, T, o> augment(Vector<d, T, o> const & v) {
-  return _affine::augment_helper(v, MakeIndexSequence<d>{});
+  return _priv::augment_helper(v, MakeIndexSequence<d>{});
+}
+
+/*
+ * Augments an NxN matrix with another row/column taken from the identity
+ * matrix.  That is, it's mostly zeroes except for the lower-right corner.
+ */
+template <
+  std::size_t n,
+  typename T
+>
+constexpr Matrix<n + 1, n + 1, T> augment(Matrix<n, n, T> const & m) {
+  return _priv::augment_helper(m, MakeIndexSequence<n>{});
 }
 
 /*
@@ -104,7 +133,7 @@ template <
   Orient o
 >
 constexpr Vector<d - 1, T, o> project(Vector<d, T, o> const & v) {
-  return _affine::project_helper(v, MakeIndexSequence<d - 1>{});
+  return _priv::project_helper(v, MakeIndexSequence<d - 1>{});
 }
 
 
@@ -113,23 +142,20 @@ constexpr Vector<d - 1, T, o> project(Vector<d, T, o> const & v) {
  */
 
 /*
- * Given displacements in n dimensions, produces an augmented translation
- * matrix (n+1 x n+1 in size).
+ * Given displacements in N dimensions, produces an N+1xN+1 augmented
+ * translation matrix.
  */
 template <std::size_t n, typename T>
-constexpr auto translate(Vector<n, T> disp)
-    -> Matrix<n + 1, n + 1, T> {
-  return _affine::translate_(disp, MakeIndexSequence<n + 1>{});
+constexpr auto translate(Vector<n, T> disp) -> Matrix<n + 1, n + 1, T> {
+  return _priv::translate_(disp, MakeIndexSequence<n + 1>{});
 }
 
 /*
- * Given factors in n dimensions, produces an augmented scale matrix (n+1 x n+1
- * in size).
+ * Given factors in N dimensions, produces an N+1xN+1 augmented scale matrix.
  */
 template <std::size_t n, typename T>
-constexpr auto scale(Vector<n, T> scale)
-    -> Matrix<n + 1, n + 1, T> {
-  return _affine::scale_(scale, MakeIndexSequence<n + 1>{});
+constexpr auto scale(Vector<n, T> scale) -> Matrix<n + 1, n + 1, T> {
+  return augment(linear_transform::scale(scale));
 }
 
 
@@ -137,38 +163,42 @@ constexpr auto scale(Vector<n, T> scale)
  * Transformations that I haven't bothered to generalize yet.
  */
 
+/*
+ * A matrix that rotates by `a` radians around the Z axis.
+ */
 template <typename T>
 constexpr Mat4<T> rotate_z(T a) {
-  using namespace std;
-  return {
-    {cos(a), -sin(a), 0, 0},
-    {sin(a),  cos(a), 0, 0},
-    {0,       0,      1, 0},
-    {0,       0,      0, 1},
-  };
+  return augment(linear_transform::rotate_z(a));
 }
 
+/*
+ * A matrix that rotates by `a` radians around the Y axis.
+ */
 template <typename T>
 constexpr Mat4<T> rotate_y(T a) {
-  using namespace std;
-  return { 
-    {cos(a),  0, sin(a), 0},
-    {0,       1, 0,      0},
-    {-sin(a), 0, cos(a), 0},
-    {0,       0, 0,      1},
-  };
+  return augment(linear_transform::rotate_y(a));
 }
 
+/*
+ * A matrix that rotates by `a` radians around the X axis.
+ */
 template <typename T>
 constexpr Mat4<T> rotate_x(T a) {
-  return {
-    {1, 0,      0,       0},
-    {0, cos(a), -sin(a), 0},
-    {0, sin(a), cos(a),  0},
-    {0, 0,      0,       1},
-  };
+  return augment(linear_transform::rotate_x(a));
 }
 
+/*
+ * A matrix that rotates by `a` radians around the origin of a two-dimensional
+ * space.
+ */
+template <typename T>
+constexpr Mat3<T> rotate(T a) {
+  return augment(linear_transform::rotate(a));
+}
+
+/*
+ * Orthographic projection of the given view volume.
+ */
 template <typename T>
 constexpr Mat4<T> ortho(T left, T top,
                         T right, T bottom,
@@ -181,6 +211,11 @@ constexpr Mat4<T> ortho(T left, T top,
   };
 }
 
+/*
+ * Perpsective projection of the given view frustum.  The left/right and
+ * top/bottom coordinates are of the near clip plane; this, combined with
+ * the distance to the near clip plane, determines the field of view.
+ */
 template <typename T>
 constexpr Mat4<T> persp(T l, T t,
                         T r, T b,
@@ -193,18 +228,8 @@ constexpr Mat4<T> persp(T l, T t,
   };
 }
 
-template <typename T>
-constexpr Mat3<T> rotate(T a) {
-  using namespace std;
-  return {
-    { cos(a), -sin(a), 0 },
-    { sin(a), cos(a),  0 },
-    { 0,      0,       1 },
-  };
-}
-
-
+}  // namespace affine_transform
 }  // namespace math
 }  // namespace etl
 
-#endif  // _ETL_MATH_AFFINE_H_INCLUDED
+#endif  // _ETL_MATH_AFFINE_TRANSFORM_H_INCLUDED
