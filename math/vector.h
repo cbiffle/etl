@@ -41,7 +41,7 @@
  * vector is unit-length.
  *
  * A `UnitVector` is a `Vector`, so it can be used with any vector operation.
- * 
+ *
  * Vector unit status is preserved across normalization and negation.  Other
  * operations will return a non-unit `Vector`.
  *
@@ -54,7 +54,7 @@
  *
  * Constexpr
  * ---------
- * 
+ *
  * This library has been designed with constexpr in mind.  All vector operations
  * that don't require mutation are declared along the C++11 constexpr rules.
  *
@@ -71,7 +71,7 @@
  * contexts, but Clang (3.6.1) does not, even with GNU extensions enabled.
  *
  * When in doubt, test.
- * 
+ *
  * Static attributes
  * -----------------
  *
@@ -221,6 +221,8 @@ struct Vector;
 
 
 /*******************************************************************************
+ * IMPLEMENTATION DETAIL SECTION - NOT PUBLIC API
+ *
  * VectorBase provides the actual member variables for the vector's components.
  * It is specialized to common sizes so that the variables can have the usual
  * names (x, y, z, so forth).
@@ -237,168 +239,169 @@ struct Vector;
 
 namespace _vec {  // implementation details
 
-/*
- * Common prototype.
- */
-template <std::size_t dim, typename T, Orient _orient, typename TL>
-struct VectorBase;
+  /*
+   * Common prototype.
+   */
+  template <std::size_t dim, typename T, Orient _orient, typename TL>
+  struct VectorBase;
 
-/*
- * The catch-all specialization for vectors of 0, 1, or many components.
- *
- * Such vectors do not have named fields; the fields are accessed as
- * elements[n].
- */
-template <std::size_t dim, typename T, Orient _orient, typename... Es>
-struct VectorBase<dim, T, _orient, TypeList<Es...>> : public VectorTag {
-  T elements[dim];
+  /*
+   * The catch-all specialization for vectors of 0, 1, or many components.
+   *
+   * Such vectors do not have named fields; the fields are accessed as
+   * elements[n].
+   */
+  template <std::size_t dim, typename T, Orient _orient, typename... Es>
+  struct VectorBase<dim, T, _orient, TypeList<Es...>> : public VectorTag {
+    T elements[dim];
 
-  // Default ctor.
-  constexpr VectorBase() = default;
+    // Default ctor.
+    constexpr VectorBase() = default;
 
-  // Element-wise ctor
-  constexpr VectorBase(Es const & ...args) : elements{args...} {}
+    // Element-wise ctor
+    constexpr VectorBase(Es const & ...args) : elements{args...} {}
 
-  // Repetition ctor
-  constexpr explicit VectorBase(T val)
-      : VectorBase{repl(val, MakeIndexSequence<dim>{})} {}
+    // Repetition ctor
+    constexpr explicit VectorBase(T val)
+        : VectorBase{repl(val, MakeIndexSequence<dim>{})} {}
 
-  // Transpose ctor
-  constexpr explicit VectorBase(
-      VectorBase<dim, T, flip(_orient), TypeList<Es...>> const & other)
-    : elements{other.elements} {}
+    // Transpose ctor
+    constexpr explicit VectorBase(
+        VectorBase<dim, T, flip(_orient), TypeList<Es...>> const & other)
+      : elements{other.elements} {}
 
-  template <std::size_t n>
-  constexpr auto get() const
-      -> typename std::enable_if<n < dim, T>::type {
-    return elements[n];
-  }
+    template <std::size_t n>
+    constexpr auto get() const
+        -> typename std::enable_if<n < dim, T>::type {
+      return elements[n];
+    }
 
-  template <std::size_t n>
-  auto get()
-      -> typename std::enable_if<n < dim, T &>::type {
-    return elements[n];
-  }
+    template <std::size_t n>
+    auto get()
+        -> typename std::enable_if<n < dim, T &>::type {
+      return elements[n];
+    }
 
-private:
-  template <std::size_t... D>
-  static constexpr VectorBase repl(T val, IndexSequence<D...>) {
-    return { ((void) D, val)... };
-  }
-};
+  private:
+    template <std::size_t... D>
+    static constexpr VectorBase repl(T val, IndexSequence<D...>) {
+      return { ((void) D, val)... };
+    }
+  };
 
 
-/*
- * Specialization of VectorBase for 2-vectors with fields named x, y.
- */
-template <typename T, Orient _orient, typename... Es>
-struct VectorBase<2, T, _orient, TypeList<Es...>> : public VectorTag {
-  T x, y;
+  /*
+   * Specialization of VectorBase for 2-vectors with fields named x, y.
+   */
+  template <typename T, Orient _orient, typename... Es>
+  struct VectorBase<2, T, _orient, TypeList<Es...>> : public VectorTag {
+    T x, y;
 
-  // Default ctor
-  constexpr VectorBase() = default;
-  // Element-wise ctor
-  constexpr VectorBase(T x_, T y_) : x{x_}, y{y_} {}
-  // Repetition ctor
-  constexpr explicit VectorBase(T v) : x{v}, y{v} {}
+    // Default ctor
+    constexpr VectorBase() = default;
+    // Element-wise ctor
+    constexpr VectorBase(T x_, T y_) : x{x_}, y{y_} {}
+    // Repetition ctor
+    constexpr explicit VectorBase(T v) : x{v}, y{v} {}
 
-  // Transpose ctor
-  constexpr explicit VectorBase(
-      VectorBase<2, T, flip(_orient), TypeList<Es...>> const & other)
-    : x{other.x}, y{other.y} {}
+    // Transpose ctor
+    constexpr explicit VectorBase(
+        VectorBase<2, T, flip(_orient), TypeList<Es...>> const & other)
+      : x{other.x}, y{other.y} {}
 
-  template <std::size_t n>
-  constexpr auto get() const
-      -> typename std::enable_if<n < 2, T>::type {
-    return n == 0 ? x : y;
-  }
+    template <std::size_t n>
+    constexpr auto get() const
+        -> typename std::enable_if<n < 2, T>::type {
+      return n == 0 ? x : y;
+    }
 
-  template <std::size_t n>
-  auto get()
-      -> typename std::enable_if<n < 2, T &>::type {
-    return n == 0 ? x : y;
-  }
-};
+    template <std::size_t n>
+    auto get()
+        -> typename std::enable_if<n < 2, T &>::type {
+      return n == 0 ? x : y;
+    }
+  };
 
-/*
- * Specialization of VectorBase for 3-vectors with fields named x, y, z.
- */
-template <typename T, Orient _orient, typename... Es>
-struct VectorBase<3, T, _orient, TypeList<Es...>> : public VectorTag {
-  T x, y, z;
+  /*
+   * Specialization of VectorBase for 3-vectors with fields named x, y, z.
+   */
+  template <typename T, Orient _orient, typename... Es>
+  struct VectorBase<3, T, _orient, TypeList<Es...>> : public VectorTag {
+    T x, y, z;
 
-  // Default ctor
-  constexpr VectorBase() = default;
-  // Element-wise ctor
-  constexpr VectorBase(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
-  // Repetition ctor
-  constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v} {}
+    // Default ctor
+    constexpr VectorBase() = default;
+    // Element-wise ctor
+    constexpr VectorBase(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
+    // Repetition ctor
+    constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v} {}
 
-  // Transpose ctor
-  constexpr explicit VectorBase(
-      VectorBase<3, T, flip(_orient), TypeList<Es...>> const & other)
-    : x{other.x}, y{other.y}, z{other.z} {}
+    // Transpose ctor
+    constexpr explicit VectorBase(
+        VectorBase<3, T, flip(_orient), TypeList<Es...>> const & other)
+      : x{other.x}, y{other.y}, z{other.z} {}
 
-  template <std::size_t n>
-  constexpr auto get() const
-      -> typename std::enable_if<n < 3, T>::type {
-    return n == 0 ? x
-                  : n == 1 ? y
-                           : z;
-  }
+    template <std::size_t n>
+    constexpr auto get() const
+        -> typename std::enable_if<n < 3, T>::type {
+      return n == 0 ? x
+                    : n == 1 ? y
+                             : z;
+    }
 
-  template <std::size_t n>
-  auto get()
-      -> typename std::enable_if<n < 3, T &>::type {
-    return n == 0 ? x
-                  : n == 1 ? y
-                           : z;
-  }
-};
+    template <std::size_t n>
+    auto get()
+        -> typename std::enable_if<n < 3, T &>::type {
+      return n == 0 ? x
+                    : n == 1 ? y
+                             : z;
+    }
+  };
 
-/*
- * Specialization of VectorBase for 4-vectors with fields named x, y, z, w.
- */
-template <typename T, Orient _orient, typename... Es>
-struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
-  T x, y, z, w;
+  /*
+   * Specialization of VectorBase for 4-vectors with fields named x, y, z, w.
+   */
+  template <typename T, Orient _orient, typename... Es>
+  struct VectorBase<4, T, _orient, TypeList<Es...>> : public VectorTag {
+    T x, y, z, w;
 
-  // Default ctor
-  constexpr VectorBase() = default;
-  // Element-wise ctor
-  constexpr VectorBase(T x_, T y_, T z_, T w_)
-    : x{x_}, y{y_}, z{z_}, w{w_} {}
-  // Repetition ctor
-  constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
+    // Default ctor
+    constexpr VectorBase() = default;
+    // Element-wise ctor
+    constexpr VectorBase(T x_, T y_, T z_, T w_)
+      : x{x_}, y{y_}, z{z_}, w{w_} {}
+    // Repetition ctor
+    constexpr explicit VectorBase(T v) : x{v}, y{v}, z{v}, w{v} {}
 
-  // Transpose ctor
-  constexpr explicit VectorBase(
-      VectorBase<4, T, flip(_orient), TypeList<Es...>> const & other)
-    : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
+    // Transpose ctor
+    constexpr explicit VectorBase(
+        VectorBase<4, T, flip(_orient), TypeList<Es...>> const & other)
+      : x{other.x}, y{other.y}, z{other.z}, w{other.w} {}
 
-  template <std::size_t n>
-  constexpr auto get() const
-      -> typename std::enable_if<n < 4, T>::type {
-    return n == 0 ? x
-                  : n == 1 ? y
-                           : n == 2 ? z
-                                    : w;
-  }
+    template <std::size_t n>
+    constexpr auto get() const
+        -> typename std::enable_if<n < 4, T>::type {
+      return n == 0 ? x
+                    : n == 1 ? y
+                             : n == 2 ? z
+                                      : w;
+    }
 
-  template <std::size_t n>
-  auto get()
-      -> typename std::enable_if<n < 3, T &>::type {
-    return n == 0 ? x
-                  : n == 1 ? y
-                           : n == 2 ? z
-                                    : w;
-  }
-};
+    template <std::size_t n>
+    auto get()
+        -> typename std::enable_if<n < 3, T &>::type {
+      return n == 0 ? x
+                    : n == 1 ? y
+                             : n == 2 ? z
+                                      : w;
+    }
+  };
 
-template <std::size_t dim, typename T, Orient orient>
-using VectorBaseHelper = VectorBase<dim, T, orient, Repeat<T, dim>>;
+  template <std::size_t dim, typename T, Orient orient>
+  using VectorBaseHelper = VectorBase<dim, T, orient, Repeat<T, dim>>;
 
 }  // namespace _vec
+
 
 /*******************************************************************************
  * Vector is the actual vector type, derived from VectorBase.
@@ -474,17 +477,12 @@ constexpr auto get(Vector<dim, T, orient> const & v)
 
 
 /*******************************************************************************
- * Parallel and horizontal combinators.
+ * IMPLEMENTATION DETAIL SECTION - NOT PUBLIC API
  *
- * These templates lift operations on scalars to operations on vectors in one
- * of two ways:
- * - Parallel combinators apply a scalar operation separately to each element
- *   of a vector, or to corresponding elements of two vectors.
- * - Horizontal combinators apply a scalar operation across the elements of
- *   a vector, producing a scalar.
+ * Helper factors for combinators (below).
  */
 
-namespace _vec {
+namespace _vec {  // implementation details
   template <
     std::size_t dim,
     typename T,
@@ -514,7 +512,7 @@ namespace _vec {
       -> Vector<dim, decltype(fn(T{}, S{})), orient> {
     return { fn(get<I>(a), get<I>(b))... };
   }
-  
+
   template <
     std::size_t dim,
     typename T,
@@ -531,7 +529,7 @@ namespace _vec {
     return fn(get<I0>(v),
               horizontal_(v, forward<F>(fn), IndexSequence<I1, I...>{}));
   }
-  
+
   template <
     std::size_t dim,
     typename T,
@@ -547,6 +545,18 @@ namespace _vec {
   }
 
 }  // namespace _vec
+
+
+/*******************************************************************************
+ * Parallel and horizontal combinators.
+ *
+ * These templates lift operations on scalars to operations on vectors in one
+ * of two ways:
+ * - Parallel combinators apply a scalar operation separately to each element
+ *   of a vector, or to corresponding elements of two vectors.
+ * - Horizontal combinators apply a scalar operation across the elements of
+ *   a vector, producing a scalar.
+ */
 
 /*
  * Produces a new vector by applying 'fn' to each element of 'v'.
