@@ -679,7 +679,7 @@ constexpr auto operator-(Vector<dim, T, orient> const & a,
   return parallel(a, b, functor::Subtract<T, S>{});
 }
 
-// Multiplication by scalar
+// Multiplication by scalar (scalar on left)
 template <
   std::size_t dim,
   typename T,
@@ -692,6 +692,7 @@ constexpr auto operator*(T a, Vector<dim, S, orient> const & b)
   return parallel(b, functor::MultiplyValueBy<T, S>{a});
 }
 
+// Multiplication by scalar (scalar on right)
 template <
   std::size_t dim,
   typename T,
@@ -717,6 +718,7 @@ constexpr auto operator/(Vector<dim, T, orient> const & a, S b)
   return parallel(a, functor::DivideByValue<T, S>{b});
 }
 
+// Division of scalar by vector
 template <
   std::size_t dim,
   typename T,
@@ -729,11 +731,13 @@ constexpr auto operator/(T a, Vector<dim, S, orient> const & b)
   return parallel(b, functor::DivideValueBy<T, S>{a});
 }
 
+
 /*******************************************************************************
  * Compound assignment.  These are derived from the binary operators using a
  * common pattern.
  */
 
+// Addition
 template <std::size_t dim, typename T, typename S, Orient orient>
 inline
 Vector<dim, T, orient> & operator+=(Vector<dim, T, orient> & target,
@@ -741,6 +745,7 @@ Vector<dim, T, orient> & operator+=(Vector<dim, T, orient> & target,
   return target = target + other;
 }
 
+// Subtraction
 template <std::size_t dim, typename T, typename S, Orient orient>
 inline
 Vector<dim, T, orient> & operator-=(Vector<dim, T, orient> & target,
@@ -748,6 +753,7 @@ Vector<dim, T, orient> & operator-=(Vector<dim, T, orient> & target,
   return target = target - other;
 }
 
+// Multiplication by scalar
 template <
   std::size_t dim,
   typename T,
@@ -760,6 +766,7 @@ inline Vector<dim, T, orient> & operator*=(Vector<dim, T, orient> & target,
   return target = target * scalar;
 }
 
+// Division by scalar
 template <
   std::size_t dim,
   typename T,
@@ -772,9 +779,12 @@ inline Vector<dim, T, orient> & operator/=(Vector<dim, T, orient> & target,
   return target = target / scalar;
 }
 
+
 /*******************************************************************************
- * Comparison operators.  These combine element-wise comparison with a
- * horizontal conjunction.
+ * Equality operators.  These combine element-wise comparison with a horizontal
+ * conjunction.
+ *
+ * Note that no ordering for vectors is defined.
  */
 
 template <std::size_t dim, typename T, typename S, Orient orient>
@@ -796,12 +806,21 @@ constexpr bool operator!=(Vector<dim, T, orient> const & a,
  * Vector-specific operations.
  */
 
+/*
+ * Returns a vector with the same elements as `v` but with opposed orientation
+ * (row to col, or col to row).
+ */
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto transposed(Vector<dim, T, orient> const & v)
     -> Vector<dim, T, flip(orient)> {
   return Vector<dim, T, flip(orient)>{v};
 }
 
+/*
+ * Parallel element-wise multiplication (Hadamard product).
+ *
+ * This doesn't obviously map to any C++ operator, so it gets a name instead.
+ */
 template <std::size_t dim, typename T, typename S, Orient orient>
 constexpr auto parallel_mul(Vector<dim, T, orient> const & a,
                             Vector<dim, S, orient> const & b)
@@ -809,6 +828,9 @@ constexpr auto parallel_mul(Vector<dim, T, orient> const & a,
   return parallel(a, b, functor::Multiply<T, S>{});
 }
 
+/*
+ * Dot product.
+ */
 template <std::size_t dim, typename T, typename S, Orient orient>
 constexpr auto dot(Vector<dim, T, orient> const & a,
                    Vector<dim, S, orient> const & b)
@@ -817,19 +839,29 @@ constexpr auto dot(Vector<dim, T, orient> const & a,
                     functor::Add<T, S>{});
 }
 
+/*
+ * The square of the norm of vector `v`.  Cheaper than the norm, this is
+ * sometimes useful.
+ */
 template <std::size_t dim, typename T, Orient orient>
-constexpr auto norm_squared(Vector<dim, T, orient> const & a)
-    -> decltype(dot(a, a)) {
-  return dot(a, a);
+constexpr auto norm_squared(Vector<dim, T, orient> const & v)
+    -> decltype(dot(v, v)) {
+  return dot(v, v);
 }
 
+/*
+ * The norm (length, magnitude) of vector `v`.
+ */
 template <std::size_t dim, typename T, Orient orient>
-constexpr auto norm(Vector<dim, T, orient> const & a)
-    -> decltype(norm_squared(a)) {
+constexpr auto norm(Vector<dim, T, orient> const & v)
+    -> decltype(norm_squared(v)) {
   using namespace std;
-  return sqrt(norm_squared(a));
+  return sqrt(norm_squared(v));
 }
 
+/*
+ * The cross product.
+ */
 template <typename T, typename S, Orient orient>
 constexpr auto cross(Vector<3, T, orient> const & a,
                      Vector<3, S, orient> const & b)
@@ -866,18 +898,34 @@ private:
   constexpr explicit UnitVector(Base const & v) : Base(v) {}
 };
 
+/*
+ * Produces a vector parallel to `a` and pointing in the same direction but
+ * with unit length.
+ */
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto normalized(Vector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
   return UnitVector<dim, T, orient>::from_arbitrary(a / norm(a));
 }
 
+/*
+ * Overload of `normalized` for unit vectors; does nothing.  This helps
+ * algorithms magically become cheaper when parameterized in terms of unit
+ * vectors.
+ *
+ * To explicitly normalize a unit vector -- which is occasionaly useful to
+ * compensate for numeric drift -- just revoke its unit status by casting to
+ * a non-unit vector.
+ */
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto normalized(UnitVector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
   return a;
 }
 
+/*
+ * Overload of negation operator for unit vectors.
+ */
 template <
   std::size_t dim,
   typename T,
