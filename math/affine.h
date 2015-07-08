@@ -11,10 +11,36 @@ namespace etl {
 namespace math {
 
 /*******************************************************************************
- * General transformations.
+ * IMPLEMENTATION DETAIL - NOT PUBLIC API
+ *
+ * Transformation helpers.
  */
 
 namespace _affine {
+  template <
+    std::size_t d,
+    typename T,
+    Orient o,
+    std::size_t... N
+  >
+  constexpr auto augment_helper(Vector<d, T, o> const & v,
+                                IndexSequence<N...>)
+      -> Vector<d + 1, T, o> {
+    return { get<N>(v)..., T{1} };
+  }
+
+  template <
+    std::size_t d,
+    typename T,
+    Orient o,
+    std::size_t... N
+  >
+  constexpr auto project_helper(Vector<d, T, o> const & v,
+                                IndexSequence<N...>)
+      -> Vector<d - 1, T, o> {
+    return get<N...>(v) / get<d - 1>(v);
+  }
+
   template <std::size_t row, std::size_t n, typename T, std::size_t... N>
   constexpr auto translate_row(Vector<n, T> disp, IndexSequence<N...> ns)
       -> Vector<n + 1, T, Orient::row> {
@@ -43,6 +69,48 @@ namespace _affine {
     return { scale_row<N>(scale, ns)... };
   }
 }  // namespace _affine
+
+/*******************************************************************************
+ * Transformation-related utilities.
+ */
+
+/*
+ * Augments a point in Euclidean space with an extra 1, placing it on the
+ * w=1 plane in homogeneous space.
+ *
+ * In other words, converts a coordinate into a form that can be used with the
+ * augmented matrices produced by the transformations below.
+ */
+template <
+  std::size_t d,
+  typename T,
+  Orient o
+>
+constexpr Vector<d + 1, T, o> augment(Vector<d, T, o> const & v) {
+  return _affine::augment_helper(v, MakeIndexSequence<d>{});
+}
+
+/*
+ * Projects a point in homogeneous space back into Euclidean space, using a
+ * perspective divide to move it onto the w=1 plane and then dropping that
+ * coordinate.
+ *
+ * In other words, converts a coordinate back from the form produced by
+ * `augment(v)` above.
+ */
+template <
+  std::size_t d,
+  typename T,
+  Orient o
+>
+constexpr Vector<d - 1, T, o> project(Vector<d, T, o> const & v) {
+  return _affine::project_helper(v, MakeIndexSequence<d - 1>{});
+}
+
+
+/*******************************************************************************
+ * General transformations.
+ */
 
 /*
  * Given displacements in n dimensions, produces an augmented translation
