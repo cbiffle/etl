@@ -11,13 +11,34 @@ namespace etl {
 /*
  * A compile-time sequence of integers.
  *
- * This is a backport of C++14's integer_sequence.
+ * This is a backport of C++14's integer_sequence with the addition of two
+ * members for non-empty instantiations:
+ *
+ * - `head` is the first element.
+ * - `Tail` is the IntegerSequence containing elements after the first.
+ * - `tail()` yields a value of `Tail` type.
  */
 template <typename T, T ... Values>
-struct IntegerSequence {
+struct IntegerSequence;
+
+// Empty specialization without head or Tail.
+template <typename T>
+struct IntegerSequence<T> {
   static constexpr std::size_t size() {
-    return sizeof...(Values);
+    return 0;
   }
+};
+
+// Non-empty specialization.
+template <typename T, T v, T ...vs>
+struct IntegerSequence<T, v, vs...> {
+  static constexpr std::size_t size() {
+    return sizeof...(vs) + 1;
+  }
+
+  static constexpr T head = v;
+  using Tail = IntegerSequence<T, vs...>;
+  static constexpr Tail tail() { return {}; }
 };
 
 
