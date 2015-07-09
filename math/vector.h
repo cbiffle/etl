@@ -869,6 +869,25 @@ constexpr auto cross(Vector<3, T, orient> const & a,
        - parallel_mul(get<2, 0, 1>(a), get<1, 2, 0>(b));
 }
 
+/*
+ * The "cross product" of two 2D vectors.
+ *
+ * This is not actually a cross product, but is a useful property of 2D vectors
+ * without a good name that I can find.  Internet people often refer to it as
+ * the cross product.  Who am I to question internet people?
+ */
+template <typename T, typename S, Orient orient>
+constexpr auto cross(Vector<2, T, orient> const & a,
+                     Vector<2, S, orient> const & b)
+    -> decltype(T{} * S{} - T{} * S{}) {
+  // Technically we're computing the x and y components of the cross product
+  // only to discard them.  In practice, the compiler understands this and
+  // elides the unnecessary work.  I prefer this phrasing to manually
+  // simplifying the equation.
+  using V3 = Vector<3, T, orient>;
+  return cross(V3{a.x, a.y, 0}, V3{b.x, b.y, 0}).z;
+}
+
 
 /*******************************************************************************
  * Unit vector subtype.
