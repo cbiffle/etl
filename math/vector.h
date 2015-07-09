@@ -31,14 +31,14 @@
  * Unit Vectors
  * ============
  *
- * Some operations are slightly cheaper when applied to vectors of unit length,
- * but only if the author or compiler can verify that at compile time.  To help
- * with this, this library distinguishes between the general `Vector` template
- * and the `UnitVector` subtype.
+ * Some operations are slightly cheaper when applied to vectors of unit
+ * magnitude, but only if the author or compiler can verify that at compile
+ * time.  To help with this, this library distinguishes between the general
+ * `Vector` template and the `UnitVector` subtype.
  *
  * You can get a `UnitVector` from `normalized(v)`, or by creating your own
  * with `from_arbitrary` -- effectively asserting to the compiler that the
- * vector is unit-length.
+ * vector is unit-magnitude.
  *
  * A `UnitVector` is a `Vector`, so it can be used with any vector operation.
  *
@@ -127,10 +127,11 @@
  * Vector-specific product types are provided as functions:
  * - `dot(v1, v2)` is the dot product.
  * - `cross(v1, v2)` is the cross product (only defined for 3-vectors).
- * - `norm(v)` is the vector norm (length or magnitude) and `norm_squared(v)`
- *   is the square of the norm (cheaper to compute and sometimes useful).
+ * - `mag(v)` is the magnitude (or length, or Euclidean vector norm).
+ * - `sqmag(v)` is the square of the magnitude (cheaper to compute and
+ *   sometimes useful).
  * - `normalized(v)` is a vector pointing in the same direction as `v` but with
- *   unit length.
+ *   unit magnitude.
  * - `transposed(v)` is a vector with the same elements as `v` but opposed
  *   orientation.
  *
@@ -840,23 +841,21 @@ constexpr auto dot(Vector<dim, T, orient> const & a,
 }
 
 /*
- * The square of the norm of vector `v`.  Cheaper than the norm, this is
- * sometimes useful.
+ * The square of the magnitude of vector `v`.  Cheaper than the magnitude
+ * itself, this is sometimes useful.
  */
 template <std::size_t dim, typename T, Orient orient>
-constexpr auto norm_squared(Vector<dim, T, orient> const & v)
-    -> decltype(dot(v, v)) {
+constexpr auto sqmag(Vector<dim, T, orient> const & v) -> decltype(dot(v, v)) {
   return dot(v, v);
 }
 
 /*
- * The norm (length, magnitude) of vector `v`.
+ * The magnitude (length, Euclidean norm) of vector `v`.
  */
 template <std::size_t dim, typename T, Orient orient>
-constexpr auto norm(Vector<dim, T, orient> const & v)
-    -> decltype(norm_squared(v)) {
+constexpr auto mag(Vector<dim, T, orient> const & v) -> decltype(sqmag(v)) {
   using namespace std;
-  return sqrt(norm_squared(v));
+  return sqrt(sqmag(v));
 }
 
 /*
@@ -877,8 +876,8 @@ constexpr auto cross(Vector<3, T, orient> const & a,
  * The usual way of obtaining a UnitVector is by calling `normalized(v)`.
  *
  * In general, a unit vector can be substituted for a vector, but most
- * operations on vectors don't preserve the norm and thus lose the result's unit
- * status.  Operations that preserve unit status are overloaded below.
+ * operations on vectors don't preserve the norm and thus lose the result's
+ * unit status.  Operations that preserve unit status are overloaded below.
  */
 
 template <std::size_t _dim, typename T, Orient _orient>
@@ -900,12 +899,12 @@ private:
 
 /*
  * Produces a vector parallel to `a` and pointing in the same direction but
- * with unit length.
+ * with unit magnitude
  */
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto normalized(Vector<dim, T, orient> const & a)
     -> UnitVector<dim, T, orient> {
-  return UnitVector<dim, T, orient>::from_arbitrary(a / norm(a));
+  return UnitVector<dim, T, orient>::from_arbitrary(a / mag(a));
 }
 
 /*
