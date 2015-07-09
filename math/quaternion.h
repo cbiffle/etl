@@ -51,12 +51,20 @@ constexpr Quaternion<T> conjugate(Quaternion<T> const & q) {
 
 /*
  * Computes the quaternion norm, which is (in implementation) equivalent to the
- * vector norm for a 4vec with the same elements.
+ * Euclidean vector norm for a 4vec with the same elements.
  */
 template <typename T>
 constexpr auto norm(Quaternion<T> const & q) -> decltype(T{} * T{}) {
   using namespace std;
   return sqrt(q.scalar * q.scalar + dot(q.vector, q.vector));
+}
+
+/*
+ * `mag(q)` is another way of saying `norm(q)` by analogy to vector.h.
+ */
+template <typename T>
+constexpr auto mag(Quaternion<T> const & q) -> decltype(norm(q)) {
+  return norm(q);
 }
 
 /*
