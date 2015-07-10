@@ -93,7 +93,7 @@ template <typename T>
 using AlignOf = std::integral_constant<std::size_t, alignof(T)>;
 
 /*******************************************************************************
- * Reasoning about function return types.
+ * Reasoning about type relations.
  */
 
 /*
@@ -101,6 +101,12 @@ using AlignOf = std::integral_constant<std::size_t, alignof(T)>;
  */
 template <typename F>
 using ResultOf = typename std::result_of<F>::type;
+
+/*
+ * Type alias version of std::common_type.
+ */
+template <typename A, typename B>
+using CommonType = typename std::common_type<A, B>::type;
 
 }  // namespace etl
 
