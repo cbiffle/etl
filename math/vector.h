@@ -477,6 +477,26 @@ constexpr auto get(Vector<dim, T, orient> const & v)
   return v.template get<I0, I1, I...>();
 }
 
+/******************************************************************************* * Aliases for common vector types.
+ */
+
+template <typename T, Orient orient = Orient::col>
+using Vec2 = Vector<2, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec3 = Vector<3, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using Vec4 = Vector<4, T, orient>;
+
+using Vec2f = Vec2<float>;
+using Vec3f = Vec3<float>;
+using Vec4f = Vec4<float>;
+
+using Vec2i = Vec2<int>;
+using Vec3i = Vec3<int>;
+using Vec4i = Vec4<int>;
+
 
 
 /*******************************************************************************
@@ -838,8 +858,9 @@ template <std::size_t dim, typename T, typename S, Orient orient>
 constexpr auto dot(Vector<dim, T, orient> const & a,
                    Vector<dim, S, orient> const & b)
     -> decltype(T{} * S{}) {
+  using M = decltype(T{} * S{});
   return horizontal(parallel_mul(a, b),
-                    functor::Add<T, S>{});
+                    functor::Add<M, M>{});
 }
 
 /*
@@ -886,8 +907,7 @@ constexpr auto cross(Vector<2, T, orient> const & a,
   // only to discard them.  In practice, the compiler understands this and
   // elides the unnecessary work.  I prefer this phrasing to manually
   // simplifying the equation.
-  using V3 = Vector<3, T, orient>;
-  return cross(V3{a.x, a.y, 0}, V3{b.x, b.y, 0}).z;
+  return cross(Vec3<T>{a.x, a.y, 0}, Vec3<S>{b.x, b.y, 0}).z;
 }
 
 
@@ -903,6 +923,29 @@ constexpr auto cross(Vector<2, T, orient> const & a,
 
 template <std::size_t _dim, typename T, Orient _orient>
 using UnitVector = Unit<Vector<_dim, T, _orient>>;
+
+
+/*******************************************************************************
+ * Aliases for common unit vector types.
+ */
+
+template <typename T, Orient orient = Orient::col>
+using UVec2 = UnitVector<2, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using UVec3 = UnitVector<3, T, orient>;
+
+template <typename T, Orient orient = Orient::col>
+using UVec4 = UnitVector<4, T, orient>;
+
+using UVec2f = UVec2<float>;
+using UVec3f = UVec3<float>;
+using UVec4f = UVec4<float>;
+
+
+/*******************************************************************************
+ * Overloaded operations on unit vectors.
+ */
 
 /*
  * Overload of negation operator for unit vectors.
@@ -946,46 +989,11 @@ constexpr T mag(UnitVector<dim, T, orient> const & v) {
  * The cross product of two unit 3vecs is itself a unit.
  */
 template <typename T, typename S, Orient orient>
-constexpr auto cross(UnitVector<3, T, orient> const & a,
-                     UnitVector<3, S, orient> const & b)
+constexpr auto cross(UVec3<T, orient> const & a,
+                     UVec3<S, orient> const & b)
     -> Unit<decltype(cross(as_nonunit(a), as_nonunit(b)))> {
   return unit_unchecked(cross(as_nonunit(a), as_nonunit(b)));
 }
-
-
-/*******************************************************************************
- * Aliases for common vector types.
- */
-
-template <typename T, Orient orient = Orient::col>
-using Vec2 = Vector<2, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using Vec3 = Vector<3, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using Vec4 = Vector<4, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using UVec2 = UnitVector<2, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using UVec3 = UnitVector<3, T, orient>;
-
-template <typename T, Orient orient = Orient::col>
-using UVec4 = UnitVector<4, T, orient>;
-
-using Vec2f = Vec2<float>;
-using Vec3f = Vec3<float>;
-using Vec4f = Vec4<float>;
-
-using Vec2i = Vec2<int>;
-using Vec3i = Vec3<int>;
-using Vec4i = Vec4<int>;
-
-using UVec2f = UVec2<float>;
-using UVec3f = UVec3<float>;
-using UVec4f = UVec4<float>;
 
 }  // namespace math
 }  // namespace etl
