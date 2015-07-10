@@ -28,6 +28,22 @@ using BoolConstant = std::integral_constant<bool, V>;
 
 
 /*******************************************************************************
+ * Obtaining (fake) values from types.
+ */
+
+/*
+ * Stands in for operations that produce a value of type T (rvalue reference).
+ * This function is never defined, and cannot be actually called.  It's
+ * intended for use in unevaluated contexts, like sizeof and decltype.
+ *
+ * Equivalent to std::declval, which is unfortunately in <utility>.  We define
+ * it here, rather than in <utility>, after libstdc++.
+ */
+template <typename T>
+auto declval() -> typename std::add_rvalue_reference<T>::type;
+
+
+/*******************************************************************************
  * Compile-time conditional behavior.
  */
 
@@ -75,6 +91,16 @@ using SizeOf = std::integral_constant<std::size_t, sizeof(T)>;
 
 template <typename T>
 using AlignOf = std::integral_constant<std::size_t, alignof(T)>;
+
+/*******************************************************************************
+ * Reasoning about function return types.
+ */
+
+/*
+ * Type alias version of std::result_of.
+ */
+template <typename F>
+using ResultOf = typename std::result_of<F>::type;
 
 }  // namespace etl
 
