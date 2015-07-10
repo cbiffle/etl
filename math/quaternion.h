@@ -50,6 +50,16 @@ constexpr Quaternion<T> conjugate(Quaternion<T> const & q) {
 }
 
 /*
+ * Functor version of `conjugate(q)`.
+ */
+template <typename T>
+struct QuaternionConjugate {
+  constexpr Quaternion<T> operator()(Quaternion<T> const & q) const {
+    return conjugate(q);
+  }
+};
+
+/*
  * Computes the quaternion norm, which is (in implementation) equivalent to the
  * Euclidean vector norm for a 4vec with the same elements.
  */
@@ -80,6 +90,22 @@ constexpr auto operator*(Quaternion<T> const & p, Quaternion<S> const & q)
   };
 }
 
+/*
+ * Divides each element of a quaternion by a scalar.
+ */
+template <
+  typename T,
+  typename S,
+  typename = std::enable_if<!IsQuaternion<S>::value>
+>
+constexpr auto operator/(Quaternion<T> const & p, S const & q)
+    -> Quaternion<decltype(T{} / q)> {
+  return {
+    p.scalar / q,
+    p.vector / q,
+  };
+}
+
 
 /*******************************************************************************
  * Unit quaternion subtype.
@@ -98,49 +124,11 @@ constexpr auto operator*(Quaternion<T> const & p, Quaternion<S> const & q)
  */
 
 template <typename T>
-struct UnitQuaternion : public Quaternion<T> {
-  // There's no obvious "default" or "zero" unit quaternion.
-  UnitQuaternion() = delete;
-
-  // Unsafe coercion backdoor, for when you really just want to plug in the
-  // components.
-  static constexpr UnitQuaternion from_parts(T w, Vec3<T> v) {
-    return UnitQuaternion{w, v};
-  }
-
-  // Unsafe coercion backdoor, for when you really just want to coerce an
-  // arbitrary quaternion.
-  static constexpr UnitQuaternion from_arbitrary(Quaternion<T> const & q) {
-    return UnitQuaternion{q};
-  }
-
-  /*
-   * Rotates the 3vec `v` by the rotation described by this unit quaternion.
-   */
-  constexpr auto rotate(Vec3<T> const & v) const -> Vec3<decltype(T{} * T{})> {
-    return (*this * quat(T{0}, v) * conjugate(*this)).vector;
-  }
-
-private:
-  constexpr explicit UnitQuaternion(T w, Vec3<T> v) : Quaternion<T>{w, v} {}
-  constexpr explicit UnitQuaternion(Quaternion<T> q) : Quaternion<T>{q} {}
-};
+using UnitQuaternion = Unit<Quaternion<T>>;
 
 template <typename T>
 constexpr UnitQuaternion<T> identity_quat() {
-  return UnitQuaternion<T>::from_parts(1, Vec3<T>{0});
-}
-
-template <typename T>
-constexpr UnitQuaternion<T> normalized(Quaternion<T> const & q) {
-  return UnitQuaternion<T>::from_parts(
-      q.scalar / norm(q),
-      q.vector / norm(q));
-}
-
-template <typename T>
-constexpr UnitQuaternion<T> normalized(UnitQuaternion<T> const & q) {
-  return q;
+  return UnitQuaternion<T>::from_unchecked({1, Vec3<T>{0}});
 }
 
 namespace _quat {
@@ -151,9 +139,10 @@ namespace _quat {
 
   template <typename T>
   constexpr UnitQuaternion<T> rotation_vec_unit_step2(T m, Vec3<T> cr) {
-    return UnitQuaternion<T>::from_parts(
+    return UnitQuaternion<T>::from_unchecked({
         T{0.5} * m,
-        (T{1} / m) * cr);
+        (T{1} / m) * cr,
+    });
   }
 
   template <typename T>
@@ -175,10 +164,32 @@ namespace _quat {
 template <typename T>
 constexpr UnitQuaternion<T> rotation(UVec3<T> axis, T angle) {
   using namespace std;
-  return UnitQuaternion<T>::from_parts(
+  return UnitQuaternion<T>::from_unchecked({
       cos(angle/2),
       axis * sin(angle/2)
-  );
+  });
+}
+
+/*
+ * Rotates a 3vec by the rotation described by a unit quaternion.
+ */
+template <typename T, typename S>
+constexpr auto rotate(UnitQuaternion<T> const & q,
+                      Vec3<S> const & v)
+    -> Vec3<decltype(T{} * S{})> {
+  return (q * quat(T{0}, v) * conjugate(q)).vector;
+}
+
+/*
+ * Rotates a unit 3vec by the rotation described by a unit quaternion,
+ * preserving unit length.
+ */
+template <typename T, typename S>
+constexpr auto rotate(UnitQuaternion<T> const & q,
+                      UVec3<S> const & v)
+    -> UVec3<decltype(T{} * S{})> {
+  using U = UVec3<decltype(T{} * S{})>;
+  return U::from_unchecked(rotate(q, Vec3<S>{v}));
 }
 
 /*
@@ -227,16 +238,14 @@ constexpr Mat4<T> rotation_matrix(UnitQuaternion<T> const & u) {
 
 template <typename T>
 constexpr UnitQuaternion<T> conjugate(UnitQuaternion<T> const & q) {
-  return UnitQuaternion<T>::from_parts(q.scalar, -q.vector);
+  return lift_unit(q, QuaternionConjugate<T>{});
 }
 
 template <typename T, typename S>
 constexpr auto operator*(UnitQuaternion<T> const & p,
                          UnitQuaternion<S> const & q)
     -> UnitQuaternion<decltype(T{} * S{})> {
-  using R = UnitQuaternion<decltype(T{} * S{})>;
-
-  return R::from_arbitrary(Quaternion<T>{p} * Quaternion<S>{q});
+  return lift_unit(p, q, functor::Multiply<Quaternion<T>, Quaternion<S>>{});
 }
 
 }  // namespace math

@@ -186,6 +186,8 @@
 #include "etl/type_list.h"
 #include "etl/functor.h"
 
+#include "etl/math/unit.h"
+
 namespace etl {
 namespace math {
 
@@ -900,46 +902,7 @@ constexpr auto cross(Vector<2, T, orient> const & a,
  */
 
 template <std::size_t _dim, typename T, Orient _orient>
-struct UnitVector : public Vector<_dim, T, _orient> {
-  using Base = Vector<_dim, T, _orient>;
-
-  UnitVector() = delete;
-
-  // It's safe to copy unit vectors.
-  constexpr UnitVector(UnitVector const &) = default;
-
-  static constexpr UnitVector from_arbitrary(Base const & v) {
-    return UnitVector{v};
-  }
-
-private:
-  constexpr explicit UnitVector(Base const & v) : Base(v) {}
-};
-
-/*
- * Produces a vector parallel to `a` and pointing in the same direction but
- * with unit magnitude
- */
-template <std::size_t dim, typename T, Orient orient>
-constexpr auto normalized(Vector<dim, T, orient> const & a)
-    -> UnitVector<dim, T, orient> {
-  return UnitVector<dim, T, orient>::from_arbitrary(a / mag(a));
-}
-
-/*
- * Overload of `normalized` for unit vectors; does nothing.  This helps
- * algorithms magically become cheaper when parameterized in terms of unit
- * vectors.
- *
- * To explicitly normalize a unit vector -- which is occasionaly useful to
- * compensate for numeric drift -- just revoke its unit status by casting to
- * a non-unit vector.
- */
-template <std::size_t dim, typename T, Orient orient>
-constexpr auto normalized(UnitVector<dim, T, orient> const & a)
-    -> UnitVector<dim, T, orient> {
-  return a;
-}
+using UnitVector = Unit<Vector<_dim, T, _orient>>;
 
 /*
  * Overload of negation operator for unit vectors.
@@ -951,7 +914,44 @@ template <
   typename R = UnitVector<dim, decltype(-T{}), orient>
 >
 constexpr R operator-(UnitVector<dim, T, orient> const & v) {
-  return R::from_arbitrary(-Vector<dim, T, orient>{v});
+  return lift_unit(v, functor::Negate<Vector<dim, T, orient>>{});
+}
+
+/*
+ * Transposition preserves the norm.
+ */
+template <std::size_t dim, typename T, Orient orient>
+constexpr auto transposed(UnitVector<dim, T, orient> const & v)
+    -> UnitVector<dim, T, flip(orient)> {
+  using U = UnitVector<dim, T, flip(orient)>;
+  return U::from_unchecked(transposed(as_nonunit(v)));
+}
+
+/*
+ * The square of the magnitude of a unit vector is statically known.
+ */
+template <std::size_t dim, typename T, Orient orient>
+constexpr T sqmag(UnitVector<dim, T, orient> const & v) {
+  return T{1};
+}
+
+/*
+ * The magnitude of a unit vector is statically known.
+ */
+template <std::size_t dim, typename T, Orient orient>
+constexpr T mag(UnitVector<dim, T, orient> const & v) {
+  return T{1};
+}
+
+/*
+ * The cross product of two unit 3vecs is itself a unit.
+ */
+template <typename T, typename S, Orient orient>
+constexpr auto cross(UnitVector<3, T, orient> const & a,
+                     UnitVector<3, S, orient> const & b)
+    -> Unit<decltype(cross(as_nonunit(a), as_nonunit(b)))> {
+  using U = Unit<decltype(cross(as_nonunit(a), as_nonunit(b)))>;
+  return U::from_unchecked(cross(as_nonunit(a), as_nonunit(b)));
 }
 
 
