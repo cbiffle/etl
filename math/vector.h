@@ -914,7 +914,7 @@ template <
   typename R = UnitVector<dim, decltype(-T{}), orient>
 >
 constexpr R operator-(UnitVector<dim, T, orient> const & v) {
-  return lift_unit(v, functor::Negate<Vector<dim, T, orient>>{});
+  return unit_unchecked(-as_nonunit(v));
 }
 
 /*
@@ -923,8 +923,7 @@ constexpr R operator-(UnitVector<dim, T, orient> const & v) {
 template <std::size_t dim, typename T, Orient orient>
 constexpr auto transposed(UnitVector<dim, T, orient> const & v)
     -> UnitVector<dim, T, flip(orient)> {
-  using U = UnitVector<dim, T, flip(orient)>;
-  return U::from_unchecked(transposed(as_nonunit(v)));
+  return unit_unchecked(transposed(as_nonunit(v)));
 }
 
 /*
@@ -950,8 +949,7 @@ template <typename T, typename S, Orient orient>
 constexpr auto cross(UnitVector<3, T, orient> const & a,
                      UnitVector<3, S, orient> const & b)
     -> Unit<decltype(cross(as_nonunit(a), as_nonunit(b)))> {
-  using U = Unit<decltype(cross(as_nonunit(a), as_nonunit(b)))>;
-  return U::from_unchecked(cross(as_nonunit(a), as_nonunit(b)));
+  return unit_unchecked(cross(as_nonunit(a), as_nonunit(b)));
 }
 
 

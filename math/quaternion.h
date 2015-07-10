@@ -50,16 +50,6 @@ constexpr Quaternion<T> conjugate(Quaternion<T> const & q) {
 }
 
 /*
- * Functor version of `conjugate(q)`.
- */
-template <typename T>
-struct QuaternionConjugate {
-  constexpr Quaternion<T> operator()(Quaternion<T> const & q) const {
-    return conjugate(q);
-  }
-};
-
-/*
  * Computes the quaternion norm, which is (in implementation) equivalent to the
  * Euclidean vector norm for a 4vec with the same elements.
  */
@@ -128,7 +118,7 @@ using UnitQuaternion = Unit<Quaternion<T>>;
 
 template <typename T>
 constexpr UnitQuaternion<T> identity_quat() {
-  return UnitQuaternion<T>::from_unchecked({1, Vec3<T>{0}});
+  return unit_unchecked({1, Vec3<T>{0}});
 }
 
 namespace _quat {
@@ -139,10 +129,7 @@ namespace _quat {
 
   template <typename T>
   constexpr UnitQuaternion<T> rotation_vec_unit_step2(T m, Vec3<T> cr) {
-    return UnitQuaternion<T>::from_unchecked({
-        T{0.5} * m,
-        (T{1} / m) * cr,
-    });
+    return unit_unchecked(quat(T{0.5} * m, (T{1} / m) * cr));
   }
 
   template <typename T>
@@ -164,10 +151,7 @@ namespace _quat {
 template <typename T>
 constexpr UnitQuaternion<T> rotation(UVec3<T> axis, T angle) {
   using namespace std;
-  return UnitQuaternion<T>::from_unchecked({
-      cos(angle/2),
-      axis * sin(angle/2)
-  });
+  return unit_unchecked(quat(cos(angle/2), axis * sin(angle/2)));
 }
 
 /*
@@ -188,8 +172,7 @@ template <typename T, typename S>
 constexpr auto rotate(UnitQuaternion<T> const & q,
                       UVec3<S> const & v)
     -> UVec3<decltype(T{} * S{})> {
-  using U = UVec3<decltype(T{} * S{})>;
-  return U::from_unchecked(rotate(q, Vec3<S>{v}));
+  return unit_unchecked(rotate(q, as_nonunit(v)));
 }
 
 /*
@@ -238,14 +221,14 @@ constexpr Mat4<T> rotation_matrix(UnitQuaternion<T> const & u) {
 
 template <typename T>
 constexpr UnitQuaternion<T> conjugate(UnitQuaternion<T> const & q) {
-  return lift_unit(q, QuaternionConjugate<T>{});
+  return unit_unchecked(conjugate(as_nonunit(q)));
 }
 
 template <typename T, typename S>
 constexpr auto operator*(UnitQuaternion<T> const & p,
                          UnitQuaternion<S> const & q)
-    -> UnitQuaternion<decltype(T{} * S{})> {
-  return lift_unit(p, q, functor::Multiply<Quaternion<T>, Quaternion<S>>{});
+    -> Unit<decltype(as_nonunit(p) * as_nonunit(q))> {
+  return unit_unchecked(as_nonunit(p) * as_nonunit(q));
 }
 
 }  // namespace math

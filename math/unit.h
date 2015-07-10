@@ -137,12 +137,26 @@ constexpr X as_nonunit(Unit<X> const & u) {
 }
 
 /*
+ * Given an arbitrary value, returns that value combined with an assurance that
+ * it is of unit magnitude.  No checking or normalization occurs.  This is
+ * equivalent to `Unit<X>::from_unchecked`, but as a function template it
+ * benefits from type inference and may be syntactically more pleasant.
+ *
+ * Note that this involves a copy, because C++ has no way of designating
+ * reference lifetimes.
+ */
+template <typename X>
+constexpr Unit<X> unit_unchecked(X const & x) {
+  return Unit<X>::from_unchecked(x);
+}
+
+/*
  * Normalizes a value, converting it to unit length.
  */
 template <typename X>
 constexpr auto normalized(X const & v)
   -> typename std::enable_if<!IsUnit<X>::value, Unit<X>>::type {
-  return Unit<X>::from_unchecked(v / mag(v));
+  return unit_unchecked(v / mag(v));
 }
 
 /*
@@ -151,32 +165,6 @@ constexpr auto normalized(X const & v)
 template <typename X>
 constexpr Unit<X> normalized(Unit<X> const & v) {
   return v;
-}
-
-/*
- * Lifts a binary operation over `X` to an equivalent operation over `Unit<X>`.
- * Implementation factor for overloads that want to preserve unit status.
- *
- * Note that, if you want the result to be `constexpr`, `F` needs to be a
- * literal type, and function references are not.
- */
-template <typename X, typename Y, typename F>
-constexpr auto lift_unit(Unit<X> const & x, Unit<Y> const & y, F && fn)
-    -> Unit<ResultOf<F(X, Y)>> {
-  return Unit<ResultOf<F(X, Y)>>::from_unchecked(
-      fn(as_nonunit(x), as_nonunit(y)));
-}
-
-/*
- * Lifts a unary operation over `X` to an equivalent operation over `Unit<X>`.
- * Implementation factor for overloads that want to preserve unit status.
- *
- * Note that, if you want the result to be `constexpr`, `F` needs to be a
- * literal type, and function references are not.
- */
-template <typename X, typename F>
-constexpr auto lift_unit(Unit<X> const & x, F && fn) -> Unit<ResultOf<F(X)>> {
-  return Unit<ResultOf<F(X)>>::from_unchecked(fn(as_nonunit(x)));
 }
 
 }  // namespace math
