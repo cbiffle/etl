@@ -152,6 +152,20 @@ private:
 };
 
 /*
+ * Element accessor.
+ */
+template <
+  std::size_t row,
+  std::size_t col,
+  typename E,
+  std::size_t m_rows,
+  std::size_t m_cols
+>
+constexpr E get(Matrix<m_rows, m_cols, E> const & m) {
+  return get<col>(m.row[row]);
+}
+
+/*
  * Aliases for common square matrices.
  */
 
