@@ -1,0 +1,5 @@
+/**
+ * @defgroup preprocessor Preprocessor Utilities
+ *
+ * Using the preprocessor is often evil, but that doesn't mean we can avoid it.
+ */
