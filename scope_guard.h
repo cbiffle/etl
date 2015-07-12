@@ -1,6 +1,150 @@
 #ifndef _ETL_SCOPE_GUARD_H_INCLUDED
 #define _ETL_SCOPE_GUARD_H_INCLUDED
 
+/**
+ * @defgroup scope_guard Scope Guard
+ *
+ * Scoped actions, an alternative to custom RAII types.
+ *
+ * This is patterned after an idea by Andrei Alexandrescu.
+ *
+ * Use Case and Examples
+ * =====================
+ *
+ * In C++, the "right" way of ensuring that some cleanup action gets taken when
+ * control flow leaves a block is with an RAII object, which performs the
+ * cleanup during its destructor.  However, actually *doing* this can be very
+ * verbose, so many people don't.
+ *
+ * ScopeGuard removes the boilerplate to make doing things the "right" way
+ * easier than doing them the wrong way.
+ *
+ * For example, imagine we want to set a GPIO on entry to a function, and reset
+ * it on exit.
+ *
+ * ~~~{.cc}
+ * int the_function() {
+ *   gpio.set();
+ *
+ *   if (condition1) {
+ *     gpio.reset();
+ *     return 0;
+ *   }
+ *
+ *   if (condition2) {
+ *     gpio.reset();
+ *     return 1;
+ *   }
+ *     
+ *   ...much code...
+ *
+ *   gpio.reset();
+ *   return 42;
+ * }
+ * ~~~
+ *
+ * At any potential exit from the function, we have to reset the GPIO.  This
+ * is troublesome:
+ *
+ * - It may be hard for a reader or reviewer to convince themselves that it's
+ *   done correctly.
+ *
+ * - As a result, errors may creep in.
+ *
+ * - Refactoring the function to have a single return point may cause it to be
+ *   easier to read for these purposes, but harder to read for its original
+ *   intent -- and doing so may be impossible if there are early exits due to
+ *   exceptions or @ref ETL_CHECK.
+ *
+ * The traditional C++ fix for this is to write a specialized class, perhaps
+ * called `ScopedGpio`, that has side effects when it's constructed (set) and
+ * destroyed (reset).
+ *
+ * ~~~{.cc}
+ * class ScopedGpio {
+ * public:
+ *   ScopedGpio(Gpio & gpio) : _gpio(gpio) {
+ *     gpio.set();
+ *   }
+ *   ~ScopedGpio() {
+ *     gpio.reset();
+ *   }
+ * };
+ *
+ * int the_function() {
+ *   ScopedGpio scoped_gpio(gpio);
+ *
+ *   ... rest of body ...
+ *
+ *   // GPIO gets reliably reset by scoped_gpio's destructor.
+ * }
+ * ~~~
+ *
+ * If the scoping class is reusable, great -- but if it's a one-off, then that's
+ * an awful lot of typing to expect from a beleaguered programmer!
+ *
+ * ETL's scope guard offers a concise alternative in the @ref ETL_ON_SCOPE_EXIT
+ * macro:
+ *
+ * ~~~{.cc}
+ * int the_function() {
+ *   gpio.set();
+ *   ETL_ON_SCOPE_EXIT { gpio.reset(); };
+ *
+ *   ... rest of body ...
+ * }
+ * ~~~
+ *
+ * Any exit path from the scope *after* the use of @ref ETL_ON_SCOPE_EXIT
+ * will run the associated code.
+ *
+ *
+ * Dismissing Guards
+ * =================
+ *
+ * But what if there is a path where we *don't* want the guard to do its job?
+ * Maybe some other error handling already did it for us.  For such cases, we
+ * can *dismiss* the guard.  To do this, we have to give it a name, using @ref
+ * etl::make_guard :
+ *
+ * ~~~{.cc}
+ * int the_function() {
+ *   gpio.set();
+ *   auto guard = etl::make_guard([] { gpio.reset(); });
+ *
+ *   if (unusual_condition) {
+ *     guard.dismiss();  // don't change the GPIO's state from here on.
+ *   }
+ *
+ *   ... rest of body ...
+ * }
+ * ~~~
+ *
+ * After calling @ref etl::ScopeGuard::dismiss() "dismiss", the guard is
+ * disabled along every exit path from the scope, and the associated code won't
+ * be run.
+ *
+ * In general, @ref ETL_ON_SCOPE_EXIT is more concise, but @ref etl::make_guard
+ * is more flexible.
+ *
+ *
+ * Compilation
+ * ===========
+ *
+ * The @ref ETL_ON_SCOPE_EXIT macro generates code very similar to the
+ * hand-rolled C-style equivalent using `goto`.
+ *
+ * etl::make_guard() performs similarly unless you pass it an elaborate function
+ * object with virtual methods or something.  The easiest way to do this is
+ * by using `std::function`; expect overhead if you do this.
+ *
+ * @{
+ */
+
+/** @file
+ * Provides #ETL_ON_SCOPE_EXIT and #etl::make_guard.
+ */
+
 #include <type_traits>
 
 #include "etl/concatenate.h"
@@ -9,84 +153,9 @@
 
 namespace etl {
 
-/*
- * Holds a function and calls it at destruction.  This is a utility class that
- * produces RAII classes from lambdas, function pointers, and the like.
- *
- * While specialized RAII classes are often more semantically meaningful and
- * harder to get wrong, ScopeGuard can be very valuable for either one-off cases
- * or bridging between legacy libraries and C++ code.
- *
- * For example, imagine we want to track how many (recursive) calls into a
- * particular function are currently on the stack.
- *
- *   static unsigned recursion_count = 0;
- *
- *   int the_function() {
- *     ++recursion_count;
- *
- *     if (condition1) {
- *       --recursion_count;
- *       return 0;
- *     }
- *
- *     if (condition2) {
- *       --recursion_count;
- *       return 1;
- *     }
- *     
- *     ...
- *     --recursion_count;
- *     return 42;
- *   }
- *
- * Note that, at any potential exit from the function, we have to update
- * recursion_count.  (While the example above could probably be simplified using
- * a single return statement, code similar to the example can result implicitly
- * from uses of ETL_CHECK.)
- *
- * The traditional C++ fix for this is to write a specialized RAII class,
- * perhaps called IncrementCount, that has side effects when it's constructed
- * (increment) and destroyed (decrement).  But this is verbose and turns many
- * programmers off from fully embracing RAII.
- *
- * ScopeGuard offers a concise alternative:
- *
- *   int the_function() {
- *     ++recursion_count;
- *     auto guard = etl::make_guard([] { --recursion_count; });
- *
- *     ... rest of body ...
- *   }
- *
- * This ensures that on *any* exit path from the scope, the lambda will be
- * invoked.  Effectively, we have used a template to roll a new RAII class from
- * an inline expression, without the traditional declaration.
- *
- * But what if there is a path where we *don't* want the guard to do its job?
- * For such cases, we can dismiss the guard:
- *
- *   int the_function() {
- *     ++recursion_count;
- *     auto guard = etl::make_guard([] { --recursion_count; });
- *
- *     if (unusual_condition) {
- *       guard.dismiss();  // leave recursion_count unchanged
- *     }
- *
- *     ... rest of body ...
- *   }
- *
- * Note that all the examples above use the `etl::make_guard` function to
- * produce guards.  This is what you want to do in the vast majority of cases;
- * see the discussion on `make_guard` below.
- *
- * You may also be interested in the ETL_ON_SCOPE_EXIT macro defined at the end
- * of this file.
- *
- *
- * Implementation Note
- * -------------------
+/**
+ * Holds a function and calls it at destruction.  This is the underlying type
+ * returned by @ref make_guard and used inside @ref ETL_ON_SCOPE_EXIT.
  *
  * ScopeGuard is parameterized by the function type so that it can store the
  * full variety of C++ function-like objects:
@@ -95,16 +164,27 @@ namespace etl {
  * - Static member functions.
  * - Function objects, including bound member functions.
  * - Lambda expressions, whose type is impossible to write by hand.
+ *
+ * That last case is why you should rarely interact with ScopeGuard directly,
+ * either by using the constructors or by writing out its type.  Guards should
+ * be created by @ref make_guard to benefit from inference, and written as type
+ * `auto`.
  */
 template <typename F>
 class ScopeGuard {
 public:
-  /*
-   * The underlying function type this guard will call.
+
+  /**
+   * The underlying function type this guard will call.  This is often a lambda
+   * type that may not be directly expressible.  To avoid needing to write the
+   * type out, use @ref make_guard, which will infer the proper type.
    */
   using FunctionType = F;
 
-  /*
+  /** @name Guard lifecycle
+   * @{ */
+
+  /**
    * Creates a new ScopeGuard from a function.  The guard is initially active
    * and will call the function at destruction.
    */
@@ -122,13 +202,13 @@ public:
     other._active = false;
   }
 
-  /*
+  /**
    * Copying a ScopeGuard would imply that the cleanup action should be
    * performed twice, which doesn't make sense.
    */
   ScopeGuard(ScopeGuard<F> const &) = delete;
 
-  /*
+  /**
    * Renders this guard inactive.  It will no longer call its function at
    * destruction.
    */
@@ -136,12 +216,14 @@ public:
     _active = false;
   }
 
-  /*
+  /**
    * Destroys the guard, calling the function if the guard is active.
    */
   ~ScopeGuard() {
     if (_active) _fn();
   }
+
+  /**@}*/
 
 private:
   FunctionType _fn;
@@ -149,15 +231,44 @@ private:
 };
 
 
-/*
+/**
  * Factory function for ScopeGuards.  The full type of a function object, and
  * thus a ScopeGuard, can be *very* difficult to write correctly -- think of the
  * distinctions between member and normal function pointers, to say nothing of
  * lambda expressions with captures.  This function saves you the trouble by
  * deducing the function type from its argument.  Together with `auto`, you
- * needn't worry about the function's explicit type:
+ * needn't worry about the function's explicit type.
  *
- *   auto guard = etl::make_guard(my_function);
+ * @ref make_guard can be used with lambda functions:
+ *
+ * ~~~{.cc}
+ * // Lambda
+ * auto guard = etl::make_guard([]{ stuff; });
+ * ~~~
+ *
+ * It can also be used with C-style namespace-scoped functions that take no
+ * arguments:
+ *
+ * ~~~{.cc}
+ * // Namespace-scoped function
+ * auto guard = etl::make_guard(::abort);
+ * ~~~
+ *
+ * Or static member functions:
+ *
+ * ~~~{.cc}
+ * // Static member function
+ * auto guard = etl::make_guard(MyClass::a_function);
+ * ~~~
+ *
+ * Or functor objects:
+ *
+ * ~~~{.cc}
+ * // Functor object
+ * auto guard = etl::make_guard(MyFunctor{});
+ * ~~~
+ *
+ * Anything *callable* with no arguments can be used.
  */
 template <typename F>
 ScopeGuard<typename std::decay<F>::type> make_guard(F && fn) {
@@ -165,25 +276,22 @@ ScopeGuard<typename std::decay<F>::type> make_guard(F && fn) {
 }
 
 
-/*******************************************************************************
- * Syntactic sugar for ScopeGuard.  This eliminates the need for a named
- * variable and loses the lambda header and right-hand paren, which can be
- * visually distracting.  In exchange, you lose the ability to dismiss the guard
- * (because you cannot name it), and you must use a lambda rather than a
- * function reference.
+/**
+ * Syntactic sugar for ScopeGuard for the common case of calling an inline
+ * lambda function.
  *
- * Where an unsugared version would read:
+ * These two versions are equivalent:
  *
- *  in_routine = true;
- *  auto guard = etl::make_guard([] { in_routine = false; });
+ * ~~~{.cc}
+ * // Explicit guard creation
+ * auto guard = etl::make_guard([]{ cleanup_action(); });
  *
- * The sugared version reads:
+ * // Implicit guard through macro
+ * ETL_ON_SCOPE_EXIT { cleanup_action(); };
+ * ~~~
  *
- *  in_routine = true;
- *  ETL_ON_SCOPE_EXIT { in_routine = false; };
- *
- * Note the trailing semicolon -- it is mandatory.
- *
+ * @hideinitializer
+ * @internal
  *
  * Implementation Note
  * -------------------
@@ -202,18 +310,21 @@ ScopeGuard<typename std::decay<F>::type> make_guard(F && fn) {
  * I/O, our operator cannot be chained -- it's really intended for use by the
  * macro only.
  */
+#define ETL_ON_SCOPE_EXIT \
+  auto ETL_CONCATENATE(on_scope_exit, __COUNTER__) = ::etl::GuardTag() << [&]()
 
+// Arbitrary type serving as LHS for the operator below.
 struct GuardTag {};
 
+// Operator used to get correct infix behavior for ETL_ON_SCOPE_EXIT.
 template <typename F>
 ScopeGuard<typename std::decay<F>::type> operator<<(GuardTag const &,
                                                     F && fn) {
   return etl::make_guard(etl::forward<F>(fn));
 }
 
-#define ETL_ON_SCOPE_EXIT \
-  auto ETL_CONCATENATE(on_scope_exit, __COUNTER__) = ::etl::GuardTag() << [&]()
-
 }  // namespace etl
+
+/**@}*/
 
 #endif  // _ETL_SCOPE_GUARD_H_INCLUDED
