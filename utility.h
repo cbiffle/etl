@@ -1,11 +1,17 @@
 #ifndef _ETL_UTILITY_H_INCLUDED
 #define _ETL_UTILITY_H_INCLUDED
 
-/*
+/**
+ * @addtogroup std
+ * @{
+ */
+
+/** @file
+ *
  * Type and scope manipulation operators that weren't interesting enough
  * to merit their own headers.
  *
- * Analog of C++ <utility>, which is not available in a freestanding
+ * Analog of C++ `<utility>`, which is not available in a freestanding
  * implementation (see discussion in n3256).
  */
 
@@ -48,5 +54,7 @@ void swap(T (&a)[count], T (&b)[count]) {
 }
 
 }  // namespace etl
+
+/**@}*/
 
 #endif  // _ETL_UTILITY_H_INCLUDED

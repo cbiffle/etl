@@ -1,0 +1,6 @@
+/**
+ * @defgroup std Standard library stand-ins
+ *
+ * Replacements for parts of the standard library that are not available in
+ * freestanding implementations, plus backports from C++14.
+ */
