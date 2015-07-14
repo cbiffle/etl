@@ -404,39 +404,43 @@ private:
  * defined comparison operators.  Note that we don't provide orderings, because
  * it's not obvious what the ordering between a user-defined type and nothing
  * would be.  Users can of course provide these if an ordering makes sense.
+ *
+ * Comparisons are optimistically constexpr.
  */
 template <typename T1, typename C1, typename T2, typename C2>
-bool operator==(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
+constexpr bool operator==(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
   return (!bool(t) && !bool(s))
       || ((bool(t) && bool(s)) && t.const_ref() == s.const_ref());
 }
 
 template <typename T1, typename C1, typename T2, typename C2>
-bool operator!=(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
+constexpr bool operator!=(Maybe<T1, C1> const &t, Maybe<T2, C2> const &s) {
   return (bool(t) != bool(s))
       || ((bool(t) && bool(s)) && t.const_ref() != s.const_ref());
 }
 
 /*
  * Comparisons between Maybe and non-maybe types.
+ *
+ * Optimistically constexpr.
  */
 template <typename T1, typename C1, typename S>
-bool operator==(Maybe<T1, C1> const &t, S const &s) {
+constexpr bool operator==(Maybe<T1, C1> const &t, S const &s) {
   return bool(t) && t.const_ref() == s;
 }
 
 template <typename T1, typename C1, typename S>
-bool operator==(S const & s, Maybe<T1, C1> const &t) {
+constexpr bool operator==(S const & s, Maybe<T1, C1> const &t) {
   return bool(t) && s == t.const_ref();
 }
 
 template <typename T1, typename C1, typename S>
-bool operator!=(Maybe<T1, C1> const &t, S const &s) {
+constexpr bool operator!=(Maybe<T1, C1> const &t, S const &s) {
   return bool(t) && t.const_ref() != s;
 }
 
 template <typename T1, typename C1, typename S>
-bool operator!=(S const & s, Maybe<T1, C1> const &t) {
+constexpr bool operator!=(S const & s, Maybe<T1, C1> const &t) {
   return bool(t) && s != t.const_ref();
 }
 
@@ -468,7 +472,7 @@ constexpr bool operator!=(Nothing, Maybe<T, C> const &m) {
 }
 
 template <typename T, typename C = LaxMaybeCheckPolicy>
-Maybe<T, C> just(T && arg) {
+constexpr Maybe<T, C> just(T && arg) {
   return Maybe<T, C>(in_place, forward<T>(arg));
 }
 
