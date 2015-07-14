@@ -1,6 +1,8 @@
 #ifndef _ETL_MATH_INLINE_FSPLIT_H_INCLUDED
 #define _ETL_MATH_INLINE_FSPLIT_H_INCLUDED
 
+#include "etl/prediction.h"
+
 #include "etl/math/float.h"
 
 namespace etl {

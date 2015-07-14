@@ -8,6 +8,8 @@
 #include "etl/bits.h"
 #include "etl/integer_sequence.h"
 
+#include "etl/data/range_ptr.h"
+
 namespace etl {
 namespace data {
 
