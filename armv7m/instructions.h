@@ -62,50 +62,6 @@ ETL_INLINE void instruction_synchronization_barrier() {
   asm volatile ("isb");
 }
 
-/*
- * Saturate an unsigned integer to a certain number of bit positions with an
- * optional shift.  Negative shift distance shift right.
- */
-template <unsigned N, int S = 0>
-ETL_INLINE unsigned usat(unsigned v) {
-  register unsigned r;
-  if (S >= 0) {
-    static_assert(S < 0 || (S <= 31), "left shift out of range");
-    asm ("usat %0, %1, %2, LSL %3"
-         : "=r" (r)
-         : "I" (N), "r" (v), "I" (S));
-    return r;
-  } else {
-    static_assert(S >= 0 || (-S >= 1 && -S <= 31), "right shift out of range");
-    asm ("usat %0, %1, %2, ASR %3"
-         : "=r" (r)
-         : "I" (N), "r" (v), "I" (-S));
-    return r;
-  }
-}
-
-/*
- * Saturate a signed integer to a certain number of bit positions with an
- * optional shift.  Negative shift distance shift right.
- */
-template <unsigned N, int S = 0>
-ETL_INLINE std::int32_t ssat(std::int32_t v) {
-  std::int32_t r;
-  if (S >= 0) {
-    static_assert(S < 0 || (S <= 31), "left shift out of range");
-    asm ("ssat %0, %1, %2, LSL %3"
-         : "=r" (r)
-         : "I" (N), "r" (v), "I" (S));
-    return r;
-  } else {
-    static_assert(S >= 0 || (-S >= 1 && -S <= 31), "right shift out of range");
-    asm ("ssat %0, %1, %2, ASR %3"
-         : "=r" (r)
-         : "I" (N), "r" (v), "I" (-S));
-    return r;
-  }
-}
-
 }  // namespace armv7m
 }  // namespace etl
 
