@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.pngmath',
     'sphinx.ext.ifconfig',
+    'alabaster',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -101,7 +102,7 @@ exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-modindex_common_prefix = ['etl::']
+modindex_common_prefix = []
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
@@ -119,7 +120,11 @@ html_theme = 'alabaster'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+        'github_user': 'cbiffle',
+        'github_repo': 'etl',
+        'show_related': True,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -159,7 +164,18 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+        '**': [
+            'about.html',
+            'relations.html',
+            'localtoc.html',
+            'searchbox.html',
+        ],
+        'index': [
+            'about.html',
+            'searchbox.html',
+        ],
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

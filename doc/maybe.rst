@@ -1,5 +1,5 @@
-Maybe: values that might not exist
-==================================
+Maybe
+=====
 
 .. contents:: :local:
 .. namespace:: etl::data

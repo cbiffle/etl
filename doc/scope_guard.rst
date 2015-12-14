@@ -5,6 +5,9 @@ Scope Guard
 
 .. namespace:: etl
 
+Discussion
+----------
+
 *Scope Guard* makes it easier to do something on exit from a scope, such as a
 function, even in the presence of exceptions.  It can save you from
 hand-writing "RAII" classes.
@@ -12,7 +15,7 @@ hand-writing "RAII" classes.
 ETL's implementation of Scope Guard is modeled after Andrei Alexandrescu's.
 
 Use Case and Examples
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 In C++, the "right" way of ensuring that some cleanup action gets taken when
 control flow leaves a block is with an RAII object, which performs the cleanup
@@ -106,7 +109,7 @@ Any exit path from the scope *after* the use of :c:macro:`ETL_ON_SCOPE_EXIT`
 will run the associated code.
 
 Multiple Guards
----------------
+^^^^^^^^^^^^^^^
 
 Because the scope guard kicks in starting at the line where it's declared, a
 scope can have *multiple* guards handling overlapping areas.  This is handy
@@ -129,7 +132,7 @@ Here's an example taken from m4vgalib::
 
 
 Dismissing Guards
------------------
+^^^^^^^^^^^^^^^^^
 
 But what if there is a path where we *don't* want the guard to do its job?
 Maybe some other error handling already did it for us.  For such cases, we
@@ -158,7 +161,7 @@ In general, :c:macro:`ETL_ON_SCOPE_EXIT` is more concise, but
 
 
 Compilation
------------
+^^^^^^^^^^^
 
 The :c:macro:`ETL_ON_SCOPE_EXIT` macro generates code very similar to the
 hand-rolled C-style equivalent using ``goto``.

@@ -7,12 +7,15 @@ TypeList
 
 A representation for lists of types, and utilities for working with them.
 
-This is directly inspired by Andrei Alexandrescu's %TypeList description from
+Discussion
+----------
+
+This is directly inspired by Andrei Alexandrescu's TypeList description from
 *Modern C++ Design*.  The actual implementation is simplified to use C++11
 variadic templates.
 
 Do we need TypeList in C++11?
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Alexandrescu's implementation was written in terms of C++03.  Many of the
 use cases for it, like creating a generic tuple class, were obviated by the
