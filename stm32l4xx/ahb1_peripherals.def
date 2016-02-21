@@ -1,0 +1,16 @@
+// vim:syntax=cpp:
+// This is an x-macro file giving the STM32L4xx AHB peripheral configuration.
+//
+// The columns are, from left to right,
+//  - Peripheral name as given in the memory map table of the reference manual.
+//  - Bit index in the RCC AHBx control registers.
+//  - Flag: can this peripheral be reset?
+//  - Flag: can this peripheral clock be controlled?
+//  - Flag: can this peripheral clock be enabled in sleep modes?
+
+ETL_STM32L4XX_AHB_PERIPH(dma1,            0, 1, 1, 1)
+ETL_STM32L4XX_AHB_PERIPH(dma2,            1, 1, 1, 1)
+ETL_STM32L4XX_AHB_PERIPH(flash,           8, 1, 1, 1)
+ETL_STM32L4XX_AHB_PERIPH(sram1,           9, 0, 0, 1)
+ETL_STM32L4XX_AHB_PERIPH(crc,            12, 1, 1, 1)
+ETL_STM32L4XX_AHB_PERIPH(tsc,            16, 1, 1, 1)

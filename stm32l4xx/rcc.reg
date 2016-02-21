@@ -1,0 +1,203 @@
+/* vim:syntax=cpp:
+ */
+
+ETL_BFF_REG_RW(Word, cr,
+  ETL_BFF_FIELD(29:29, bool, pllsai2rdy)
+  ETL_BFF_FIELD(28:28, bool, pllsai2on)
+  ETL_BFF_FIELD(27:27, bool, pllsai1rdy)
+  ETL_BFF_FIELD(26:26, bool, pllsai1on)
+  ETL_BFF_FIELD(25:25, bool, pllrdy)
+  ETL_BFF_FIELD(24:24, bool, pllon)
+  ETL_BFF_FIELD(19:19, bool, csson)
+  ETL_BFF_FIELD(18:18, bool, hsebyp)
+  ETL_BFF_FIELD(17:17, bool, hserdy)
+  ETL_BFF_FIELD(16:16, bool, hseon)
+
+  ETL_BFF_FIELD(11:11, bool, hsiasfs)
+  ETL_BFF_FIELD(10:10, bool, hsirdy)
+  ETL_BFF_FIELD( 9: 9, bool, hsikeron)
+  ETL_BFF_FIELD( 8: 8, bool, hsion)
+
+  ETL_BFF_FIELD( 7: 4, unsigned, msirange)
+  ETL_BFF_FIELD( 3: 3, bool, msirgsel)
+  ETL_BFF_FIELD( 2: 2, bool, msipllen)
+  ETL_BFF_FIELD( 1: 1, bool, msirdy)
+  ETL_BFF_FIELD( 0: 0, bool, msion)
+  ETL_BFF_FIELD(15: 8, unsigned, hsical)
+)
+
+ETL_BFF_REG_RW(Word, icscr,
+  ETL_BFF_FIELD(28:24, unsigned, hsitrim)
+  ETL_BFF_FIELD(23:16, unsigned, hsical)
+  ETL_BFF_FIELD(16: 8, unsigned, msitrim)
+  ETL_BFF_FIELD( 7: 0, unsigned, msical)
+)
+
+ETL_BFF_REG_RW(Word, cfgr,
+  ETL_BFF_FIELD_E(30:28, unsigned, mcopre,
+    ETL_BFF_ENUM(0b000, div1)
+    ETL_BFF_ENUM(0b001, div2)
+    ETL_BFF_ENUM(0b010, div4)
+    ETL_BFF_ENUM(0b011, div8)
+    ETL_BFF_ENUM(0b100, div16)
+  )
+  ETL_BFF_FIELD_E(26:24, unsigned, mcosel,
+    ETL_BFF_ENUM(0b000, disabled)
+    ETL_BFF_ENUM(0b001, sysclk)
+    ETL_BFF_ENUM(0b010, msi)
+    ETL_BFF_ENUM(0b011, hsi16)
+    ETL_BFF_ENUM(0b100, hse)
+    ETL_BFF_ENUM(0b101, main_pll)
+    ETL_BFF_ENUM(0b110, lsi)
+    ETL_BFF_ENUM(0b111, lse)
+  )
+  ETL_BFF_FIELD_E(15:15, bool, stopwuck,
+    ETL_BFF_ENUM(0b0, msi)
+    ETL_BFF_ENUM(0b1, hsi16)
+  )
+  ETL_BFF_FIELD  (13:11, pprex_t, ppre2)
+  ETL_BFF_FIELD  (10: 8, pprex_t, ppre1)
+  ETL_BFF_FIELD_E( 7: 4, unsigned, hpre,
+    ETL_BFF_ENUM(0b0000, div1)
+    ETL_BFF_ENUM(0b1000, div2)
+    ETL_BFF_ENUM(0b1001, div4)
+    ETL_BFF_ENUM(0b1010, div8)
+    ETL_BFF_ENUM(0b1011, div16)
+    /* not a mistake: encoding skips 32 */
+    ETL_BFF_ENUM(0b1100, div64)
+    ETL_BFF_ENUM(0b1101, div128)
+    ETL_BFF_ENUM(0b1110, div256)
+    ETL_BFF_ENUM(0b1111, div512)
+  )
+  ETL_BFF_FIELD_E( 3: 2, unsigned, sws,
+    ETL_BFF_ENUM(0b00, msi)
+    ETL_BFF_ENUM(0b01, hsi16)
+    ETL_BFF_ENUM(0b10, hse)
+    ETL_BFF_ENUM(0b11, pll)
+  )
+
+  ETL_BFF_FIELD_E( 1: 0, unsigned, sw,
+    ETL_BFF_ENUM(0b00, msi)
+    ETL_BFF_ENUM(0b01, hsi16)
+    ETL_BFF_ENUM(0b10, hse)
+    ETL_BFF_ENUM(0b11, pll)
+  )
+)
+
+ETL_BFF_REG_RW(Word, pllcfgr,
+  ETL_BFF_FIELD_E(26:25, unsigned, pllr,
+    ETL_BFF_ENUM(0b00, div2)
+    ETL_BFF_ENUM(0b01, div4)
+    ETL_BFF_ENUM(0b10, div6)
+    ETL_BFF_ENUM(0b11, div8)
+  )
+  ETL_BFF_FIELD(24:24, bool, pllren)
+
+  ETL_BFF_FIELD_E(22:21, unsigned, pllq,
+    ETL_BFF_ENUM(0b00, div2)
+    ETL_BFF_ENUM(0b01, div4)
+    ETL_BFF_ENUM(0b10, div6)
+    ETL_BFF_ENUM(0b11, div8)
+  )
+  ETL_BFF_FIELD(20:20, bool, pllqen)
+
+  ETL_BFF_FIELD_E(17:17, unsigned, pllp,
+    ETL_BFF_ENUM(0b0, div7)
+    ETL_BFF_ENUM(0b1, div17)
+  )
+  ETL_BFF_FIELD(16:16, bool, pllpen)
+  
+  ETL_BFF_FIELD  (14: 8, unsigned, plln)
+  ETL_BFF_FIELD_E( 6: 4, unsigned, pllm,
+    ETL_BFF_ENUM(0b000, _1)
+    ETL_BFF_ENUM(0b001, _2)
+    ETL_BFF_ENUM(0b010, _3)
+    ETL_BFF_ENUM(0b011, _4)
+    ETL_BFF_ENUM(0b100, _5)
+    ETL_BFF_ENUM(0b101, _6)
+    ETL_BFF_ENUM(0b110, _7)
+    ETL_BFF_ENUM(0b111, _8)
+  )
+
+  ETL_BFF_FIELD_E( 1: 0, unsigned, pllsrc,
+    ETL_BFF_ENUM(0b00, none)
+    ETL_BFF_ENUM(0b01, msi)
+    ETL_BFF_ENUM(0b10, hsi16)
+    ETL_BFF_ENUM(0b11, hse)
+  )
+)
+
+ETL_BFF_REG_RW(Word, pllsai1cfgr, )
+
+ETL_BFF_REG_RW(Word, pllsai2cfgr, )
+
+ETL_BFF_REG_RW(Word, cier, )
+ETL_BFF_REG_RW(Word, cifr, )
+ETL_BFF_REG_RW(Word, cicr, )
+
+ETL_BFF_REG_RESERVED(Word, 24, 1)
+
+ETL_BFF_REG_RW(Word, ahb1rstr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+
+  ETL_BFF_FIELD(16:16, bool, tscrst)
+  ETL_BFF_FIELD(12:12, bool, crcrst)
+  ETL_BFF_FIELD( 8: 8, bool, flashrst)
+  ETL_BFF_FIELD( 1: 1, bool, dma2rst)
+  ETL_BFF_FIELD( 0: 0, bool, dma1rst)
+)
+ETL_BFF_REG_RW(Word, ahb2rstr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, ahb3rstr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RESERVED(Word, 34, 1)
+
+ETL_BFF_REG_RW(Word, apb1rstr1,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, apb1rstr2,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, apb2rstr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RESERVED(Word, 44, 1)
+
+ETL_BFF_REG_RW(Word, ahb1enr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, ahb2enr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, ahb3enr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RESERVED(Word, 54, 1)
+
+ETL_BFF_REG_RW(Word, apb1enr1,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, apb1enr2,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RW(Word, apb2enr,
+  ETL_BFF_FIELD_ARRAY(31: 0, 1, bool, bit)
+)
+ETL_BFF_REG_RESERVED(Word, 64, 1)
+
+ETL_BFF_REG_RW(Word, ahb1smenr, )
+ETL_BFF_REG_RW(Word, ahb2smenr, )
+ETL_BFF_REG_RW(Word, ahb3smenr, )
+ETL_BFF_REG_RESERVED(Word, 74, 1)
+
+ETL_BFF_REG_RW(Word, apb1smenr1, )
+ETL_BFF_REG_RW(Word, apb1smenr2, )
+ETL_BFF_REG_RW(Word, apb2smenr, )
+ETL_BFF_REG_RESERVED(Word, 84, 1)
+
+ETL_BFF_REG_RW(Word, ccipr, )
+ETL_BFF_REG_RESERVED(Word, 8c, 1)
+ETL_BFF_REG_RW(Word, bdcr, )
+ETL_BFF_REG_RW(Word, csr, )
