@@ -1,3 +1,8 @@
+_ZN3etl9stm32l4xx4tim2E = 0x40000000;
+_ZN3etl9stm32l4xx4tim3E = 0x40000400;
+_ZN3etl9stm32l4xx4tim4E = 0x40000800;
+_ZN3etl9stm32l4xx4tim5E = 0x40000c00;
+
 _ZN3etl9stm32l4xx3rccE = 0x40021000;
 
 _ZN3etl9stm32l4xx5gpioaE = 0x48000000;
