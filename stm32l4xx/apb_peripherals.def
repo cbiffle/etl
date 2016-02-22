@@ -1,0 +1,69 @@
+// vim:syntax=cpp:
+// This is an x-macro file giving the STM32L4xx APB peripheral configuration.
+//
+// The columns are, from left to right,
+// - Peripheral name as given in the memory map table of the reference manual.
+// - APB bus number (1 or 2)
+// - Bit index in the RCC APBx control registers; for APB1, bit indices 32-63
+//   refer to the second register.
+// - Flag: can this peripheral be reset?
+// - Flag: can this peripheral clock be controlled?
+// - Flag: can this peripheral clock be enabled in sleep modes?
+
+// APB1 group 1
+
+ETL_STM32L4XX_APB_P(tim2,    1,  0, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim3,    1,  1, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim4,    1,  2, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim5,    1,  3, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim6,    1,  4, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim7,    1,  5, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(wwd,     1, 11, 0, 1, 1)
+
+ETL_STM32L4XX_APB_P(spi2,    1, 14, 1, 1, 1)
+ETL_STM32L4XX_APB_P(spi3,    1, 15, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(usart2,  1, 17, 1, 1, 1)
+ETL_STM32L4XX_APB_P(usart3,  1, 18, 1, 1, 1)
+ETL_STM32L4XX_APB_P(uart4,   1, 19, 1, 1, 1)
+ETL_STM32L4XX_APB_P(uart5,   1, 20, 1, 1, 1)
+ETL_STM32L4XX_APB_P(i2c1,    1, 21, 1, 1, 1)
+ETL_STM32L4XX_APB_P(i2c2,    1, 22, 1, 1, 1)
+ETL_STM32L4XX_APB_P(i2c3,    1, 23, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(can1,    1, 25, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(pwr,     1, 28, 1, 1, 1)
+ETL_STM32L4XX_APB_P(dac1,    1, 29, 1, 1, 1)
+ETL_STM32L4XX_APB_P(opamp,   1, 30, 1, 1, 1)
+ETL_STM32L4XX_APB_P(lptim1,  1, 31, 1, 1, 1)
+
+// APB1 group 2
+
+ETL_STM32L4XX_APB_P(lpuart1, 1, 32, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(swpmi1,  1, 34, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(lptim2,  1, 37, 1, 1, 1)
+
+// APB2
+
+ETL_STM32L4XX_APB_P(syscfg,  2,  0, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(fw,      2,  7, 0, 1, 0)
+
+ETL_STM32L4XX_APB_P(sdmmc1,  2, 10, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim1,    2, 11, 1, 1, 1)
+ETL_STM32L4XX_APB_P(spi1,    2, 12, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim8,    2, 13, 1, 1, 1)
+ETL_STM32L4XX_APB_P(usart1,  2, 14, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(tim15,   2, 16, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim16,   2, 17, 1, 1, 1)
+ETL_STM32L4XX_APB_P(tim17,   2, 18, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(sai1,    2, 21, 1, 1, 1)
+ETL_STM32L4XX_APB_P(sai2,    2, 22, 1, 1, 1)
+
+ETL_STM32L4XX_APB_P(dfsdm,   2, 24, 1, 1, 1)
