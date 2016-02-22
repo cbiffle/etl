@@ -1,0 +1,11 @@
+ETL_BFF_REG_RESERVED(Word, 94, 5)
+
+ETL_BFF_REG_RW(Word, cselr,
+  ETL_BFF_FIELD(27:24, unsigned, c7s)
+  ETL_BFF_FIELD(23:20, unsigned, c6s)
+  ETL_BFF_FIELD(19:16, unsigned, c5s)
+  ETL_BFF_FIELD(15:12, unsigned, c4s)
+  ETL_BFF_FIELD(11: 8, unsigned, c3s)
+  ETL_BFF_FIELD( 7: 4, unsigned, c2s)
+  ETL_BFF_FIELD( 3: 0, unsigned, c1s)
+)

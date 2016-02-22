@@ -1,0 +1,34 @@
+ETL_BFF_REG_RW(Word, ccr,
+  ETL_BFF_FIELD  (14:14, bool, mem2mem)
+
+  ETL_BFF_FIELD_E(13:12, unsigned, pl,
+    ETL_BFF_ENUM(0b00, low)
+    ETL_BFF_ENUM(0b01, medium)
+    ETL_BFF_ENUM(0b10, high)
+    ETL_BFF_ENUM(0b11, very_high)
+  )
+
+  ETL_BFF_FIELD  (11:10, TransferSize, msize)
+  ETL_BFF_FIELD  ( 9: 8, TransferSize, psize)
+  ETL_BFF_FIELD  ( 7: 7, bool, minc)
+  ETL_BFF_FIELD  ( 6: 6, bool, pinc)
+  ETL_BFF_FIELD  ( 5: 5, bool, circ)
+  ETL_BFF_FIELD_E( 4: 4, bool, dir,
+    ETL_BFF_ENUM(false, read_from_peripheral)
+    ETL_BFF_ENUM(true,  read_from_memory)
+  )
+  ETL_BFF_FIELD  ( 3: 3, bool, teie)
+  ETL_BFF_FIELD  ( 2: 2, bool, htie)
+  ETL_BFF_FIELD  ( 1: 1, bool, tcie)
+  ETL_BFF_FIELD  ( 0: 0, bool, en)
+)
+
+ETL_BFF_REG_RW(Word, cndtr,
+  ETL_BFF_FIELD(15: 0, unsigned, ndt)
+)
+
+ETL_BFF_REG_RW(Word, cpar, )
+
+ETL_BFF_REG_RW(Word, cmar, )
+
+ETL_BFF_REG_RESERVED(Word, 10, 1)
