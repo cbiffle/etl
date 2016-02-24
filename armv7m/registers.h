@@ -39,6 +39,13 @@ inline void set_control(Word value) {
   asm volatile ("msr CONTROL, %0" :: "r"(value));
 }
 
+/*
+ * Sets the contents of PRIMASK.
+ */
+inline void set_primask(bool value) {
+  asm volatile ("msr PRIMASK, %0" :: "r"(value));
+}
+
 }  // namespace armv7m
 }  // namespace etl 
 
