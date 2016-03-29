@@ -46,6 +46,15 @@ inline void set_primask(bool value) {
   asm volatile ("msr PRIMASK, %0" :: "r"(value));
 }
 
+/*
+ * Reads the contents of the Interrupt Program Status Register.
+ */
+inline Word get_ipsr() {
+  Word result;
+  asm ("mrs %0, IPSR" : "=r"(result));
+  return result;
+}
+
 }  // namespace armv7m
 }  // namespace etl 
 
