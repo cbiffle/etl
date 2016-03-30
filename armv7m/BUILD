@@ -42,4 +42,9 @@ c_library('implicit_crt0',
     '//etl/armv7m',
     '//etl',
   ],
+  using = {
+    'link_flags': [
+      '-u main',
+    ],
+  },
 )
