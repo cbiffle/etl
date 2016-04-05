@@ -33,6 +33,22 @@ inline Word get_msp() {
 }
 
 /*
+ * Sets the contents of the BASEPRI register.
+ */
+inline void set_basepri(Word value) {
+  asm volatile ("msr BASEPRI, %0" :: "r"(value));
+}
+
+/*
+ * Reads the contents of the BASEPRI register.
+ */
+inline Word get_basepri() {
+  Word result;
+  asm ("mrs %0, BASEPRI" : "=r"(result));
+  return result;
+}
+
+/*
  * Sets the contents of the CONTROL register.
  */
 inline void set_control(Word value) {
