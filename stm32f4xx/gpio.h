@@ -123,6 +123,12 @@ extern Gpio gpiob;
 extern Gpio gpioc;
 extern Gpio gpiod;
 extern Gpio gpioe;
+extern Gpio gpiof;
+extern Gpio gpiog;
+extern Gpio gpioh;
+extern Gpio gpioi;
+extern Gpio gpioj;
+extern Gpio gpiok;
 
 }  // namespace stm32f4xx
 }  // namespace etl
