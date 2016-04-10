@@ -62,6 +62,22 @@ ETL_INLINE void instruction_synchronization_barrier() {
   asm volatile ("isb");
 }
 
+/*
+ * Disables interrupts ("cpsid i").  On ARMv7-M this uses PRIMASK.
+ */
+ETL_INLINE void disable_interrupts() {
+  asm volatile ("cpsid i");
+}
+
+/*
+ * Enables interrupts ("cpsie i").  On ARMv7-M this uses PRIMASK.
+ */
+ETL_INLINE void enable_interrupts() {
+  asm volatile ("cpsie i");
+}
+
+
+
 }  // namespace armv7m
 }  // namespace etl
 
