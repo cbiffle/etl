@@ -60,7 +60,11 @@ ETL_BFF_REG_RW(Word, shcsr,
   ETL_BFF_FIELD( 0: 0, bool, memfaultact)
 )
 
-ETL_BFF_REG_RW(Word, cfsr, )
+ETL_BFF_REG_RW(Word, cfsr,
+  ETL_BFF_FIELD(31:16, HalfWord, ufsr)
+  ETL_BFF_FIELD(15: 8, Byte,     bfsr)
+  ETL_BFF_FIELD( 7: 0, Byte,     mmfsr)
+)
 ETL_BFF_REG_RW(Word, hfsr, )
 ETL_BFF_REG_RW(Word, dfsr, )
 ETL_BFF_REG_RW(Word, mmfar, )
