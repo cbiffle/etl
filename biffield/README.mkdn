@@ -93,10 +93,10 @@ We could describe this with the following:
     ETL_BFF_REG_RW(uint32_t, config, 0,
       ETL_BFF_FIELD(31:16, unsigned, foo)
       ETL_BFF_FIELD(15:12, unsigned, bar)
-      ETL_BFF_FIELD(11:11, bool, a)
-      ETL_BFF_FIELD(10:10, bool, a)
-      ETL_BFF_FIELD( 9: 9, bool, a)
-      ETL_BFF_FIELD( 8: 8, bool, a)
+      ETL_BFF_FIELD(11:11, bool, A)
+      ETL_BFF_FIELD(10:10, bool, B)
+      ETL_BFF_FIELD( 9: 9, bool, C)
+      ETL_BFF_FIELD( 8: 8, bool, D)
     )
 
     ETL_BFF_REG_RESERVED(uint32_t, hole, 1)
@@ -139,7 +139,7 @@ We would use this code as follows:
 
     // Change bit A and foo value in one write
     death_ray.write_config(death_ray.read_config()
-                           .with_a(true)
+                           .with_A(true)
                            .with_foo(42));
 
 
