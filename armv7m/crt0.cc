@@ -60,6 +60,7 @@ ETL_NAKED void _init() {
 }
 
 ETL_SECTION(".init_epilogue")
+ETL_USED
 ETL_NAKED void init_epilogue() {
   asm volatile ("pop {r4-r11, pc}");
 }
