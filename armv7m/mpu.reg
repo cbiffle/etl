@@ -63,7 +63,7 @@ ETL_BFF_REG_RW(Word, rbar,
   // On writes, when true, the Region Number Register is updated from the
   // contents of 'region' below.
   ETL_BFF_FIELD( 4: 4, bool, valid)
-  ETL_BFF_FIELD( 3: 0, Byte, region)
+  ETL_BFF_FIELD( 3: 0, Word, region)
 )
 
 /*
