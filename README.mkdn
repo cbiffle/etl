@@ -12,4 +12,5 @@ or startup code, because I'm weird like that.
 The tests are in a separate repo for now.
 
 **Caveat hax0r:** this code is currently subject to change at my whims.  I am
-not currently supporting a 'released' version.
+not currently supporting a 'released' version.  (This is mostly true because I
+haven't heard from anyone who wants to use it.)
