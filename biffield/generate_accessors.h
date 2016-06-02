@@ -27,11 +27,22 @@
 #define ETL_BFF_REG_ARRAY_RO(__at, __rn, __n, __fs) \
   __rn ## _value_t read_##__rn(unsigned index) { \
     return __rn ## _value_t(_##__rn[index]); \
+  } \
+  \
+  __rn ## _value_t const volatile * const_addr_of_##__rn(unsigned index) { \
+    return reinterpret_cast<__rn ## _value_t const volatile *>( \
+        &_##__rn[index]); \
   }
+
 
 #define ETL_BFF_REG_ARRAY_WO(__at, __rn, __n, __fs) \
   void write_##__rn(unsigned index, __rn##_value_t value) { \
     _##__rn[index] = __at(value); \
+  } \
+  \
+  __rn ## _value_t volatile * addr_of_##__rn(unsigned index) { \
+    return reinterpret_cast<__rn ## _value_t volatile *>( \
+        &_##__rn[index]); \
   } \
   \
   bool swap_##__rn(unsigned index, __rn##_value_t old_value, \
@@ -58,6 +69,11 @@
 #define ETL_BFF_REG_RO(__at, __n, __fs) \
   __n ## _value_t read_##__n() { \
     return __n ## _value_t(_##__n); \
+  } \
+  \
+  __n ## _value_t const volatile * const_addr_of_##__n() { \
+    return reinterpret_cast<__n ## _value_t const volatile *>( \
+        &_##__n); \
   }
 
 #define ETL_BFF_REG_WO(__at, __n, __fs) \
@@ -67,6 +83,11 @@
   \
   void write_##__n(__at value) { \
     _##__n = value; \
+  } \
+  \
+  __n ## _value_t volatile * addr_of_##__n() { \
+    return reinterpret_cast<__n ## _value_t volatile *>( \
+        &_##__n); \
   } \
   \
   bool swap_##__n(__n##_value_t old_value, \
