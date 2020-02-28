@@ -4,6 +4,6 @@ c_library('assert_loop',
   sources = [ 'assert_loop.cc' ],
   deps = [ ':etl' ],
   local = {
-    'whole_archive': True,
+    'c_library_whole_archive': True,
   },
 )

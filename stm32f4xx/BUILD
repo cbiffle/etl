@@ -9,7 +9,7 @@ c_library('stm32f4xx',
     '//etl',
   ],
   using = {
-    'link_flags': [ PKG + '/peripherals.ld' ],
+    'c_link_flags': [ PKG + '/peripherals.ld' ],
   },
 )
 
@@ -22,6 +22,6 @@ c_library('interrupt_table',
     '//etl/stm32f4xx',
   ],
   local = {
-    'whole_archive': True,
+    'c_library_whole_archive': True,
   },
 )

@@ -2,13 +2,13 @@
 
 c_library('libm',
   using = {
-    'link_srcs': [ '-lm' ],
+    'c_link_srcs': [ '-lm' ],
   },
 )
 
 c_library('libgcc',
   using = {
-    'link_srcs': [ '-lgcc' ],
+    'c_link_srcs': [ '-lgcc' ],
   },
 )
 

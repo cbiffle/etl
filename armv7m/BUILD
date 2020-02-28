@@ -7,7 +7,7 @@ c_library('armv7m',
     '//etl',
   ],
   using = {
-    'link_flags': [ PKG + '/peripherals.ld' ],
+    'c_link_flags': [ PKG + '/peripherals.ld' ],
   },
 )
 
@@ -18,7 +18,7 @@ c_library('exception_table',
     '//etl',
   ],
   local = {
-    'whole_archive': True,
+    'c_library_whole_archive': True,
   },
 )
 
@@ -31,7 +31,7 @@ c_library('manual_crt0',
   using = {
     # This library provides the equivalent of GCC's startfiles.  Attempting to
     # link in *both* will result in a symbol conflict.
-    'link_flags': [ '-nostartfiles' ],
+    'c_link_flags': [ '-nostartfiles' ],
   },
 )
 
@@ -43,7 +43,7 @@ c_library('implicit_crt0',
     '//etl',
   ],
   using = {
-    'link_flags': [
+    'c_link_flags': [
       '-u main',
     ],
   },
