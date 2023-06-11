@@ -1,3 +1,11 @@
+Unmaintained
+============
+
+This code dates to back when I was trying to build C++ abstractions to enable
+more resable, maintainable, and robust embedded code. It turned out to be way
+easier to achieve all of those things with Rust, so this library is now
+unmaintained.
+
 Embedded Template Library
 =========================
 
